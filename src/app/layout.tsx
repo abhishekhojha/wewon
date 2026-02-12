@@ -89,6 +89,9 @@ export const metadata: Metadata = {
     // google: "your-google-verification-code",
     // yandex: "your-yandex-verification-code",
   },
+  other: {
+    "google-adsense-account": "ca-pub-5838698717959983",
+  },
 };
 
 export default function RootLayout({
@@ -99,12 +102,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5838698717959983"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
       </head>
       <body className={`${poppins.variable} antialiased`}>
         <Loader />
