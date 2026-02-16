@@ -131,3 +131,94 @@ export const fetchPredictorBySlug = async (
   const response = await apiClient.get(`/api/predictor/${slug}`);
   return response.data.data;
 };
+
+// ========== Choice Filling APIs ==========
+
+export interface ChoiceFillingMetadata {
+  categories: string[];
+  homeStates: string[];
+  instituteTypes: string[];
+  branchGroups: string[];
+}
+
+export interface ChoiceFillingRequest {
+  name: string;
+  crlRank: number;
+  categoryRank?: number;
+  gender: string;
+  category: string;
+  homeState: string;
+  instituteType?: string | string[];
+  branchGroup?: string | string[];
+}
+
+export interface ChoiceRow {
+  choiceNo: number;
+  institute: string;
+  program: string;
+  quota: string;
+  seatType: string;
+  gender: string;
+  openingRank: number;
+  closingRank: number;
+  origin: string;
+  isHomeState: boolean;
+}
+
+export interface ChoiceFillingResponse {
+  user: {
+    name: string;
+    crlRank: number;
+    categoryRank?: number;
+    gender: string;
+    category: string;
+    homeState: string;
+  };
+  searchRank: number;
+  minRange: number;
+  maxRange: number;
+  totalChoices: number;
+  top100Choices: ChoiceRow[];
+  choices: ChoiceRow[];
+  disclaimer: string;
+}
+
+export const fetchChoiceFillingMetadata =
+  async (): Promise<ChoiceFillingMetadata> => {
+    const response = await apiClient.get(
+      "/api/choice-filling/jee-main/metadata",
+    );
+    return response.data;
+  };
+
+export const generateChoiceList = async (
+  data: ChoiceFillingRequest,
+): Promise<ChoiceFillingResponse> => {
+  const response = await apiClient.post(
+    "/api/choice-filling/jee-main/generate",
+    data,
+  );
+  return response.data;
+};
+
+export const exportChoiceListExcel = async (
+  data: ChoiceFillingRequest,
+): Promise<Blob> => {
+  const response = await apiClient.post(
+    "/api/choice-filling/jee-main/export/excel",
+    data,
+    { responseType: "blob" },
+  );
+  return response.data;
+};
+
+export const exportChoiceListPDF = async (
+  data: ChoiceFillingRequest,
+): Promise<Blob> => {
+  const response = await apiClient.post(
+    "/api/choice-filling/jee-main/export/pdf",
+    data,
+    { responseType: "blob" },
+  );
+  return response.data;
+};
