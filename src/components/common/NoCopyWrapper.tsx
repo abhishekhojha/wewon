@@ -14,7 +14,7 @@ const NoCopyWrapper = ({ children }: { children: React.ReactNode }) => {
       if (
         (e.ctrlKey || e.metaKey) &&
         (e.key === "c" ||
-          e.key === "x" ||
+          e.key === "x" || 
           e.key === "u" ||
           e.key === "s" ||
           e.key === "p")
