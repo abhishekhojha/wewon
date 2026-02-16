@@ -181,8 +181,8 @@ export default function RegisterFormStep1({
           </button>
         </div>
         <p className="text-xs text-[var(--muted-text)] mt-1.5">
-          Your 6-digit OTP will be sent to your{" "}
-          {verificationMethod === "email" ? "email" : "phone number"}
+          Your 6-digit OTP will be sent to your
+          {verificationMethod === "email" ? "email" : "phone number (please pick up call)"}
         </p>
       </div>
 

@@ -1,11 +1,12 @@
 import React from "react";
+import NoCopyWrapper from "@/components/common/NoCopyWrapper";
 import JEEEarlyPredictor from "@/components/Predictor/JEEEarlyPredictor";
 import MainHeading from "@/components/sections/MainHeading";
 import Recommended from "@/components/sections/Recommended";
 
 export default function page() {
   return (
-    <>
+    <NoCopyWrapper>
       <div className="container mx-auto mb-8 px-4">
         <MainHeading
           top="JEE Early College Predictor"
@@ -23,6 +24,6 @@ export default function page() {
           <Recommended />
         </div>
       </div>
-    </>
+    </NoCopyWrapper>
   );
 }

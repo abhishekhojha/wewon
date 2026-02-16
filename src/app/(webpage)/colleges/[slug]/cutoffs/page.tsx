@@ -55,6 +55,12 @@ export async function generateMetadata({
   };
 }
 
+import NoCopyWrapper from "@/components/common/NoCopyWrapper";
+
 export default function Page() {
-  return <CutoffClient />;
+  return (
+    <NoCopyWrapper>
+      <CutoffClient />
+    </NoCopyWrapper>
+  );
 }
