@@ -6,7 +6,7 @@ import { fetchAllPredictors, PredictorListItem } from "@/network/predictor";
 import { PredictorCategory } from "@/store/types";
 import { Loader2 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { selectIsAuthenticated } from "@/store/auth/authSlice";
+import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
 
@@ -48,7 +48,10 @@ const mapToPredictorProduct = (
 const PredictorsGrid: React.FC = () => {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const userData = useAppSelector(selectUser);
   const userOrders = useAppSelector(selectUserOrders);
+
+  const isCounsellor = userData?.userId?.role === "counsellor";
 
   const [predictors, setPredictors] = useState<PredictorListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,17 +121,24 @@ const PredictorsGrid: React.FC = () => {
     );
   }
 
+  // Only show predictors that exist in the user's orders
+  const displayPredictors = isAuthenticated
+    ? predictors.filter((predictor) =>
+        userOrders.some((order: any) => order.product?.slug === predictor.slug),
+      )
+    : [];
+
   return (
     <div className="w-full">
       {/* Predictors Grid */}
-      {predictors.length > 0 ? (
+      {displayPredictors.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {predictors.map((predictor) => (
+          {displayPredictors.map((predictor) => (
             <PredictorCard
               key={predictor._id}
               predictor={mapToPredictorProduct(
                 predictor,
-                isPredictorPurchased(predictor.slug),
+                isCounsellor || isPredictorPurchased(predictor.slug),
               )}
             />
           ))}
@@ -136,7 +146,9 @@ const PredictorsGrid: React.FC = () => {
       ) : (
         <div className="text-center py-16">
           <p className="text-gray-500 text-lg">
-            No predictors available at the moment.
+            {isCounsellor
+              ? "No predictors assigned to you yet."
+              : "No predictors available at the moment."}
           </p>
         </div>
       )}

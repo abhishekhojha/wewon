@@ -17,7 +17,10 @@ const PRODUCT_SLUG = "jee-early-predictor";
 export default function JEEEarlyPredictor() {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectIsAuthenticated);
+  const userData = useAppSelector(selectUser);
   const userOrders = useAppSelector(selectUserOrders);
+
+  const isCounsellor = userData?.userId?.role === "counsellor";
 
   const [formData, setFormData] = useState({
     percentile: "",
@@ -66,6 +69,13 @@ export default function JEEEarlyPredictor() {
         return;
       }
 
+      // If user is a counsellor, grant free access
+      if (user && isCounsellor) {
+        setHasPurchased(true);
+        setCheckingPurchase(false);
+        return;
+      }
+
       // If user is not logged in, don't fetch orders
       if (!user) {
         setHasPurchased(false);
@@ -84,7 +94,7 @@ export default function JEEEarlyPredictor() {
     };
 
     checkPurchaseStatus();
-  }, [user, dispatch]);
+  }, [user, isCounsellor, dispatch]);
 
   // Update hasPurchased when userOrders change
   useEffect(() => {
