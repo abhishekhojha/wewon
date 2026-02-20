@@ -122,11 +122,12 @@ const PredictorsGrid: React.FC = () => {
   }
 
   // Only show predictors that exist in the user's orders
-  const displayPredictors = isAuthenticated
-    ? predictors.filter((predictor) =>
-        userOrders.some((order: any) => order.product?.slug === predictor.slug),
-      )
-    : [];
+  // const displayPredictors = isAuthenticated
+  //   ? predictors.filter((predictor) =>
+  //       userOrders.some((order: any) => order.product?.slug === predictor.slug),
+  //     )
+  //   : [];
+  const displayPredictors = predictors;
 
   return (
     <div className="w-full">
