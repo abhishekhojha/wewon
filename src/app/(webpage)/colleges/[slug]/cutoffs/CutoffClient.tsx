@@ -26,6 +26,7 @@ import hbtuOptions from "@/components/Predictor/data/hbtuOptions.json";
 import mmmutOptions from "@/components/Predictor/data/mmmutOptions.json";
 import jacDelhiOptions from "@/components/Predictor/data/jacDelhiOptions.json";
 import jacChandigarhOptions from "@/components/Predictor/data/jacChandigarhOptions.json";
+import customOptions from "@/components/Predictor/data/customOptions.json";
 
 interface CutoffData {
   _id: string;
@@ -55,6 +56,7 @@ type CollegeType =
   | "MMMUT"
   | "JAC_DELHI"
   | "JAC_CHANDIGARH"
+  | "CUSTOM"
   | "UNKNOWN";
 
 interface FilterOption {
@@ -181,6 +183,12 @@ export default function CutoffClient() {
       case "UPTAC":
         return "UPTAC";
       default:
+        if (
+          type.includes("GOVERNMENT") ||
+          type.includes("PRIVATE")
+        ) {
+          return "CUSTOM";
+        }
         // Fallback: check Name for legacy/unmapped colleges
         const name = (college?.Name || "").toUpperCase();
 
@@ -237,6 +245,8 @@ export default function CutoffClient() {
         return josaaOptions.categories;
       case "UPTAC":
         return uptacOptions.categories;
+      case "CUSTOM":
+        return customOptions.categories;
       case "HBTU":
         return hbtuOptions.categories;
       case "MMMUT":
@@ -265,6 +275,12 @@ export default function CutoffClient() {
       case "UPTAC":
         return (
           (uptacOptions.subCategories as Record<string, FilterOption[]>)[
+            selectedCategory
+          ] || []
+        );
+      case "CUSTOM":
+        return (
+          (customOptions.subCategories as Record<string, FilterOption[]>)[
             selectedCategory
           ] || []
         );
@@ -305,7 +321,9 @@ export default function CutoffClient() {
 
   // Check if college type uses sub-category
   const hasSubCategory = (): boolean => {
-    return ["UPTAC", "HBTU", "MMMUT", "JAC_DELHI"].includes(collegeType);
+    return ["UPTAC", "CUSTOM", "HBTU", "MMMUT", "JAC_DELHI"].includes(
+      collegeType,
+    );
   };
 
   // Check if college type uses gender
@@ -348,9 +366,12 @@ export default function CutoffClient() {
 
     // Filter by category (Seat_Type) - required
     if (selectedCategory) {
-      filtered = filtered.filter((c) => c.Seat_Type === selectedCategory);
+      filtered = filtered.filter((c) => c.Seat_Type.includes(selectedCategory));
     }
 
+    if (hasSubCategory() && selectedSubCategory) {
+      filtered = filtered.filter((c) => c.Seat_Type === selectedSubCategory);
+    }
     // Filter by gender (for JOSAA type)
     if (hasGender() && selectedGender && selectedGender !== "BOTH") {
       filtered = filtered.filter((c) => c.Gender === selectedGender);
@@ -399,16 +420,12 @@ export default function CutoffClient() {
   const tableData = useMemo(() => {
     return {
       columns: [
-        { key: "seatType", label: "Seat Type", align: "left" as const },
-        { key: "quota", label: "Quota", align: "left" as const },
         { key: "program", label: "Program", align: "left" as const },
         { key: "opening", label: "Opening Rank", align: "right" as const },
         { key: "closing", label: "Closing Rank", align: "right" as const },
       ],
       data: displayResults.map((c) => ({
-        seatType: c.Seat_Type || "-",
-        quota: c.Quota || "-",
-        program: `${c.Academic_Program_Name}${c.Gender ? ` (${c.Gender})` : ""}`,
+        program: `${c.Academic_Program_Name}${(hasGender() && c.Gender) ? ` (${c.Gender})` : ""}`,
         opening: c.Opening_Rank?.toString() || "-",
         closing: c.Closing_Rank?.toString() || "-",
       })),
@@ -790,8 +807,25 @@ export default function CutoffClient() {
                 {/* Results Table */}
                 {displayResults.length > 0 ? (
                   <>
-                    <div className="mb-2 text-lg font-semibold text-[var(--primary)]">
+                    <div className="mb-4 flex flex-wrap justify-between items-center gap-3 text-sm">
+                      <div className="flex flex-wrap gap-2">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] font-semibold">
+                        <span className="text-gray-600 font-medium">Category:</span> {selectedCategory || "All"}
+                      </span>
+                      {selectedSubCategory && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] font-semibold">
+                          <span className="text-gray-600 font-medium">Sub Category:</span> {selectedSubCategory}
+                        </span>
+                      )}
+                      {displayResults[0]?.Quota && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] font-semibold">
+                          <span className="text-gray-600 font-medium">Quota:</span> {displayResults[0].Quota}
+                        </span>
+                      )}
+                      </div>
+                      <div className="mb-2 text-lg font-semibold text-[var(--primary)]">
                       4-Year B.E./B.Tech. Course
+                      </div>
                     </div>
                     <DynamicTable
                       columns={tableData.columns}
