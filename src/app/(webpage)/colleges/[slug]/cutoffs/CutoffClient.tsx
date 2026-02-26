@@ -631,7 +631,7 @@ export default function CutoffClient() {
                       selectedSubCategory ? "text-gray-900" : "text-gray-400"
                     }
                   >
-                    {selectedSubCategory || "Select Sub Category"}
+                    {selectedSubCategory || "Not Applicable"}
                   </span>
                   <ChevronDown
                     className={`w-5 h-5 text-gray-600 transition-transform ${
