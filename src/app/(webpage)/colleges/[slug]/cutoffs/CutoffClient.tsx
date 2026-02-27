@@ -376,12 +376,13 @@ export default function CutoffClient() {
 
     // Filter by category (Seat_Type) - required
     if (selectedCategory) {
-      filtered = filtered.filter((c) => c.Seat_Type.includes(selectedCategory));
+      if (hasSubCategory() && selectedSubCategory) {
+        filtered = filtered.filter((c) => c.Seat_Type === selectedSubCategory);
+      } else {
+        filtered = filtered.filter((c) => c.Seat_Type == selectedCategory);
+      }
     }
 
-    if (hasSubCategory() && selectedSubCategory) {
-      filtered = filtered.filter((c) => c.Seat_Type === selectedSubCategory);
-    }
     // Filter by gender (for JOSAA type)
     if (hasGender() && selectedGender && selectedGender !== "BOTH") {
       filtered = filtered.filter((c) => c.Gender === selectedGender);
