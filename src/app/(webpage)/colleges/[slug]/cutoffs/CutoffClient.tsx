@@ -183,10 +183,7 @@ export default function CutoffClient() {
       case "UPTAC":
         return "UPTAC";
       default:
-        if (
-          type.includes("GOVERNMENT") ||
-          type.includes("PRIVATE")
-        ) {
+        if (type.includes("GOVERNMENT") || type.includes("PRIVATE")) {
           return "CUSTOM";
         }
         // Fallback: check Name for legacy/unmapped colleges
@@ -360,6 +357,19 @@ export default function CutoffClient() {
     }
   };
 
+  // Auto-fetch cutoffs once when category is first selected (data not yet loaded)
+  useEffect(() => {
+    if (
+      selectedCategory &&
+      selectedYear &&
+      college?.instituteId &&
+      allCutoffs.length === 0 &&
+      !hasSearched
+    ) {
+      handleSubmit();
+    }
+  }, [selectedCategory, selectedSubCategory]);
+
   // Filter cutoffs based on current filter selections
   const filteredCutoffs = useMemo(() => {
     let filtered = allCutoffs;
@@ -378,7 +388,13 @@ export default function CutoffClient() {
     }
 
     return filtered;
-  }, [allCutoffs, selectedCategory, selectedGender, collegeType]);
+  }, [
+    allCutoffs,
+    selectedCategory,
+    selectedSubCategory,
+    selectedGender,
+    collegeType,
+  ]);
 
   // Get available rounds based on filtered cutoffs
   const availableRounds = useMemo(() => {
@@ -425,7 +441,7 @@ export default function CutoffClient() {
         { key: "closing", label: "Closing Rank", align: "right" as const },
       ],
       data: displayResults.map((c) => ({
-        program: `${c.Academic_Program_Name}${(hasGender() && c.Gender) ? ` (${c.Gender})` : ""}`,
+        program: `${c.Academic_Program_Name}${hasGender() && c.Gender ? ` (${c.Gender})` : ""}`,
         opening: c.Opening_Rank?.toString() || "-",
         closing: c.Closing_Rank?.toString() || "-",
       })),
@@ -809,22 +825,31 @@ export default function CutoffClient() {
                   <>
                     <div className="mb-4 flex flex-wrap justify-between items-center gap-3 text-sm">
                       <div className="flex flex-wrap gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] font-semibold">
-                        <span className="text-gray-600 font-medium">Category:</span> {selectedCategory || "All"}
-                      </span>
-                      {selectedSubCategory && (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] font-semibold">
-                          <span className="text-gray-600 font-medium">Sub Category:</span> {selectedSubCategory}
+                          <span className="text-gray-600 font-medium">
+                            Category:
+                          </span>{" "}
+                          {selectedCategory || "All"}
                         </span>
-                      )}
-                      {displayResults[0]?.Quota && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] font-semibold">
-                          <span className="text-gray-600 font-medium">Quota:</span> {displayResults[0].Quota}
-                        </span>
-                      )}
+                        {selectedSubCategory && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] font-semibold">
+                            <span className="text-gray-600 font-medium">
+                              Sub Category:
+                            </span>{" "}
+                            {selectedSubCategory}
+                          </span>
+                        )}
+                        {displayResults[0]?.Quota && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] font-semibold">
+                            <span className="text-gray-600 font-medium">
+                              Quota:
+                            </span>{" "}
+                            {displayResults[0].Quota}
+                          </span>
+                        )}
                       </div>
                       <div className="mb-2 text-lg font-semibold text-[var(--primary)]">
-                      4-Year B.E./B.Tech. Course
+                        4-Year B.E./B.Tech. Course
                       </div>
                     </div>
                     <DynamicTable
