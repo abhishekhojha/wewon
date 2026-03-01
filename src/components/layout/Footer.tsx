@@ -177,7 +177,7 @@ const Footer = () => {
                       {isObject ? (
                         <a
                           href={href}
-                          className="text-gray-300 hover:text-white transition-colors"
+                          className="text-gray-300 hover:text-white transition-colors break-all"
                         >
                           {label}
                         </a>
