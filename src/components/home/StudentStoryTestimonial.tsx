@@ -18,53 +18,53 @@ const testimonials = [
     affiliation: "IIIT Lucknow",
     quote:
       "I purchased We Won Academy's paid counselling package and it was worth every rupee. The team guided me through every step of JoSAA and CSAB counselling, explained cutoffs clearly, and suggested the best colleges based on my rank. The support felt very personalised.",
-    imageUrl: "/testimonials.png",
+    imageUrl: "/student_stories.png",
   },
   {
     name: "Rezen Pranav Kshitiz Tiga",
     affiliation: "BIT Mesra",
     quote:
       "The paid counselling from We Won Academy was extremely useful for procedural clarity and choice-locking strategy. They answered my queries quickly and explained how to prioritise colleges effectively.",
-    imageUrl: "/testimonials.png",
+    imageUrl: "/student_stories.png",
   },
   {
     name: "Ayush Wanjari",
     affiliation: "IIITDM Jabalpur",
     quote:
       "I was very nervous about counselling, but We Won Academy's paid support gave me confidence and clarity. They explained trends and cutoffs in simple language and helped me avoid mistakes I could have made on my own.",
-    imageUrl: "/testimonials.png",
+    imageUrl: "/student_stories.png",
   },
   {
     name: "Krishna",
     affiliation: "IIT Patna",
     quote:
       "The paid counselling was completely worth the money. I was confused about college choices according to my rank, but We Won Academy guided me honestly and clearly, helping me make the right decision.",
-    imageUrl: "/testimonials.png",
+    imageUrl: "/student_stories.png",
   },
   {
     name: "Kaif Ali",
     affiliation: "IIT Bhilai",
     quote:
       "Nice experience. Aman Sir supports students very well throughout the counselling process.",
-    imageUrl: "/testimonials.png",
+    imageUrl: "/student_stories.png",
   },
   {
     name: "Sirsha Das",
     affiliation: "NIT Durgapur",
     quote: "Very good and supportive counselling. Thank you very much.",
-    imageUrl: "/testimonials.png",
+    imageUrl: "/student_stories.png",
   },
   {
     name: "Jatin Kumawat",
     affiliation: "MNNIT Allahabad",
     quote: "I just want to say that the counselling support is fully worth it.",
-    imageUrl: "/testimonials.png",
+    imageUrl: "/student_stories.png",
   },
   {
     name: "Soubarno",
     affiliation: "NIT Calicut",
     quote: "Great experience. Mentors are very helpful and respond on time.",
-    imageUrl: "/testimonials.png",
+    imageUrl: "/student_stories.png",
   },
 ];
 
