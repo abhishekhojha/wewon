@@ -17,7 +17,7 @@ interface CutOffsFilterProps {
   instituteId?: string;
 }
 
-export default function CutOffsFilter({
+export default function   CutOffsFilter({
   title = "CutOffs",
   hideHeading = false,
   collegeName = "",
@@ -84,7 +84,7 @@ export default function CutOffsFilter({
               <button
                 key={year}
                 onClick={() => handleYearSelect(year)}
-                className="px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-sm hover:shadow-md bg-gray-100 text-gray-700 hover:bg-gray-200"
+                className="px-8 py-4 cursor-pointer rounded-xl font-semibold text-lg transition-all shadow-sm hover:shadow-md bg-gray-100 text-gray-700 hover:bg-gray-200"
               >
                 Cutoff {year}
               </button>
