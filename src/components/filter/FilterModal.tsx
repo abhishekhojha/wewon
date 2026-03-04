@@ -7,8 +7,10 @@ interface FilterModalProps {
   handleApplyFilter: () => void;
   selectedInstituteType: string | null;
   onInstituteTypeChange: (value: string) => void;
-  selectedLocation: string | null;
-  onLocationChange: (value: string) => void;
+  selectedState: string | null;
+  onStateChange: (value: string) => void;
+  selectedCity: string | null;
+  onCityChange: (value: string) => void;
   selectedCourse: string | null;
   onCourseChange: (value: string) => void;
   selectedBranch: string | null;
@@ -22,32 +24,107 @@ export default function FilterModal({
   handleApplyFilter,
   selectedInstituteType,
   onInstituteTypeChange,
-  selectedLocation,
-  onLocationChange,
+  selectedState,
+  onStateChange,
+  selectedCity,
+  onCityChange,
   selectedCourse,
   onCourseChange,
   selectedBranch,
   onBranchChange,
   onClearAllFilters,
 }: FilterModalProps) {
-  const [activeTab, setActiveTab] = useState("Location");
-  const [searchLocation, setSearchLocation] = useState("");
+  const [activeTab, setActiveTab] = useState("States");
+  const [searchState, setSearchState] = useState("");
+  const [searchCity, setSearchCity] = useState("");
   const [searchSpecialization, setSearchSpecialization] = useState("");
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   // Institute type options for ranking filters (same as desktop sidebar)
   const instituteTypeOptions = [
     { label: "IIT", value: "IIT" },
-    { label: "IIIT", value: "IIIT" },
     { label: "NIT", value: "NIT" },
+    { label: "IIIT", value: "IIIT" },
     { label: "GFTI", value: "GFTI" },
-    { label: "Government Colleges", value: "Government" },
-    { label: "Private Colleges", value: "Private" },
+    {
+      label: "Government College (UPTAC)",
+      value: "Government College (UPTAC)",
+    },
+    {
+      label: "Government University (UPTAC)",
+      value: "Government University (UPTAC)",
+    },
+    { label: "Private College (UPTAC)", value: "Private College (UPTAC)" },
+    {
+      label: "HSTES Counselling (Government College)",
+      value: "HSTES Counselling (Government College)",
+    },
+    {
+      label: "HSTES Counselling (Private College)",
+      value: "HSTES Counselling (Private College)",
+    },
+    {
+      label: "GGSIPU Counselling (Government College)",
+      value: "GGSIPU Counselling (Government College)",
+    },
+    {
+      label: "GGSIPU Counselling (Private College)",
+      value: "GGSIPU Counselling (Private College)",
+    },
+    {
+      label: "JAC Delhi Counselling (Colleges)",
+      value: "JAC Delhi Counselling (Colleges)",
+    },
+    {
+      label: "JAC Chandigarh Counselling (Colleges)",
+      value: "JAC Chandigarh Counselling (Colleges)",
+    },
+    { label: "Delhi University Colleges", value: "Delhi University Colleges" },
+    { label: "CUET (UG) Colleges", value: "CUET (UG) Colleges" },
+    { label: "IISER", value: "IISER" },
+    { label: "Private University", value: "Private University" },
+    {
+      label: "WBJEE Counselling (Colleges)",
+      value: "WBJEE Counselling (Colleges)",
+    },
+    {
+      label: "MHTCET Counselling (Colleges)",
+      value: "MHTCET Counselling (Colleges)",
+    },
+    {
+      label: "MANIPAL Counselling (Colleges)",
+      value: "MANIPAL Counselling (Colleges)",
+    },
+    {
+      label: "COMEDK Counselling (Colleges)",
+      value: "COMEDK Counselling (Colleges)",
+    },
+    { label: "HBTU Kanpur", value: "HBTU Kanpur" },
+    { label: "MMMUT Gorakhpur", value: "MMMUT Gorakhpur" },
+    { label: "IIST", value: "IIST" },
+    { label: "IISC Research", value: "IISC Research" },
+    {
+      label: "MPDTE Counselling (Colleges)",
+      value: "MPDTE Counselling (Colleges)",
+    },
+    {
+      label: "REAP Counselling (Colleges)",
+      value: "REAP Counselling (Colleges)",
+    },
+    {
+      label: "BIHAR Counselling (Colleges)",
+      value: "BIHAR Counselling (Colleges)",
+    },
+    {
+      label: "CHHATTISGARH Counselling (Colleges)",
+      value: "CHHATTISGARH Counselling (Colleges)",
+    },
   ];
 
   const filterCategories = [
-    "Location",
-    "Course",
+    "States",
+    "City",
+    // "Course",
     "Institute Type",
     "Specialization",
   ];
@@ -55,33 +132,45 @@ export default function FilterModal({
   const filterData: {
     [key: string]: Array<{ label: string; count?: number }>;
   } = {
-    Location: [
-      { label: "Delhi/NCR" },
-      { label: "Mumbai (All)" },
-      { label: "Bangalore" },
-      { label: "Pune" },
-      { label: "Kolkata" },
-      { label: "Hyderabad" },
-      { label: "Chennai" },
-      { label: "Ahmedabad" },
-      { label: "Jaipur" },
-      { label: "Lucknow" },
-      { label: "Chandigarh" },
-      { label: "Indore" },
-      { label: "Bhopal" },
-      { label: "Nagpur" },
-      { label: "Visakhapatnam" },
-      { label: "Maharashtra" },
-      { label: "Uttar Pradesh" },
-      { label: "Karnataka" },
+    States: [
+      { label: "Andaman and Nicobar Islands" },
       { label: "Andhra Pradesh" },
-      { label: "Tamil Nadu" },
-      { label: "West Bengal" },
-      { label: "Rajasthan" },
+      { label: "Arunachal Pradesh" },
+      { label: "Assam" },
+      { label: "Bihar" },
+      { label: "Chandigarh" },
+      { label: "Chhattisgarh" },
+      { label: "Dadra and Nagar Haveli and Daman and Diu" },
+      { label: "Delhi" },
+      { label: "Goa" },
       { label: "Gujarat" },
+      { label: "Haryana" },
+      { label: "Himachal Pradesh" },
+      { label: "Jammu and Kashmir" },
+      { label: "Jharkhand" },
+      { label: "Karnataka" },
+      { label: "Kerala" },
+      { label: "Ladakh" },
+      { label: "Lakshadweep" },
       { label: "Madhya Pradesh" },
+      { label: "Maharashtra" },
+      { label: "Manipur" },
+      { label: "Meghalaya" },
+      { label: "Mizoram" },
+      { label: "Nagaland" },
+      { label: "Odisha" },
+      { label: "Puducherry" },
+      { label: "Punjab" },
+      { label: "Rajasthan" },
+      { label: "Sikkim" },
+      { label: "Tamil Nadu" },
+      { label: "Telangana" },
+      { label: "Tripura" },
+      { label: "Uttar Pradesh" },
+      { label: "Uttarakhand" },
+      { label: "West Bengal" },
     ],
-    Course: [
+    /* Course: [
       { label: "MBA/PGDM" },
       { label: "BBA" },
       { label: "B.Tech/B.E." },
@@ -106,7 +195,7 @@ export default function FilterModal({
       { label: "Hotel Management" },
       { label: "Fashion Design" },
       { label: "Architecture" },
-    ],
+    ], */
     Specialization: [
       { label: "Finance" },
       { label: "Marketing" },
@@ -129,19 +218,121 @@ export default function FilterModal({
       { label: "E-Commerce" },
       { label: "Real Estate Management" },
     ],
+    City: [
+      { label: "Agartala" },
+      { label: "Agra" },
+      { label: "Ahmedabad" },
+      { label: "Aizawl" },
+      { label: "Aligarh" },
+      { label: "Allahabad" },
+      { label: "Ambedkar Nagar" },
+      { label: "Amaravati" },
+      { label: "Amethi" },
+      { label: "Amroha" },
+      { label: "Anantapur" },
+      { label: "Ayodhya" },
+      { label: "Azamgarh" },
+      { label: "Baghpat" },
+      { label: "Banda" },
+      { label: "Bangalore" },
+      { label: "Basti" },
+      { label: "Barabanki" },
+      { label: "Bareilly" },
+      { label: "Berhampur" },
+      { label: "Bhagalpur" },
+      { label: "Bhilai" },
+      { label: "Bhopal" },
+      { label: "Bhubaneswar" },
+      { label: "Bijnor" },
+      { label: "Bulandshahr" },
+      { label: "Calicut" },
+      { label: "Chandigarh" },
+      { label: "Chennai" },
+      { label: "Chromepet" },
+      { label: "Cochin" },
+      { label: "Coimbatore" },
+      { label: "Daman" },
+      { label: "Dehradun" },
+      { label: "Dhanbad" },
+      { label: "Dharwad" },
+      { label: "Dimapur" },
+      { label: "Diu" },
+      { label: "Dispur" },
+      { label: "Durgapur" },
+      { label: "Etawah" },
+      { label: "Faizabad" },
+      { label: "Faridabad" },
+      { label: "Farrukhabad" },
+      { label: "Fatehpur" },
+      { label: "Firozabad" },
+      { label: "Gandhinagar" },
+      { label: "Gangtok" },
+      { label: "Ghaziabad" },
+      { label: "Gorakhpur" },
+      { label: "Greater Noida" },
+      { label: "Guwahati" },
+      { label: "Gwalior" },
+      { label: "Haridwar" },
+      { label: "Hubli" },
+      { label: "Hyderabad" },
+      { label: "Imphal" },
+      { label: "Indore" },
+      { label: "Itanagar" },
+      { label: "Jabalpur" },
+      { label: "Jaipur" },
+      { label: "Jalandhar" },
+      { label: "Jammu" },
+      { label: "Jamshedpur" },
+      { label: "Jhansi" },
+      { label: "Jodhpur" },
+      { label: "Kanpur" },
+      { label: "Kochi" },
+      { label: "Kolkata" },
+      { label: "Kota" },
+      { label: "Lucknow" },
+      { label: "Madurai" },
+      { label: "Meerut" },
+      { label: "Mumbai" },
+      { label: "Mysore" },
+      { label: "Nagpur" },
+      { label: "New Delhi" },
+      { label: "Noida" },
+      { label: "Patna" },
+      { label: "Port Blair" },
+      { label: "Pune" },
+      { label: "Raipur" },
+      { label: "Ranchi" },
+      { label: "Shimla" },
+      { label: "Srinagar" },
+      { label: "Surat" },
+      { label: "Thiruvananthapuram" },
+      { label: "Tirupati" },
+      { label: "Vadodara" },
+      { label: "Varanasi" },
+      { label: "Vellore" },
+      { label: "Vijayawada" },
+      { label: "Visakhapatnam" },
+      { label: "Warangal" },
+    ],
   };
 
   const handleClearFilters = () => {
     onClearAllFilters();
-    setSearchLocation("");
+    setSearchState("");
+    setSearchCity("");
     setSearchSpecialization("");
   };
 
   const getFilteredOptions = (category: string) => {
     const options = filterData[category.split(" ").join("")] || [];
-    if (category === "Location" && searchLocation) {
-      return options.filter((location) =>
-        location.label.toLowerCase().includes(searchLocation.toLowerCase()),
+    if (category === "States" && searchState) {
+      return options.filter((state) =>
+        state.label.toLowerCase().includes(searchState.toLowerCase()),
+      );
+    }
+    if (category === "City" && searchCity) {
+      return options.filter((city) =>
+        city.label.toLowerCase().includes(searchCity.toLowerCase()),
       );
     }
     if (category === "Specialization" && searchSpecialization) {
@@ -289,15 +480,33 @@ export default function FilterModal({
           {/* Filter Options */}
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex flex-col h-full">
-              {/* Search Box - Only for Location */}
-              {activeTab === "Location" && (
+              {/* Search Box - Only for States */}
+              {activeTab === "States" && (
                 <div className="mx-6 pt-6 pb-2 border-b flex-shrink-0 border-gray-200 max-sm:mx-4 max-sm:pt-4">
                   <div className="relative">
                     <input
                       type="text"
-                      placeholder="Search Location"
-                      value={searchLocation}
-                      onChange={(e) => setSearchLocation(e.target.value)}
+                      placeholder="Search State"
+                      value={searchState}
+                      onChange={(e) => setSearchState(e.target.value)}
+                      className="w-full pr-12 outline-none text-sm py-2 px-3 border border-gray-300 rounded-lg"
+                    />
+                    <Search
+                      className="absolute right-4 top-1/2 -translate-y-1/2"
+                      size={18}
+                      style={{ color: "rgba(13, 58, 102, 0.4)" }}
+                    />
+                  </div>
+                </div>
+              )}
+              {activeTab === "City" && (
+                <div className="mx-6 pt-6 pb-2 border-b flex-shrink-0 border-gray-200 max-sm:mx-4 max-sm:pt-4">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search City"
+                      value={searchCity}
+                      onChange={(e) => setSearchCity(e.target.value)}
                       className="w-full pr-12 outline-none text-sm py-2 px-3 border border-gray-300 rounded-lg"
                     />
                     <Search
@@ -359,8 +568,8 @@ export default function FilterModal({
                           </span>
                         </label>
                       ))
-                    : activeTab === "Location"
-                      ? // Location filter with controlled state from parent
+                    : activeTab === "States"
+                      ? // States filter with controlled state from parent
                         getFilteredOptions(activeTab).map((option) => (
                           <label
                             key={option.label}
@@ -368,15 +577,15 @@ export default function FilterModal({
                           >
                             <input
                               type="radio"
-                              checked={selectedLocation === option.label}
-                              onChange={() => onLocationChange(option.label)}
+                              checked={selectedState === option.label}
+                              onChange={() => onStateChange(option.label)}
                               className="w-5 h-5 cursor-pointer max-sm:w-4 max-sm:h-4"
                               style={{
                                 accentColor: "#0D3A66",
                               }}
                               onClick={() => {
-                                if (selectedLocation === option.label) {
-                                  onLocationChange(option.label);
+                                if (selectedState === option.label) {
+                                  onStateChange(option.label);
                                 }
                               }}
                             />
@@ -388,23 +597,24 @@ export default function FilterModal({
                             </span>
                           </label>
                         ))
-                      : activeTab === "Course"
-                        ? getFilteredOptions(activeTab).map((option) => (
+                      : activeTab === "City"
+                        ? // City filter with controlled state from parent
+                          getFilteredOptions(activeTab).map((option) => (
                             <label
                               key={option.label}
                               className="flex items-center cursor-pointer group"
                             >
                               <input
                                 type="radio"
-                                checked={selectedCourse === option.label}
-                                onChange={() => onCourseChange(option.label)}
+                                checked={selectedCity === option.label}
+                                onChange={() => onCityChange(option.label)}
                                 className="w-5 h-5 cursor-pointer max-sm:w-4 max-sm:h-4"
                                 style={{
                                   accentColor: "#0D3A66",
                                 }}
                                 onClick={() => {
-                                  if (selectedCourse === option.label) {
-                                    onCourseChange(option.label);
+                                  if (selectedCity === option.label) {
+                                    onCityChange(option.label);
                                   }
                                 }}
                               />
@@ -416,7 +626,35 @@ export default function FilterModal({
                               </span>
                             </label>
                           ))
-                        : activeTab === "Specialization"
+                        : /* activeTab === "Course"
+                          ? getFilteredOptions(activeTab).map((option) => (
+                              <label
+                                key={option.label}
+                                className="flex items-center cursor-pointer group"
+                              >
+                                <input
+                                  type="radio"
+                                  checked={selectedCourse === option.label}
+                                  onChange={() => onCourseChange(option.label)}
+                                  className="w-5 h-5 cursor-pointer max-sm:w-4 max-sm:h-4"
+                                  style={{
+                                    accentColor: "#0D3A66",
+                                  }}
+                                  onClick={() => {
+                                    if (selectedCourse === option.label) {
+                                      onCourseChange(option.label);
+                                    }
+                                  }}
+                                />
+                                <span
+                                  className="ml-3 text-sm font-medium group-hover:opacity-80 max-sm:text-xs max-sm:ml-2"
+                                  style={{ color: "#0D3A66" }}
+                                >
+                                  {option.label}
+                                </span>
+                              </label>
+                            ))
+                          : */ activeTab === "Specialization"
                           ? getFilteredOptions(activeTab).map((option) => (
                               <label
                                 key={option.label}

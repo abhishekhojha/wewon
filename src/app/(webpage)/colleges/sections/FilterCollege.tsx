@@ -40,7 +40,8 @@ export default function FilterColleges() {
   const [selectedInstituteType, setSelectedInstituteType] = useState<
     string | null
   >(null);
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null); // Mixed cities/states
+  const [selectedState, setSelectedState] = useState<string | null>(null); // States filter
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
 
@@ -48,7 +49,8 @@ export default function FilterColleges() {
   const [appliedInstituteType, setAppliedInstituteType] = useState<
     string | null
   >(null);
-  const [appliedLocation, setAppliedLocation] = useState<string | null>(null);
+  const [appliedState, setAppliedState] = useState<string | null>(null);
+  const [appliedCity, setAppliedCity] = useState<string | null>(null);
   const [appliedCourse, setAppliedCourse] = useState<string | null>(null);
   const [appliedBranch, setAppliedBranch] = useState<string | null>(null);
   const itemsPerPage = 12;
@@ -66,7 +68,7 @@ export default function FilterColleges() {
         let cities: string[] = [];
         let states: string[] = [];
 
-        if (appliedLocation) {
+        if (appliedState) {
           if (
             [
               "Maharashtra",
@@ -78,10 +80,10 @@ export default function FilterColleges() {
               "Rajasthan",
               "Gujarat",
               "Madhya Pradesh",
-            ].includes(appliedLocation)
+            ].includes(appliedState)
           ) {
-            states = [appliedLocation];
-          } else if (appliedLocation === "Delhi/NCR") {
+            states = [appliedState];
+          } else if (appliedState === "Delhi/NCR") {
             states = ["Delhi"];
           } else {
             if (
@@ -96,11 +98,15 @@ export default function FilterColleges() {
                 "Gujarat",
                 "Madhya Pradesh",
                 "Delhi/NCR",
-              ].includes(appliedLocation)
+              ].includes(appliedState)
             ) {
-              cities = [appliedLocation];
+              cities = [appliedState];
             }
           }
+        }
+
+        if (appliedCity) {
+          cities.push(appliedCity);
         }
 
         setRetryCount((prev) => prev + 1);
@@ -127,7 +133,8 @@ export default function FilterColleges() {
     currentPage,
     debouncedSearch,
     appliedInstituteType,
-    appliedLocation,
+    appliedState,
+    appliedCity,
     appliedCourse,
     appliedBranch,
   ]);
@@ -139,14 +146,192 @@ export default function FilterColleges() {
     }
   }, [error, colleges]);
 
+  // City search state for filtering the city list
+  const [citySearch, setCitySearch] = useState<string>("");
+
+  // City options
+  const cityOptions = [
+    "Agartala",
+    "Agra",
+    "Ahmedabad",
+    "Aizawl",
+    "Aligarh",
+    "Allahabad",
+    "Ambedkar Nagar",
+    "Amaravati",
+    "Amethi",
+    "Amroha",
+    "Anantapur",
+    "Ayodhya",
+    "Azamgarh",
+    "Baghpat",
+    "Banda",
+    "Bangalore",
+    "Basti",
+    "Barabanki",
+    "Bareilly",
+    "Berhampur",
+    "Bhagalpur",
+    "Bhilai",
+    "Bhopal",
+    "Bhubaneswar",
+    "Bijnor",
+    "Bulandshahr",
+    "Calicut",
+    "Chandigarh",
+    "Chennai",
+    "Chromepet",
+    "Cochin",
+    "Coimbatore",
+    "Daman",
+    "Dehradun",
+    "Dhanbad",
+    "Dharwad",
+    "Dimapur",
+    "Diu",
+    "Dispur",
+    "Durgapur",
+    "Etawah",
+    "Faizabad",
+    "Faridabad",
+    "Farrukhabad",
+    "Fatehpur",
+    "Firozabad",
+    "Gandhinagar",
+    "Gangtok",
+    "Ghaziabad",
+    "Gorakhpur",
+    "Greater Noida",
+    "Guwahati",
+    "Gwalior",
+    "Haridwar",
+    "Hubli",
+    "Hyderabad",
+    "Imphal",
+    "Indore",
+    "Itanagar",
+    "Jabalpur",
+    "Jaipur",
+    "Jalandhar",
+    "Jammu",
+    "Jamshedpur",
+    "Jhansi",
+    "Jodhpur",
+    "Kanpur",
+    "Kochi",
+    "Kolkata",
+    "Kota",
+    "Lucknow",
+    "Madurai",
+    "Meerut",
+    "Mumbai",
+    "Mysore",
+    "Nagpur",
+    "New Delhi",
+    "Noida",
+    "Patna",
+    "Port Blair",
+    "Pune",
+    "Raipur",
+    "Ranchi",
+    "Shimla",
+    "Srinagar",
+    "Surat",
+    "Thiruvananthapuram",
+    "Tirupati",
+    "Vadodara",
+    "Varanasi",
+    "Vellore",
+    "Vijayawada",
+    "Visakhapatnam",
+    "Warangal",
+  ];
+
+  const filteredCityOptions = citySearch
+    ? cityOptions.filter((city) =>
+        city.toLowerCase().includes(citySearch.toLowerCase()),
+      )
+    : cityOptions;
+
   // Institute type options for ranking filters
   const instituteTypeOptions = [
     { label: "IIT", value: "IIT" },
-    { label: "IIIT", value: "IIIT" },
     { label: "NIT", value: "NIT" },
+    { label: "IIIT", value: "IIIT" },
     { label: "GFTI", value: "GFTI" },
-    { label: "Government Colleges", value: "Government" },
-    { label: "Private Colleges", value: "Private" },
+    {
+      label: "Government College (UPTAC)",
+      value: "Government College (UPTAC)",
+    },
+    {
+      label: "Government University (UPTAC)",
+      value: "Government University (UPTAC)",
+    },
+    { label: "Private University", value: "Private University" },
+    { label: "Private College (UPTAC)", value: "Private College (UPTAC)" },
+    {
+      label: "HSTES Counselling (Government College)",
+      value: "HSTES Counselling (Government College)",
+    },
+    {
+      label: "HSTES Counselling (Private College)",
+      value: "HSTES Counselling (Private College)",
+    },
+    {
+      label: "GGSIPU Counselling (Government College)",
+      value: "GGSIPU Counselling (Government College)",
+    },
+    {
+      label: "GGSIPU Counselling (Private College)",
+      value: "GGSIPU Counselling (Private College)",
+    },
+    {
+      label: "JAC Delhi Counselling (Colleges)",
+      value: "JAC Delhi Counselling (Colleges)",
+    },
+    {
+      label: "JAC Chandigarh Counselling (Colleges)",
+      value: "JAC Chandigarh Counselling (Colleges)",
+    },
+    { label: "Delhi University Colleges", value: "Delhi University Colleges" },
+    { label: "CUET (UG) Colleges", value: "CUET (UG) Colleges" },
+    { label: "IISER", value: "IISER" },
+    {
+      label: "WBJEE Counselling (Colleges)",
+      value: "WBJEE Counselling (Colleges)",
+    },
+    {
+      label: "MHTCET Counselling (Colleges)",
+      value: "MHTCET Counselling (Colleges)",
+    },
+    {
+      label: "MANIPAL Counselling (Colleges)",
+      value: "MANIPAL Counselling (Colleges)",
+    },
+    {
+      label: "COMEDK Counselling (Colleges)",
+      value: "COMEDK Counselling (Colleges)",
+    },
+    { label: "HBTU Kanpur", value: "HBTU Kanpur" },
+    { label: "MMMUT Gorakhpur", value: "MMMUT Gorakhpur" },
+    { label: "IIST", value: "IIST" },
+    { label: "IISC Research", value: "IISC Research" },
+    {
+      label: "MPDTE Counselling (Colleges)",
+      value: "MPDTE Counselling (Colleges)",
+    },
+    {
+      label: "REAP Counselling (Colleges)",
+      value: "REAP Counselling (Colleges)",
+    },
+    {
+      label: "BIHAR Counselling (Colleges)",
+      value: "BIHAR Counselling (Colleges)",
+    },
+    {
+      label: "CHHATTISGARH Counselling (Colleges)",
+      value: "CHHATTISGARH Counselling (Colleges)",
+    },
   ];
 
   // Debounce search query
@@ -164,7 +349,7 @@ export default function FilterColleges() {
     let cities: string[] = [];
     let states: string[] = [];
 
-    if (appliedLocation) {
+    if (appliedState) {
       if (
         [
           "Maharashtra",
@@ -176,10 +361,10 @@ export default function FilterColleges() {
           "Rajasthan",
           "Gujarat",
           "Madhya Pradesh",
-        ].includes(appliedLocation)
+        ].includes(appliedState)
       ) {
-        states = [appliedLocation];
-      } else if (appliedLocation === "Delhi/NCR") {
+        states = [appliedState];
+      } else if (appliedState === "Delhi/NCR") {
         states = ["Delhi"];
       } else {
         // It's a city (or at least treated as one for now based on previous logic exclusion)
@@ -197,11 +382,15 @@ export default function FilterColleges() {
             "Gujarat",
             "Madhya Pradesh",
             "Delhi/NCR",
-          ].includes(appliedLocation)
+          ].includes(appliedState)
         ) {
-          cities = [appliedLocation];
+          cities = [appliedState];
         }
       }
+    }
+
+    if (appliedCity) {
+      cities.push(appliedCity);
     }
 
     dispatch(
@@ -221,7 +410,8 @@ export default function FilterColleges() {
     currentPage,
     debouncedSearch,
     appliedInstituteType,
-    appliedLocation,
+    appliedState,
+    appliedCity,
     appliedCourse,
     appliedBranch,
   ]);
@@ -230,7 +420,7 @@ export default function FilterColleges() {
     let cities: string[] = [];
     let states: string[] = [];
 
-    if (appliedLocation) {
+    if (appliedState) {
       if (
         [
           "Maharashtra",
@@ -242,10 +432,10 @@ export default function FilterColleges() {
           "Rajasthan",
           "Gujarat",
           "Madhya Pradesh",
-        ].includes(appliedLocation)
+        ].includes(appliedState)
       ) {
-        states = [appliedLocation];
-      } else if (appliedLocation === "Delhi/NCR") {
+        states = [appliedState];
+      } else if (appliedState === "Delhi/NCR") {
         states = ["Delhi"];
       } else {
         if (
@@ -260,11 +450,15 @@ export default function FilterColleges() {
             "Gujarat",
             "Madhya Pradesh",
             "Delhi/NCR",
-          ].includes(appliedLocation)
+          ].includes(appliedState)
         ) {
-          cities = [appliedLocation];
+          cities = [appliedState];
         }
       }
+    }
+
+    if (appliedCity) {
+      cities.push(appliedCity);
     }
 
     dispatch(
@@ -288,7 +482,8 @@ export default function FilterColleges() {
   const handleApplyFilter = () => {
     // Apply the pending filters
     setAppliedInstituteType(selectedInstituteType);
-    setAppliedLocation(selectedLocation);
+    setAppliedState(selectedState);
+    setAppliedCity(selectedCity);
     setAppliedCourse(selectedCourse);
     setAppliedBranch(selectedBranch);
     setIsFilterOpen(false);
@@ -303,11 +498,20 @@ export default function FilterColleges() {
     });
   };
 
-  // Handle location filter change (City/State)
-  const handleLocationChange = (value: string) => {
-    setSelectedLocation((prev) => {
+  // Handle state filter change
+  const handleStateChange = (value: string) => {
+    setSelectedState((prev) => {
       const next = prev === value ? null : value;
-      setAppliedLocation(next);
+      setAppliedState(next);
+      return next;
+    });
+  };
+
+  // Handle city filter change
+  const handleCityChange = (value: string) => {
+    setSelectedCity((prev) => {
+      const next = prev === value ? null : value;
+      setAppliedCity(next);
       return next;
     });
   };
@@ -334,8 +538,11 @@ export default function FilterColleges() {
   const handleClearAllFilters = () => {
     setSelectedInstituteType(null);
     setAppliedInstituteType(null);
-    setSelectedLocation(null);
-    setAppliedLocation(null);
+    setSelectedState(null);
+    setAppliedState(null);
+    setSelectedCity(null);
+    setAppliedCity(null);
+    setCitySearch("");
     setSelectedCourse(null);
     setAppliedCourse(null);
     setSelectedBranch(null);
@@ -380,45 +587,94 @@ export default function FilterColleges() {
 
             {/* Scrollable Filter Content */}
             <div className="max-h-[calc(100vh-180px)] overflow-y-auto">
-              {/* Location Filter */}
+              {/* Institute Type / Ranking Filter */}
               <div className="p-5 border-b border-gray-200">
                 <h3
                   className="text-sm font-semibold mb-3"
                   style={{ color: "#0D3A66" }}
                 >
-                  Location
+                  Institute Type / Ranking
+                </h3>
+                <div className="space-y-2">
+                  {instituteTypeOptions.map((option) => (
+                    <label
+                      key={option.value}
+                      className="flex items-center cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        checked={selectedInstituteType === option.value}
+                        onChange={() => handleInstituteTypeChange(option.value)}
+                        className="w-4 h-4 cursor-pointer"
+                        style={{ accentColor: "#0D3A66" }}
+                        onClick={() => {
+                          if (selectedInstituteType === option.value) {
+                            handleInstituteTypeChange(option.value);
+                          }
+                        }}
+                      />
+                      <span
+                        className="ml-2 text-sm"
+                        style={{ color: "#0D3A66" }}
+                      >
+                        {option.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* States Filter */}
+              <div className="p-5 border-b border-gray-200">
+                <h3
+                  className="text-sm font-semibold mb-3"
+                  style={{ color: "#0D3A66" }}
+                >
+                  States
                 </h3>
                 <input
                   type="text"
-                  placeholder="Search location..."
+                  placeholder="Search state..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-[#0D3A66] mb-3"
                 />
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {[
-                    "Delhi/NCR",
-                    "Mumbai (All)",
-                    "Bangalore",
-                    "Pune",
-                    "Kolkata",
-                    "Hyderabad",
-                    "Chennai",
-                    "Ahmedabad",
-                    "Jaipur",
-                    "Lucknow",
-                    "Chandigarh",
-                    "Indore",
-                    "Bhopal",
-                    "Nagpur",
-                    "Visakhapatnam",
-                    "Maharashtra",
-                    "Uttar Pradesh",
-                    "Karnataka",
+                    "Andaman and Nicobar Islands",
                     "Andhra Pradesh",
-                    "Tamil Nadu",
-                    "West Bengal",
-                    "Rajasthan",
+                    "Arunachal Pradesh",
+                    "Assam",
+                    "Bihar",
+                    "Chandigarh",
+                    "Chhattisgarh",
+                    "Dadra and Nagar Haveli and Daman and Diu",
+                    "Delhi",
+                    "Goa",
                     "Gujarat",
+                    "Haryana",
+                    "Himachal Pradesh",
+                    "Jammu and Kashmir",
+                    "Jharkhand",
+                    "Karnataka",
+                    "Kerala",
+                    "Ladakh",
+                    "Lakshadweep",
                     "Madhya Pradesh",
+                    "Maharashtra",
+                    "Manipur",
+                    "Meghalaya",
+                    "Mizoram",
+                    "Nagaland",
+                    "Odisha",
+                    "Puducherry",
+                    "Punjab",
+                    "Rajasthan",
+                    "Sikkim",
+                    "Tamil Nadu",
+                    "Telangana",
+                    "Tripura",
+                    "Uttar Pradesh",
+                    "Uttarakhand",
+                    "West Bengal",
                   ].map((location) => (
                     <label
                       key={location}
@@ -426,14 +682,14 @@ export default function FilterColleges() {
                     >
                       <input
                         type="radio"
-                        checked={selectedLocation === location}
-                        onChange={() => handleLocationChange(location)}
+                        checked={selectedState === location}
+                        onChange={() => handleStateChange(location)}
                         className="w-4 h-4 cursor-pointer"
                         style={{ accentColor: "#0D3A66" }}
                         onClick={() => {
                           // Allow deselect on re-click of radio
-                          if (selectedLocation === location) {
-                            handleLocationChange(location);
+                          if (selectedState === location) {
+                            handleStateChange(location);
                           }
                         }}
                       />
@@ -448,8 +704,52 @@ export default function FilterColleges() {
                 </div>
               </div>
 
-              {/* Course Filter */}
+              {/* City Filter */}
               <div className="p-5 border-b border-gray-200">
+                <h3
+                  className="text-sm font-semibold mb-3"
+                  style={{ color: "#0D3A66" }}
+                >
+                  City
+                </h3>
+                <input
+                  type="text"
+                  placeholder="Search city..."
+                  value={citySearch}
+                  onChange={(e) => setCitySearch(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-[#0D3A66] mb-3"
+                />
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {filteredCityOptions.map((city) => (
+                    <label
+                      key={city}
+                      className="flex items-center cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        checked={selectedCity === city}
+                        onChange={() => handleCityChange(city)}
+                        className="w-4 h-4 cursor-pointer"
+                        style={{ accentColor: "#0D3A66" }}
+                        onClick={() => {
+                          if (selectedCity === city) {
+                            handleCityChange(city);
+                          }
+                        }}
+                      />
+                      <span
+                        className="ml-2 text-sm"
+                        style={{ color: "#0D3A66" }}
+                      >
+                        {city}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Course Filter */}
+              {/* <div className="p-5 border-b border-gray-200">
                 <h3
                   className="text-sm font-semibold mb-3"
                   style={{ color: "#0D3A66" }}
@@ -508,44 +808,7 @@ export default function FilterColleges() {
                     </label>
                   ))}
                 </div>
-              </div>
-
-              {/* Institute Type / Ranking Filter */}
-              <div className="p-5 border-b border-gray-200">
-                <h3
-                  className="text-sm font-semibold mb-3"
-                  style={{ color: "#0D3A66" }}
-                >
-                  Institute Type / Ranking
-                </h3>
-                <div className="space-y-2">
-                  {instituteTypeOptions.map((option) => (
-                    <label
-                      key={option.value}
-                      className="flex items-center cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        checked={selectedInstituteType === option.value}
-                        onChange={() => handleInstituteTypeChange(option.value)}
-                        className="w-4 h-4 cursor-pointer"
-                        style={{ accentColor: "#0D3A66" }}
-                        onClick={() => {
-                          if (selectedInstituteType === option.value) {
-                            handleInstituteTypeChange(option.value);
-                          }
-                        }}
-                      />
-                      <span
-                        className="ml-2 text-sm"
-                        style={{ color: "#0D3A66" }}
-                      >
-                        {option.label}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+              </div> */}
 
               {/* Specialization Filter */}
               {/* <div className="p-5 border-b border-gray-200">
@@ -712,7 +975,7 @@ export default function FilterColleges() {
                 let cities: string[] = [];
                 let states: string[] = [];
 
-                if (appliedLocation) {
+                if (appliedState) {
                   if (
                     [
                       "Maharashtra",
@@ -724,10 +987,10 @@ export default function FilterColleges() {
                       "Rajasthan",
                       "Gujarat",
                       "Madhya Pradesh",
-                    ].includes(appliedLocation)
+                    ].includes(appliedState)
                   ) {
-                    states = [appliedLocation];
-                  } else if (appliedLocation === "Delhi/NCR") {
+                    states = [appliedState];
+                  } else if (appliedState === "Delhi/NCR") {
                     states = ["Delhi"];
                   } else {
                     if (
@@ -742,11 +1005,15 @@ export default function FilterColleges() {
                         "Gujarat",
                         "Madhya Pradesh",
                         "Delhi/NCR",
-                      ].includes(appliedLocation)
+                      ].includes(appliedState)
                     ) {
-                      cities = [appliedLocation];
+                      cities = [appliedState];
                     }
                   }
+                }
+
+                if (appliedCity) {
+                  cities.push(appliedCity);
                 }
 
                 dispatch(
@@ -811,8 +1078,10 @@ export default function FilterColleges() {
         handleApplyFilter={handleApplyFilter}
         selectedInstituteType={selectedInstituteType}
         onInstituteTypeChange={handleInstituteTypeChange}
-        selectedLocation={selectedLocation}
-        onLocationChange={handleLocationChange}
+        selectedState={selectedState}
+        onStateChange={handleStateChange}
+        selectedCity={selectedCity}
+        onCityChange={handleCityChange}
         selectedCourse={selectedCourse}
         onCourseChange={handleCourseChange}
         selectedBranch={selectedBranch}
