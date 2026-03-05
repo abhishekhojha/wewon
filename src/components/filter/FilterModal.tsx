@@ -126,7 +126,7 @@ export default function FilterModal({
     "City",
     "Course",
     "Institute Type",
-    "Specialization",
+    // "Specialization",
   ];
 
   const filterData: {
@@ -518,7 +518,7 @@ export default function FilterModal({
                   </div>
                 </div>
               )}
-              {activeTab === "Specialization" && (
+              {/* {activeTab === "Specialization" && (
                 <div className="mx-6 pt-6 pb-2 border-b flex-shrink-0 border-gray-200 max-sm:mx-4 max-sm:pt-4">
                   <div className="relative">
                     <input
@@ -535,7 +535,7 @@ export default function FilterModal({
                     />
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Checkboxes - Scrollable */}
               <div className="flex-1 overflow-y-auto p-6 pt-4 max-sm:p-4 max-sm:pt-3">
