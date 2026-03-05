@@ -30,7 +30,6 @@ interface CollegeCardProps {
 }
 
 const CollegeCard = ({ college, handleKnowMore }: CollegeCardProps) => {
-  
   const [logoUrl, setLogoUrl] = useState<string | null>(
     college?.logoUrl || null,
   );
@@ -82,11 +81,11 @@ const CollegeCard = ({ college, handleKnowMore }: CollegeCardProps) => {
       }}
     >
       {/* College Image */}
-      <div className="relative h-48 overflow-hidden border-b">
+      <div className="relative h-28 md:h-48 overflow-hidden border-b">
         {loadingLogo ? (
           <div className="w-full h-full flex items-center justify-center bg-gray-100">
             <div className="animate-pulse flex flex-col items-center">
-              <Building2 size={48} className="text-gray-300" />
+              <Building2 size={32} className="text-gray-300 md:w-12 md:h-12" />
             </div>
           </div>
         ) : (
@@ -101,37 +100,37 @@ const CollegeCard = ({ college, handleKnowMore }: CollegeCardProps) => {
       </div>
 
       {/* College Info */}
-      <div className="p-4 flex flex-col h-[200px]">
+      <div className="p-2 md:p-4 flex flex-col h-[150px] md:h-[200px]">
         <h3
-          className="text-lg font-bold mb-1 truncate"
+          className="text-xs md:text-lg font-bold mb-0.5 md:mb-1 truncate"
           style={{ color: "#0D3A66" }}
           title={college?.name}
         >
           {college?.name}
         </h3>
         <p
-          className="text-sm mb-3 truncate"
+          className="text-[10px] md:text-sm mb-1.5 md:mb-3 truncate"
           style={{ color: "rgba(13, 58, 102, 0.6)" }}
         >
           {college?.location}
         </p>
         {/* Tags */}
-        <div className="flex flex-wrap gap-2 mb-3 flex-grow">
+        <div className="flex flex-wrap gap-1 md:gap-2 mb-1.5 md:mb-3 flex-grow">
           {college?.established && (
             <div
-              className="flex items-center gap-1 text-xs flex-shrink-0"
+              className="flex items-center gap-0.5 md:gap-1 text-[10px] md:text-xs flex-shrink-0"
               style={{ color: "rgba(13, 58, 102, 0.7)" }}
             >
-              <Calendar size={14} className="flex-shrink-0" />
+              <Calendar className="flex-shrink-0 w-3 h-3 md:w-3.5 md:h-3.5" />
               <span>{college.established}</span>
             </div>
           )}
           {college?.nirf && college.nirf !== "N/A" && (
             <div
-              className="flex items-center gap-1 text-xs max-w-full"
+              className="flex items-center gap-0.5 md:gap-1 text-[10px] md:text-xs max-w-full"
               style={{ color: "rgba(13, 58, 102, 0.7)" }}
             >
-              <Building2 size={14} className="flex-shrink-0" />
+              <Building2 className="flex-shrink-0 w-3 h-3 md:w-3.5 md:h-3.5" />
               <span className="truncate" title={`TYPE: ${college.nirf}`}>
                 TYPE: {college.nirf}
               </span>
@@ -141,14 +140,14 @@ const CollegeCard = ({ college, handleKnowMore }: CollegeCardProps) => {
 
         {/* Know More Button */}
         <button
-          className="w-full py-3 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all hover:opacity-90 cursor-pointer mt-auto flex-shrink-0"
+          className="w-full py-1.5 md:py-3 rounded-lg font-medium text-[10px] md:text-sm flex items-center justify-center gap-1 md:gap-2 transition-all hover:opacity-90 cursor-pointer mt-auto flex-shrink-0"
           style={{
             backgroundColor: "var(--light-blue)",
             color: "#0D3A66",
           }}
         >
           Know More
-          <CircleChevronRight size={16} />
+          <CircleChevronRight className="w-3 h-3 md:w-4 md:h-4" />
         </button>
       </div>
     </div>
