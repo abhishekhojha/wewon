@@ -23,15 +23,15 @@ export default function DynamicTable({
       style={{ fontFamily: "Poppins, sans-serif" }}
     >
       <div className="bg-white rounded-2xl border border-[var(--border)] overflow-hidden">
-        {/* Desktop Table View */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        {/* Table View */}
+        <div>
+          <table className="w-full table-fixed">
             <thead style={{ backgroundColor: "#F9FAFB" }}>
               <tr>
                 {columns.map((column, index) => (
                   <th
                     key={column.key}
-                    className={`px-6 py-4 font-semibold text-base ${
+                    className={`px-2 py-2 md:px-6 md:py-4 font-semibold text-xs md:text-base ${
                       column.align === "center"
                         ? "text-center"
                         : column.align === "right"
@@ -56,7 +56,7 @@ export default function DynamicTable({
                   {columns.map((column, colIndex) => (
                     <td
                       key={column.key}
-                      className={`px-6 py-4 text-sm md:text-base ${
+                      className={`px-2 py-2 md:px-6 md:py-4 text-xs md:text-base break-words ${
                         column.align === "center"
                           ? "text-center"
                           : column.align === "right"

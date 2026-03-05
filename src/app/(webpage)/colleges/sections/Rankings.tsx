@@ -56,17 +56,17 @@ const categorizeRanking = (category: string): "international" | "national" => {
 
 // Ranking table component for reuse
 const RankingTable: React.FC<{ rankings: RankingType[] }> = ({ rankings }) => (
-  <div className="overflow-x-auto">
-    <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+  <div>
+    <table className="w-full table-fixed bg-white border border-gray-200 rounded-lg">
       <thead className="bg-gray-50">
         <tr>
-          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">
+          <th className="px-2 py-2 md:px-6 md:py-3 text-left text-[10px] md:text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">
             Agency
           </th>
-          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">
+          <th className="px-2 py-2 md:px-6 md:py-3 text-left text-[10px] md:text-xs font-semibold text-gray-700 uppercase tracking-wider border-b w-16 md:w-auto">
             Year
           </th>
-          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">
+          <th className="px-2 py-2 md:px-6 md:py-3 text-left text-[10px] md:text-xs font-semibold text-gray-700 uppercase tracking-wider border-b w-20 md:w-auto">
             Rank
           </th>
         </tr>
@@ -79,24 +79,24 @@ const RankingTable: React.FC<{ rankings: RankingType[] }> = ({ rankings }) => (
               key={ranking._id}
               className="hover:bg-gray-50 transition-colors"
             >
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                <div className="flex items-center gap-3">
+              <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-gray-900">
+                <div className="flex items-center gap-1.5 md:gap-3">
                   {agencyLogo && (
                     <Image
                       src={agencyLogo}
                       alt={ranking.Agency}
                       width={32}
                       height={32}
-                      className="object-contain"
+                      className="object-contain w-5 h-5 md:w-8 md:h-8 flex-shrink-0"
                     />
                   )}
-                  <span>{ranking.Agency}</span>
+                  <span className="break-words">{ranking.Agency}</span>
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-gray-500">
                 {ranking.Year}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600">
+              <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm font-bold text-blue-600">
                 #{ranking.Rank_Range}
               </td>
             </tr>
