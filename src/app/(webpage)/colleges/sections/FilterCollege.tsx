@@ -595,7 +595,7 @@ export default function FilterColleges() {
                 >
                   Institute Type / Ranking
                 </h3>
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-40 overflow-y-auto">
                   {instituteTypeOptions.map((option) => (
                     <label
                       key={option.value}
@@ -749,7 +749,7 @@ export default function FilterColleges() {
               </div>
 
               {/* Course Filter */}
-              {/* <div className="p-5 border-b border-gray-200">
+              <div className="p-5 border-b border-gray-200">
                 <h3
                   className="text-sm font-semibold mb-3"
                   style={{ color: "#0D3A66" }}
@@ -758,10 +758,10 @@ export default function FilterColleges() {
                 </h3>
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {[
-                    "MBA",
-                    "BBA",
                     "B.Tech",
                     "M.Tech",
+                    "MBA",
+                    "BBA",
                     "B.Com",
                     "M.Com",
                     "BCA",
@@ -808,7 +808,7 @@ export default function FilterColleges() {
                     </label>
                   ))}
                 </div>
-              </div> */}
+              </div>
 
               {/* Specialization Filter */}
               {/* <div className="p-5 border-b border-gray-200">

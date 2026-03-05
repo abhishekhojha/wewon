@@ -14,9 +14,9 @@ export default function page() {
       </div>
       <div className="container mx-auto px-4">
         <MMMUTCollegePredictor />
-        <div className="mb-16">
+        {/* <div className="mb-16">
           <Recommended />
-        </div>
+        </div> */}
       </div>
     </>
   );

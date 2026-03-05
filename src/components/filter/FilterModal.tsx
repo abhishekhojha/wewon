@@ -124,7 +124,7 @@ export default function FilterModal({
   const filterCategories = [
     "States",
     "City",
-    // "Course",
+    "Course",
     "Institute Type",
     "Specialization",
   ];
@@ -170,11 +170,11 @@ export default function FilterModal({
       { label: "Uttarakhand" },
       { label: "West Bengal" },
     ],
-    /* Course: [
-      { label: "MBA/PGDM" },
-      { label: "BBA" },
+    Course: [
       { label: "B.Tech/B.E." },
       { label: "M.Tech" },
+      { label: "MBA/PGDM" },
+      { label: "BBA" },
       { label: "B.Com" },
       { label: "M.Com" },
       { label: "BCA" },
@@ -195,7 +195,8 @@ export default function FilterModal({
       { label: "Hotel Management" },
       { label: "Fashion Design" },
       { label: "Architecture" },
-    ], */
+    ], 
+    
     Specialization: [
       { label: "Finance" },
       { label: "Marketing" },
@@ -626,7 +627,7 @@ export default function FilterModal({
                               </span>
                             </label>
                           ))
-                        : /* activeTab === "Course"
+                        :  activeTab === "Course"
                           ? getFilteredOptions(activeTab).map((option) => (
                               <label
                                 key={option.label}
@@ -654,7 +655,7 @@ export default function FilterModal({
                                 </span>
                               </label>
                             ))
-                          : */ activeTab === "Specialization"
+                          : activeTab === "Specialization"
                           ? getFilteredOptions(activeTab).map((option) => (
                               <label
                                 key={option.label}
