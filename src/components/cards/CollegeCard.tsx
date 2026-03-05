@@ -74,6 +74,7 @@ const CollegeCard = ({ college, handleKnowMore }: CollegeCardProps) => {
   return (
     <div
       key={college?.id}
+      onClick={() => handleKnowMore && handleKnowMore(college?.slug)}
       className="rounded-xl overflow-hidden transition-all hover:shadow-lg"
       style={{
         backgroundColor: "#ffffff",
@@ -140,7 +141,6 @@ const CollegeCard = ({ college, handleKnowMore }: CollegeCardProps) => {
 
         {/* Know More Button */}
         <button
-          onClick={() => handleKnowMore && handleKnowMore(college?.slug)}
           className="w-full py-3 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all hover:opacity-90 cursor-pointer mt-auto flex-shrink-0"
           style={{
             backgroundColor: "var(--light-blue)",
