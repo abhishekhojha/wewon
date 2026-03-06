@@ -38,28 +38,23 @@ const StickyBottomAd = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 w-full z-50 bg-red-500 border-t border-gray-200 shadow-lg p-3 flex items-center justify-between md:justify-center gap-4">
-      <div className="flex-1 md:flex-none flex items-center gap-4 text-sm md:text-base font-medium text-white">
-        <div
-          dangerouslySetInnerHTML={{ __html: content?.text || "" }}
-          className="prose-sm ad-renderer-container"
-        />
-        {content?.link && (
-          <Link
-            href={content?.link}
-            className="bg-primary text-white px-4 py-1.5 rounded-full hover:opacity-90 transition-colors text-xs md:text-sm whitespace-nowrap"
-          >
-            {content?.btnText || "Action"}
-          </Link>
-        )}
-      </div>
-
+    <div className="fixed z-55 bottom-0 left-0 w-full z-50 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
+      {/* Close button */}
       <button
         onClick={handleClose}
-        className="text-black hover:text-gray-700 absolute right-4"
+        className="absolute top-1 right-1 md:top-2 md:right-2 z-10 bg-gray-100 hover:bg-gray-200 rounded-full p-0.5 md:p-1 transition-colors cursor-pointer"
+        aria-label="Close ad"
       >
-        <XMarkIcon className="h-5 w-5" />
+        <XMarkIcon className="h-4 w-4 md:h-5 md:w-5 text-gray-600" />
       </button>
+
+      {/* Ad content - scrollable if content is too tall */}
+      <div className="max-h-[40vh] overflow-y-auto overflow-x-hidden pr-6 md:pr-8">
+        <div
+          dangerouslySetInnerHTML={{ __html: content?.text || "" }}
+          className="ad-renderer-container sticky-ad-content"
+        />
+      </div>
     </div>
   );
 };

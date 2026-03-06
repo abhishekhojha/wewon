@@ -242,3 +242,83 @@ body {
   font-weight: 600;
   /* Removed display: inline-block to prevent layout breaking */
 }
+
+/* Sticky bottom ad specific overrides */
+.sticky-ad-content {
+  font-size: 0.875rem;
+}
+
+.sticky-ad-content > *:last-child,
+.sticky-ad-content table,
+.sticky-ad-content p,
+.sticky-ad-content h2 {
+  margin-bottom: 0 !important;
+}
+
+.sticky-ad-content h2 {
+  font-size: 1rem;
+}
+
+.sticky-ad-content td,
+.sticky-ad-content th {
+  padding: 0.4rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.sticky-ad-content table a[href],
+.sticky-ad-content .apply-button {
+  padding: 0.35rem 0.6rem !important;
+  font-size: 0.7rem !important;
+  min-width: 60px;
+}
+
+.sticky-ad-content td:last-child {
+  width: 70px;
+}
+
+/* Mobile overrides for all ad containers */
+@media (max-width: 640px) {
+  .ad-renderer-container td,
+  .ad-renderer-container th {
+    padding: 0.35rem 0.4rem;
+    font-size: 0.7rem;
+  }
+
+  .ad-renderer-container table a[href],
+  .ad-renderer-container .apply-button {
+    padding: 0.3rem 0.5rem !important;
+    font-size: 0.65rem !important;
+    min-width: 50px;
+  }
+
+  .ad-renderer-container td:last-child {
+    width: 60px;
+  }
+
+  .ad-renderer-container h2 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .ad-renderer-container p {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .sticky-ad-content td,
+  .sticky-ad-content th {
+    padding: 0.25rem 0.35rem;
+    font-size: 0.65rem;
+  }
+
+  .sticky-ad-content table a[href],
+  .sticky-ad-content .apply-button {
+    padding: 0.25rem 0.4rem !important;
+    font-size: 0.6rem !important;
+    min-width: 45px;
+  }
+
+  .sticky-ad-content td:last-child {
+    width: 55px;
+  }
+}

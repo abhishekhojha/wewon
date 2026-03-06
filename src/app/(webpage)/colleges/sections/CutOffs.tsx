@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import SubHeading from "@/components/sections/SubHeading";
 import apiClient from "@/hooks/Axios";
 
@@ -17,7 +17,7 @@ interface CutOffsFilterProps {
   instituteId?: string;
 }
 
-export default function   CutOffsFilter({
+export default function CutOffsFilter({
   title = "CutOffs",
   hideHeading = false,
   collegeName = "",
@@ -84,9 +84,10 @@ export default function   CutOffsFilter({
               <button
                 key={year}
                 onClick={() => handleYearSelect(year)}
-                className="px-8 py-4 cursor-pointer rounded-xl font-semibold text-lg transition-all shadow-sm hover:shadow-md bg-gray-100 text-gray-700 hover:bg-gray-200"
+                className="group px-8 py-4 cursor-pointer rounded-xl flex items-center justify-center gap-2 font-semibold text-lg transition-all shadow-sm hover:shadow-md bg-gray-100 text-gray-700 hover:bg-gray-200"
               >
-                Cutoff {year}
+                Cutoff {year}{" "}
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-all duration-300" />
               </button>
             ))}
           </div>

@@ -725,7 +725,7 @@ export default function CollegeClient() {
               }}
             >
               <AdRenderer location="prediction_banner" />
-              <SubHeading align="left" top="Cutoff Ranks" />
+              <SubHeading align="left" top="Cutoff Ranks (OPENING & CLOSING RANKS)" />
               <CutOffsFilter
                 hideHeading={true}
                 collegeName={college?.Name || ""}

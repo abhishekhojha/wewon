@@ -73,7 +73,7 @@ const RecommendedCard = ({
         <h3 className="text-white text-center text-xs md:text-sm font-semibold truncate">
           {college.name}
         </h3>
-        <p className="text-white/70 text-center text-[10px] md:text-xs mt-1 truncate">
+        <p className="text-white/90 text-center text-[10px] md:text-xs mt-1 font-bold truncate">
           {college.type}
         </p>
       </div>
