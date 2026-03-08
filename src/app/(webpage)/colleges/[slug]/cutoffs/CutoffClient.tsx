@@ -435,19 +435,32 @@ export default function CutoffClient() {
 
   // Transform results for DynamicTable
   const tableData = useMemo(() => {
-    return {
-      columns: [
-        { key: "program", label: "Program", align: "left" as const },
-        { key: "opening", label: "Opening Rank", align: "right" as const },
-        { key: "closing", label: "Closing Rank", align: "right" as const },
-      ],
-      data: displayResults.map((c) => ({
-        program: `${c.Academic_Program_Name}${hasGender() && c.Gender ? ` (${c.Gender})` : ""}`,
-        opening: c.Opening_Rank?.toString() || "-",
-        closing: c.Closing_Rank?.toString() || "-",
-      })),
-    };
-  }, [displayResults]);
+    const useSubCategory = hasSubCategory();
+
+    const columns = useSubCategory
+      ? [
+          { key: "program", label: "Program", align: "left" as const },
+          { key: "opening", label: "Opening Rank", align: "right" as const },
+          { key: "closing", label: "Closing Rank", align: "right" as const },
+        ]
+      : [
+          { key: "seatType", label: "Seat Type", align: "left" as const },
+          { key: "quota", label: "Quota", align: "left" as const },
+          { key: "program", label: "Program", align: "left" as const },
+          { key: "opening", label: "Opening Rank", align: "right" as const },
+          { key: "closing", label: "Closing Rank", align: "right" as const },
+        ];
+
+    const data = displayResults.map((c) => ({
+      seatType: c.Seat_Type || "-",
+      quota: c.Quota || "-",
+      program: `${c.Academic_Program_Name}${hasGender() && c.Gender ? ` (${c.Gender})` : ""}`,
+      opening: c.Opening_Rank?.toString() || "-",
+      closing: c.Closing_Rank?.toString() || "-",
+    }));
+
+    return { columns, data };
+  }, [displayResults, collegeType]);
 
   // Close all dropdowns when clicking outside
   const closeAllDropdowns = () => {
@@ -840,14 +853,15 @@ export default function CutoffClient() {
                             {selectedSubCategory}
                           </span>
                         )}
-                        {displayResults[0]?.Quota && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] font-semibold">
-                            <span className="text-gray-600 font-medium">
-                              Quota:
-                            </span>{" "}
-                            {displayResults[0].Quota}
-                          </span>
-                        )}
+                        {hasSubCategory() &&
+                          displayResults[0]?.Quota && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] font-semibold">
+                              <span className="text-gray-600 font-medium">
+                                Quota:
+                              </span>{" "}
+                              {displayResults[0].Quota}
+                            </span>
+                          )}
                       </div>
                       <div className="mb-2 text-lg font-semibold text-[var(--primary)]">
                         4-Year B.E./B.Tech. Course

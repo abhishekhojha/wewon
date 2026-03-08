@@ -9,6 +9,7 @@
   "subCategories": {
     "OPEN": [
       { "label": "Not Applicable", "value": "" },
+      { "label": "OPEN (PwD)", "value": "OPEN (PwD)" },
       { "label": "OPEN(AF)", "value": "OPEN(AF)" },
       { "label": "OPEN(FF)", "value": "OPEN(FF)" },
       { "label": "OPEN(GIRL)", "value": "OPEN(GIRL)" },
