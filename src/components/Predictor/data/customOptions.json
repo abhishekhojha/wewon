@@ -8,41 +8,41 @@
   ],
   "subCategories": {
     "OPEN": [
-    { "label": "Not Applicable", "value": "" },
-    { "label": "OPEN(AF)", "value": "OPEN(AF)" },
-    { "label": "OPEN(FF)", "value": "OPEN(FF)" },
-    { "label": "OPEN(GIRL)", "value": "OPEN(GIRL)" },
-    { "label": "OPEN(PH)", "value": "OPEN(PH)" },
-    { "label": "OPEN(TF)", "value": "OPEN(TF)" }
-  ],
-  "EWS": [
-    { "label": "Not Applicable", "value": "" },
-    { "label": "EWS(AF)", "value": "EWS(AF)" },
-    { "label": "EWS(FF)", "value": "EWS(FF)" },
-    { "label": "EWS(GIRL)", "value": "EWS(GIRL)" },
-    { "label": "EWS(PH)", "value": "EWS(PH)" }
-  ],
-  "OBC-NCL": [
-    { "label": "Not Applicable", "value": "" },
-    { "label": "OBC(AF)", "value": "OBC(AF)" },
-    { "label": "OBC(FF)", "value": "OBC(FF)" },
-    { "label": "OBC(GIRL)", "value": "OBC(GIRL)" },
-    { "label": "OBC(PH)", "value": "OBC(PH)" }
-  ],
-  "SC": [
-    { "label": "Not Applicable", "value": "" },
-    { "label": "SC(AF)", "value": "SC(AF)" },
-    { "label": "SC(FF)", "value": "SC(FF)" },
-    { "label": "SC(GIRL)", "value": "SC(GIRL)" },
-    { "label": "SC(PH)", "value": "SC(PH)" }
-  ],
-  "ST": [
-    { "label": "Not Applicable", "value": "" },
-    { "label": "ST(AF)", "value": "ST(AF)" },
-    { "label": "ST(FF)", "value": "ST(FF)" },
-    { "label": "ST(GIRL)", "value": "ST(GIRL)" },
-    { "label": "ST(PH)", "value": "ST(PH)" }
-  ]
+      { "label": "Not Applicable", "value": "" },
+      { "label": "OPEN(AF)", "value": "OPEN(AF)" },
+      { "label": "OPEN(FF)", "value": "OPEN(FF)" },
+      { "label": "OPEN(GIRL)", "value": "OPEN(GIRL)" },
+      { "label": "OPEN(PH)", "value": "OPEN(PH)" },
+      { "label": "OPEN(TF)", "value": "OPEN(TF)" }
+    ],
+    "EWS": [
+      { "label": "Not Applicable", "value": "" },
+      { "label": "EWS(AF)", "value": "EWS(AF)" },
+      { "label": "EWS(FF)", "value": "EWS(FF)" },
+      { "label": "EWS(GIRL)", "value": "EWS(GIRL)" },
+      { "label": "EWS(PH)", "value": "EWS(PH)" }
+    ],
+    "OBC-NCL": [
+      { "label": "Not Applicable", "value": "" },
+      { "label": "OBC(AF)", "value": "OBC(AF)" },
+      { "label": "OBC(FF)", "value": "OBC(FF)" },
+      { "label": "OBC(GIRL)", "value": "OBC(GIRL)" },
+      { "label": "OBC(PH)", "value": "OBC(PH)" }
+    ],
+    "SC": [
+      { "label": "Not Applicable", "value": "" },
+      { "label": "SC(AF)", "value": "SC(AF)" },
+      { "label": "SC(FF)", "value": "SC(FF)" },
+      { "label": "SC(GIRL)", "value": "SC(GIRL)" },
+      { "label": "SC(PH)", "value": "SC(PH)" }
+    ],
+    "ST": [
+      { "label": "Not Applicable", "value": "" },
+      { "label": "ST(AF)", "value": "ST(AF)" },
+      { "label": "ST(FF)", "value": "ST(FF)" },
+      { "label": "ST(GIRL)", "value": "ST(GIRL)" },
+      { "label": "ST(PH)", "value": "ST(PH)" }
+    ]
   },
   "homeStates": [
     { "label": "Uttar Pradesh", "value": "Uttar Pradesh" },
