@@ -8,9 +8,14 @@ import {
   Mail,
   Phone,
   Calendar,
+  BarChart3,
+  ArrowRight,
 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import apiClient from "@/hooks/Axios";
+import { useAppDispatch } from "@/store/hooks";
+import { setSelectedStudentId, setSelectedStudentName } from "@/store/toolUsage/toolUsageSlice";
 
 interface Student {
   _id: string;
@@ -35,6 +40,14 @@ export default function StudentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  const handleManageToolUsage = (studentId: string | null, studentName: string | null) => {
+    dispatch(setSelectedStudentId(studentId));
+    dispatch(setSelectedStudentName(studentName));
+    router.push("/c/students/tool-usage");
+  };
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -91,14 +104,23 @@ export default function StudentsPage() {
     <div className="min-h-screen bg-gray-50 w-full">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <GraduationCap className="w-8 h-8 text-[#073d68]" />
-            <h1 className="text-3xl font-bold text-gray-800">My Students</h1>
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <GraduationCap className="w-8 h-8 text-[#073d68]" />
+              <h1 className="text-3xl font-bold text-gray-800">My Students</h1>
+            </div>
+            <p className="text-gray-500">
+              Students who have enrolled in your assigned products.
+            </p>
           </div>
-          <p className="text-gray-500">
-            Students who have enrolled in your assigned products.
-          </p>
+          <button
+            onClick={() => handleManageToolUsage(null, null)}
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#073d68] text-white text-sm font-semibold hover:bg-[#0a4c82] transition-colors shadow-sm"
+          >
+            <BarChart3 className="w-4 h-4" />
+            Open Tool Usage Manager
+          </button>
         </div>
 
         {/* Search */}
@@ -183,6 +205,14 @@ export default function StudentsPage() {
                     </div>
                   )}
                 </div>
+
+                <button
+                  onClick={() => handleManageToolUsage(student._id, student.name || "")}
+                  className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#073d68]/10 text-[#073d68] text-sm font-semibold hover:bg-[#073d68]/15 transition-colors"
+                >
+                  Manage Tool Usage
+                  <ArrowRight className="w-4 h-4" />
+                </button>
               </div>
             ))}
           </div>
