@@ -5,7 +5,7 @@ import MainHeading from "@/components/sections/MainHeading";
 import Recommended from "@/components/sections/Recommended";
 import React from "react";
 
-const isLaunchingSoon = false; // TOGGLE THIS BOOLEAN
+const isLaunchingSoon = true; // TOGGLE THIS BOOLEAN
 
 export default function page() {
   if (isLaunchingSoon) {
