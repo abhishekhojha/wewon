@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     process.env.NEXT_PUBLIC_API_URL || "https://wewon-backend.vercel.app/";
 
   try {
-    const response = await fetch(`${apiUrl}api/counseling/slug/${slug}`, {
+    const response = await fetch(`${apiUrl}api/admin/products/slug/${slug}`, {
       next: { revalidate: 3600 },
     });
 
