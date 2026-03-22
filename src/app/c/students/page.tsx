@@ -5,7 +5,6 @@ import {
   Search,
   Loader2,
   GraduationCap,
-  Mail,
   Phone,
   Calendar,
   ArrowRight,
@@ -17,6 +16,8 @@ import {
   XCircle,
   Sparkles,
   Package,
+  Download,
+  FilterX,
 } from "lucide-react";
 import Link from "next/link";
 import apiClient from "@/hooks/Axios";
@@ -50,6 +51,11 @@ interface Pagination {
   pages: number;
 }
 
+type ExportFeedback = {
+  type: "info" | "success" | "error";
+  text: string;
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
@@ -66,6 +72,30 @@ const formatAmount = (amount: number) =>
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(amount);
+
+const buildDefaultExportFileName = () => {
+  return `students_${new Date().toISOString().slice(0, 10)}.xlsx`;
+};
+
+const extractFilename = (contentDisposition?: string): string => {
+  if (!contentDisposition) return buildDefaultExportFileName();
+
+  const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) {
+    try {
+      return decodeURIComponent(utf8Match[1].replace(/["']/g, ""));
+    } catch {
+      return utf8Match[1].replace(/["']/g, "");
+    }
+  }
+
+  const asciiMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+  if (asciiMatch?.[1]) {
+    return asciiMatch[1];
+  }
+
+  return buildDefaultExportFileName();
+};
 
 function TaskStatusBadge({ status }: { status: StudentOrder["taskStatus"] }) {
   const cfg: Record<
@@ -193,12 +223,18 @@ export default function StudentsPage() {
   const [panel, setPanel] = useState<"active" | "completed">("active");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
   const LIMIT = 20;
 
   const [orders, setOrders] = useState<StudentOrder[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const [exportFeedback, setExportFeedback] = useState<ExportFeedback | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -249,6 +285,98 @@ export default function StudentsPage() {
     fetchStudents();
   }, [fetchStudents]);
 
+  const resetDateFilters = () => {
+    setStartDate("");
+    setEndDate("");
+    setExportFeedback(null);
+  };
+
+  const handleExportStudents = async () => {
+    if (startDate && endDate && startDate > endDate) {
+      setExportFeedback({
+        type: "error",
+        text: "Start date cannot be after end date.",
+      });
+      return;
+    }
+
+    setExporting(true);
+    setExportFeedback(null);
+
+    try {
+      const params: Record<string, string> = { panel };
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+
+      const response = await apiClient.get("/api/counsellor/students/export", {
+        params,
+        responseType: "blob",
+      });
+
+      const contentType = response.headers["content-type"] || "";
+      if (contentType.includes("application/json")) {
+        const text = await response.data.text();
+        let parsed: { message?: string } = {};
+
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          parsed = {};
+        }
+
+        setExportFeedback({
+          type: "info",
+          text: parsed.message || "No students available to export.",
+        });
+        return;
+      }
+      
+      const fileName = extractFilename(response.headers["content-disposition"]);
+      const blob = new Blob([response.data], {
+        type:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const objectUrl = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(objectUrl);
+
+      setExportFeedback({
+        type: "success",
+        text: "Export downloaded successfully.",
+      });
+    } catch (err: any) {
+      let message = "Failed to export students.";
+      const responseData = err?.response?.data;
+
+      if (responseData instanceof Blob) {
+        try {
+          const text = await responseData.text();
+          const parsed = JSON.parse(text);
+          message = parsed?.message || message;
+        } catch {
+          // Fallback to generic message
+        }
+      } else if (err?.response?.data?.message) {
+        message = err.response.data.message;
+      } else if (err?.message) {
+        message = err.message;
+      }
+
+      setExportFeedback({
+        type: "error",
+        text: message,
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 w-full">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -280,8 +408,8 @@ export default function StudentsPage() {
           ))}
         </div>
 
-        {/* ── Search ── */}
-        <div className="mb-6">
+        <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          {/* ── Search ── */}
           <div className="relative max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
@@ -292,7 +420,82 @@ export default function StudentsPage() {
               className="w-full py-3 pl-11 pr-4 rounded-xl border border-gray-200 outline-none focus:border-[#073d68] transition-colors bg-white text-sm"
             />
           </div>
+
+          {/* ── Export controls ── */}
+          <div className="flex flex-wrap items-end gap-2">
+            <div>
+              <label
+                htmlFor="export-start-date"
+                className="block text-xs font-semibold text-gray-500 mb-1"
+              >
+                Start date
+              </label>
+              <input
+                id="export-start-date"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="h-10 rounded-lg border border-gray-200 px-3 text-sm bg-white outline-none focus:border-[#073d68]"
+                max={endDate || undefined}
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="export-end-date"
+                className="block text-xs font-semibold text-gray-500 mb-1"
+              >
+                End date
+              </label>
+              <input
+                id="export-end-date"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="h-10 rounded-lg border border-gray-200 px-3 text-sm bg-white outline-none focus:border-[#073d68]"
+                min={startDate || undefined}
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={resetDateFilters}
+              disabled={!startDate && !endDate}
+              className="h-10 px-3 rounded-lg border border-gray-200 bg-white text-gray-600 text-sm font-semibold hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-2"
+            >
+              <FilterX className="w-4 h-4" />
+              Clear
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExportStudents}
+              disabled={exporting}
+              className="h-10 px-4 rounded-lg bg-[#073d68] text-white text-sm font-semibold hover:bg-[#062f51] disabled:opacity-60 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-2"
+            >
+              {exporting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              {exporting ? "Exporting..." : "Export XLSX"}
+            </button>
+          </div>
         </div>
+
+        {exportFeedback && (
+          <div
+            className={`mb-6 rounded-xl border px-4 py-3 text-sm font-medium ${
+              exportFeedback.type === "success"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : exportFeedback.type === "error"
+                  ? "bg-red-50 text-red-700 border-red-200"
+                  : "bg-blue-50 text-blue-700 border-blue-200"
+            }`}
+          >
+            {exportFeedback.text}
+          </div>
+        )}
 
         {/* ── Count ── */}
         {pagination && !loading && (
