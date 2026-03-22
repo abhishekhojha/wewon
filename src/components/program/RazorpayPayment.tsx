@@ -23,6 +23,7 @@ interface RazorpayPaymentProps {
   productType: "counseling" | "mentorship";
   amount: number;
   couponCode?: string;
+  mentorshipFormData?: Record<string, string | number>;
   onSuccess: (orderId: string) => void;
   onFailure: (error: string) => void;
 }
@@ -33,6 +34,7 @@ export default function RazorpayPayment({
   productType,
   amount,
   couponCode,
+  mentorshipFormData,
   onSuccess,
   onFailure,
 }: RazorpayPaymentProps) {
@@ -77,6 +79,7 @@ export default function RazorpayPayment({
           productId,
           productType,
           couponCode,
+          mentorshipFormData,
         }),
       ).unwrap();
 

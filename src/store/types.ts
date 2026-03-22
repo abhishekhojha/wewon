@@ -87,6 +87,21 @@ export interface UserId {
   phone: string;
 }
 
+export interface MentorshipFormField {
+  name: string;
+  label: string;
+  type: string;
+  required?: boolean;
+  placeholder?: string;
+  options?: string[];
+  order?: number;
+}
+
+export interface MentorshipForm {
+  isRequired: boolean;
+  fields: MentorshipFormField[];
+}
+
 // College Types
 export interface College {
   _id: string;
@@ -297,6 +312,7 @@ export interface CounselingProduct {
     hasMentorship: boolean;
     hasCourseContent: boolean;
   };
+  mentorshipForm?: MentorshipForm;
   content: {
     landingPageHighlights: {
       introVideo?: {
