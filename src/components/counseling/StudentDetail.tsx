@@ -201,7 +201,7 @@ export default function StudentDetail({ studentId, orderId }: Props) {
   const fetchDetail = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
+    try { 
       const params: Record<string, string> = {};
       if (orderId) params.orderId = orderId;
       const res = await apiClient.get(
