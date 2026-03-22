@@ -11,17 +11,29 @@ import {
   ChoiceFillingMetadata,
   ChoiceFillingResponse,
   ChoiceFillingRequest,
-} from "@/network/predictor";
+} from "@/network/choice-filling";
 import { useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated } from "@/store/auth/authSlice";
 import { useRouter } from "next/navigation";
 
-export default function ChoiceFillingForm() {
+interface ChoiceFillingFormProps {
+  toolKey?: string;
+  toolLabel?: string;
+}
+
+export default function ChoiceFillingForm({
+  toolKey,
+  toolLabel = "JEE Main",
+}: ChoiceFillingFormProps) {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const router = useRouter();
 
   const [metadata, setMetadata] = useState<ChoiceFillingMetadata | null>(null);
   const [metaLoading, setMetaLoading] = useState(true);
+  const [rankLocked, setRankLocked] = useState(false);
+  const [rankLockMessage, setRankLockMessage] = useState(
+    "Your rank has been set by your counsellor.",
+  );
 
   const [formData, setFormData] = useState({
     name: "",
@@ -46,8 +58,32 @@ export default function ChoiceFillingForm() {
     const loadMetadata = async () => {
       try {
         setMetaLoading(true);
-        const data = await fetchChoiceFillingMetadata();
+        const data = await fetchChoiceFillingMetadata(toolKey);
         setMetadata(data);
+
+        const prefill = data.prefill || {};
+        if (Object.keys(prefill).length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            name: prefill.name || prev.name,
+            crlRank:
+              typeof prefill.crlRank === "number"
+                ? String(prefill.crlRank)
+                : prev.crlRank,
+            categoryRank:
+              typeof prefill.categoryRank === "number"
+                ? String(prefill.categoryRank)
+                : prev.categoryRank,
+            gender: prefill.gender || prev.gender,
+            category: prefill.category || prev.category,
+            homeState: prefill.homeState || prev.homeState,
+          }));
+        }
+
+        setRankLocked(Boolean(data.rankLocked));
+        if (data.lockMessage) {
+          setRankLockMessage(data.lockMessage);
+        }
       } catch {
         toast.error("Failed to load form data. Please refresh the page.");
       } finally {
@@ -55,7 +91,7 @@ export default function ChoiceFillingForm() {
       }
     };
     loadMetadata();
-  }, []);
+  }, [toolKey]);
 
   // Auto-scroll to results
   useEffect(() => {
@@ -73,6 +109,8 @@ export default function ChoiceFillingForm() {
     const { id, value, type } = e.target;
 
     if (id === "categoryRank" || id === "crlRank") {
+      if (rankLocked) return;
+
       if (value === "") {
         setFormData((prev) => ({ ...prev, [id]: value }));
         return;
@@ -167,9 +205,34 @@ export default function ChoiceFillingForm() {
           formData.branchGroups.length > 0 ? formData.branchGroups : undefined,
       };
 
-      const response = await generateChoiceList(payload);
+      const response = await generateChoiceList(payload, toolKey);
       setResults(response);
       setLastRequest(payload);
+
+      if (response.rankLocked) {
+        setRankLocked(true);
+      }
+      if (response.lockMessage) {
+        setRankLockMessage(response.lockMessage);
+      }
+
+      const prefill = response.prefill;
+      if (prefill) {
+        setFormData((prev) => ({
+          ...prev,
+          crlRank:
+            typeof prefill.crlRank === "number"
+              ? String(prefill.crlRank)
+              : prev.crlRank,
+          categoryRank:
+            typeof prefill.categoryRank === "number"
+              ? String(prefill.categoryRank)
+              : prev.categoryRank,
+          gender: prefill.gender || prev.gender,
+          category: prefill.category || prev.category,
+          homeState: prefill.homeState || prev.homeState,
+        }));
+      }
     } catch (error: any) {
       if (error?.response?.status === 403) {
         toast.error(
@@ -241,7 +304,7 @@ export default function ChoiceFillingForm() {
           {/* Header */}
           <div className="flex flex-col justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--primary)]">
-              JEE MAIN CHOICE FILLING
+              {toolLabel.toUpperCase()} CHOICE FILLING
             </h2>
             <span className="bg-[var(--light-blue)] text-[var(--primary)] text-[10px] sm:text-xs font-semibold px-2 sm:px-4 py-1 sm:py-2 rounded-full whitespace-nowrap w-fit">
               Powered by real cutoff data
@@ -255,7 +318,7 @@ export default function ChoiceFillingForm() {
                 htmlFor="name"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Full Name (Required)
+                Full Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -274,7 +337,7 @@ export default function ChoiceFillingForm() {
                 htmlFor="crlRank"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                CRL Rank (Required)
+                CRL Rank <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -283,8 +346,14 @@ export default function ChoiceFillingForm() {
                 onChange={handleChange}
                 placeholder="e.g. 52341"
                 required
+                disabled={rankLocked}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
+              {rankLocked && (
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
+                  {rankLockMessage}
+                </p>
+              )}
             </div>
 
             {/* Category Rank */}
@@ -293,8 +362,8 @@ export default function ChoiceFillingForm() {
                 htmlFor="categoryRank"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Category Rank{" "}
-                {formData.category !== "OPEN" ? "(Required)" : "(Optional)"}
+                Category Rank {" "}
+                {formData.category !== "OPEN" ? <span className="text-red-500">*</span> : "(Optional)"}
               </label>
               <input
                 type="text"
@@ -303,6 +372,7 @@ export default function ChoiceFillingForm() {
                 onChange={handleChange}
                 placeholder="e.g. 14211"
                 required={formData.category !== "OPEN"}
+                disabled={rankLocked}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
             </div>
@@ -475,7 +545,11 @@ export default function ChoiceFillingForm() {
       {/* Results Section */}
       <div ref={resultsRef}>
         {results && lastRequest && (
-          <ChoiceFillingResults results={results} requestData={lastRequest} />
+          <ChoiceFillingResults
+            results={results}
+            requestData={lastRequest}
+            toolKey={toolKey}
+          />
         )}
       </div>
     </div>

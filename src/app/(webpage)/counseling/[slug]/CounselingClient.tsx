@@ -117,6 +117,8 @@ export default function CounselingClient() {
         productType="counseling"
         productPrice={product.discountPrice || product.price}
         productSlug={product.slug}
+        hasMentorship={product.features.hasMentorship}
+        mentorshipForm={product.mentorshipForm}
         onBack={() => setShowCheckout(false)}
       />
     );

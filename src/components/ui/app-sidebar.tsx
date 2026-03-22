@@ -9,6 +9,7 @@ import {
   GraduationCap,
   TrendingUp,
   BarChart3,
+  ListChecks,
 } from "lucide-react";
 
 import {
@@ -52,6 +53,11 @@ export function AppSidebar() {
           title: "College Predictor",
           url: "/predictor",
           icon: TrendingUp,
+        },
+        {
+          title: "Choice Filling",
+          url: "/choice-filling",
+          icon: ListChecks,
         },
         {
           title: "My Orders",

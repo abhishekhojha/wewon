@@ -19,13 +19,24 @@ export const createOrder = createAsyncThunk(
       productId: string;
       productType: "counseling" | "mentorship";
       couponCode?: string;
+      mentorshipFormData?: Record<string, string | number>;
     },
     { rejectWithValue },
   ) => {
     try {
+      const payload = {
+        productId: orderData.productId,
+        productType: orderData.productType,
+        ...(orderData.couponCode ? { couponCode: orderData.couponCode } : {}),
+        ...(orderData.mentorshipFormData &&
+        Object.keys(orderData.mentorshipFormData).length > 0
+          ? { mentorshipFormData: orderData.mentorshipFormData }
+          : {}),
+      };
+
       const response = await apiClient.post(
         "/api/payment/create-order",
-        orderData,
+        payload,
       );
 
       if (!response.data.success) {

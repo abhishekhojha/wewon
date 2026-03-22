@@ -18,10 +18,12 @@ import {
   AlertCircle,
   XCircle,
   Edit2,
+  Lock,
 } from "lucide-react";
 import apiClient from "@/hooks/Axios";
 import SetTaskStatusModal from "./SetTaskStatusModal";
 import StudentToolUsage from "./StudentToolUsage";
+import { toast } from "sonner";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface StudentDetailData {
@@ -51,9 +53,21 @@ interface StudentDetailData {
   activePurchases: {
     purchaseId: string;
     productId: string;
+    productTitle?: string;
     status: string;
-    usageStats: { choiceFillingCount?: number };
-    counsellorOverrides?: Record<string, unknown>;
+    usageStats: { choiceFillingCount?: number; collegePredictorCount?: number };
+    counsellorOverrides?: {
+      isUnlimitedChoiceFilling?: boolean;
+      [key: string]: unknown;
+    };
+    mentorshipFormData?: Record<string, string | number | boolean | null>;
+    mentorshipFormSubmittedAt?: string | null;
+    rankOverrides?: {
+      crlRank?: number;
+      categoryRank?: number;
+      lockedByAdmin?: boolean;
+      lastModifiedAt?: string;
+    };
   }[];
 }
 
@@ -64,6 +78,56 @@ const formatDate = (ds: string) =>
     month: "short",
     year: "numeric",
   });
+
+const formatDateTime = (ds?: string | null) => {
+  if (!ds) return "—";
+  return new Date(ds).toLocaleString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const formatFieldLabel = (key: string) =>
+  key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (ch) => ch.toUpperCase());
+
+const hasRankOverrideValues = (
+  purchase: StudentDetailData["activePurchases"][number],
+) =>
+  purchase.rankOverrides?.crlRank != null ||
+  purchase.rankOverrides?.categoryRank != null;
+
+const hasMentorshipFormValues = (
+  purchase: StudentDetailData["activePurchases"][number],
+) =>
+  Object.entries(purchase.mentorshipFormData || {}).some(([, value]) => {
+    if (value == null) return false;
+    if (typeof value === "string") return value.trim().length > 0;
+    return true;
+  });
+
+const isMentorshipPurchase = (
+  purchase: StudentDetailData["activePurchases"][number],
+) =>
+  Boolean(
+    hasMentorshipFormValues(purchase) ||
+      purchase.mentorshipFormSubmittedAt ||
+      hasRankOverrideValues(purchase) ||
+      purchase.rankOverrides?.lockedByAdmin,
+  );
+
+const toValidRank = (input: string) => {
+  const value = input.trim();
+  if (!value) return undefined;
+  if (!/^\d+$/.test(value)) return null;
+  const parsed = Number(value);
+  if (parsed <= 0) return null;
+  return parsed;
+};
 
 function TaskStatusBadge({ status }: { status: StudentDetailData["orders"][0]["taskStatus"] }) {
   const cfg = {
@@ -107,8 +171,8 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 function StatPill({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="flex flex-col items-center justify-center p-3 bg-[#073d68]/5 rounded-xl text-center min-w-[80px]">
-      <span className="text-lg font-bold text-[#073d68]">{value}</span>
-      <span className="text-[10px] text-gray-500 font-medium mt-0.5 leading-tight">{label}</span>
+      <span className="text-lg font-bold text-white">{value}</span>
+      <span className="text-[10px] text-gray-300 font-medium mt-0.5 leading-tight">{label}</span>
     </div>
   );
 }
@@ -124,6 +188,15 @@ export default function StudentDetail({ studentId, orderId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modalOrderId, setModalOrderId] = useState<string | null>(null);
+  const [editingPurchaseId, setEditingPurchaseId] = useState<string | null>(
+    null,
+  );
+  const [rankForm, setRankForm] = useState({
+    crlRank: "",
+    categoryRank: "",
+  });
+  const [rankUpdateLoading, setRankUpdateLoading] = useState(false);
+  const [rankUpdateError, setRankUpdateError] = useState<string | null>(null);
 
   const fetchDetail = useCallback(async () => {
     setLoading(true);
@@ -151,6 +224,86 @@ export default function StudentDetail({ studentId, orderId }: Props) {
     fetchDetail();
   }, [fetchDetail]);
 
+  const openRankEditor = (
+    purchase: StudentDetailData["activePurchases"][number],
+  ) => {
+    const formCrlRank = purchase.mentorshipFormData?.crlRank;
+    const formCategoryRank = purchase.mentorshipFormData?.categoryRank;
+
+    setRankForm({
+      crlRank: String(
+        purchase.rankOverrides?.crlRank ??
+          (typeof formCrlRank === "number" ? formCrlRank : ""),
+      ),
+      categoryRank: String(
+        purchase.rankOverrides?.categoryRank ??
+          (typeof formCategoryRank === "number" ? formCategoryRank : ""),
+      ),
+    });
+    setRankUpdateError(null);
+    setEditingPurchaseId(purchase.purchaseId);
+  };
+
+  const handleRankOverrideSubmit = async (purchaseId: string) => {
+    const crlRank = toValidRank(rankForm.crlRank);
+    const categoryRank = toValidRank(rankForm.categoryRank);
+
+    if (crlRank === null || categoryRank === null) {
+      setRankUpdateError("Ranks must be positive whole numbers.");
+      return;
+    }
+
+    if (crlRank == null && categoryRank == null) {
+      setRankUpdateError("Please enter at least one rank value.");
+      return;
+    }
+
+    setRankUpdateLoading(true);
+    setRankUpdateError(null);
+
+    try {
+      const body: {
+        purchaseId: string;
+        crlRank?: number;
+        categoryRank?: number;
+      } = {
+        purchaseId,
+      };
+
+      if (crlRank != null) body.crlRank = crlRank;
+      if (categoryRank != null) body.categoryRank = categoryRank;
+
+      const res = await apiClient.put(
+        `/api/counsellor/students/${studentId}/rank`,
+        body,
+      );
+
+      toast.success(
+        res.data?.message || "Rank overrides updated successfully.",
+      );
+      setEditingPurchaseId(null);
+      await fetchDetail();
+    } catch (err: any) {
+      const apiError = err?.response?.data;
+      if (apiError?.code === "RANK_LOCKED") {
+        setRankUpdateError(
+          apiError?.message ||
+            "Rank fields are locked by admin and cannot be edited.",
+        );
+      } else if (err?.response?.status === 400) {
+        setRankUpdateError(
+          apiError?.message || "Rank override is available only for mentorship products.",
+        );
+      } else {
+        setRankUpdateError(
+          apiError?.message || "Failed to update rank overrides.",
+        );
+      }
+    } finally {
+      setRankUpdateLoading(false);
+    }
+  };
+
   // ── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -175,6 +328,7 @@ export default function StudentDetail({ studentId, orderId }: Props) {
   if (!data) return null;
 
   const { user, profile, orders, activePurchases } = data;
+  const mentorshipPurchases = activePurchases.filter(isMentorshipPurchase);
   const academics = profile?.academics;
   const exams = profile?.exams ?? [];
   const preferences = profile?.preferences;
@@ -356,6 +510,212 @@ export default function StudentDetail({ studentId, orderId }: Props) {
                 )}
               </div>
             ))}
+          </div>
+        )}
+      </Section>
+
+      {/* ── Rank Overrides ───────────────────────────────────────────────────── */}
+      <Section title="Active Purchase" icon={<Lock className="w-5 h-5" />}>
+        {mentorshipPurchases.length === 0 ? (
+          <p className="text-sm text-gray-400 italic">
+            No mentorship purchases found.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {mentorshipPurchases.map((purchase) => {
+              const formEntries = Object.entries(purchase.mentorshipFormData || {});
+              const hasRankOverride = hasRankOverrideValues(purchase);
+              const isRankLocked = Boolean(purchase.rankOverrides?.lockedByAdmin);
+              const isEditing = editingPurchaseId === purchase.purchaseId;
+              const canOverrideRank = !isRankLocked && hasRankOverride;
+
+              return (
+                <div
+                  key={purchase.purchaseId}
+                  className="rounded-xl border border-gray-100 bg-gray-50 p-4 space-y-3"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-bold text-gray-800">
+                        {purchase.productTitle || `Purchase #${purchase.purchaseId.slice(-8)}`}
+                      </p>
+                      <p className="text-xs text-gray-500 font-mono">
+                        #{purchase.purchaseId}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2.5 py-1 rounded-full text-xs font-semibold border bg-blue-100 text-blue-700 border-blue-200 capitalize">
+                        {purchase.status || "active"}
+                      </span>
+                      {isRankLocked && (
+                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold border bg-red-100 text-red-700 border-red-200">
+                          Locked by Admin
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="text-xs text-gray-600">
+                      Choice Filling Usage:{" "}
+                      <strong>{purchase.usageStats?.choiceFillingCount ?? 0}</strong>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      Predictor Usage:{" "}
+                      <strong>{purchase.usageStats?.collegePredictorCount ?? 0}</strong>
+                    </div>
+                    <div className="text-xs text-gray-600 sm:col-span-2">
+                      Mentorship Form Submitted:{" "}
+                      <strong>{formatDateTime(purchase.mentorshipFormSubmittedAt)}</strong>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg bg-white border border-gray-100 p-3">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                      Mentorship Form Data
+                    </p>
+                    {formEntries.length === 0 ? (
+                      <p className="text-xs text-gray-400 italic">
+                        No form data submitted for this purchase.
+                      </p>
+                    ) : (
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {formEntries.map(([key, value]) => (
+                          <div key={key} className="text-xs text-gray-700">
+                            <span className="font-semibold text-gray-500">
+                              {formatFieldLabel(key)}:
+                            </span>{" "}
+                            <span>{String(value)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="rounded-lg bg-white border border-gray-100 p-3 space-y-2">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Current Rank Overrides
+                    </p>
+                    <div className="grid gap-2 sm:grid-cols-2 text-xs text-gray-700">
+                      <div>
+                        <span className="font-semibold text-gray-500">CRL Rank:</span>{" "}
+                        {purchase.rankOverrides?.crlRank?.toLocaleString() || "—"}
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-500">Category Rank:</span>{" "}
+                        {purchase.rankOverrides?.categoryRank?.toLocaleString() || "—"}
+                      </div>
+                      <div className="sm:col-span-2">
+                        <span className="font-semibold text-gray-500">Last Modified:</span>{" "}
+                        {purchase.rankOverrides?.lastModifiedAt
+                          ? formatDateTime(purchase.rankOverrides.lastModifiedAt)
+                          : "—"}
+                      </div>
+                    </div>
+
+                    {purchase.counsellorOverrides?.isUnlimitedChoiceFilling && (
+                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-2.5 py-1.5">
+                        Unlimited choice filling is enabled for this purchase.
+                      </p>
+                    )}
+                  </div>
+
+                  {canOverrideRank && (
+                    <div className="pt-1">
+                      <button
+                        onClick={() => openRankEditor(purchase)}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#073d68] text-white text-xs font-semibold hover:bg-[#0a4c82] transition-colors"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        Update Rank Override
+                      </button>
+                    </div>
+                  )}
+
+                  {isEditing && !isRankLocked && (
+                    <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 space-y-3">
+                      <p className="text-xs text-blue-800 font-semibold">
+                        Set rank overrides for tool auto-fill
+                      </p>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">
+                            CRL Rank
+                          </label>
+                          <input
+                            type="text"
+                            value={rankForm.crlRank}
+                            onChange={(e) =>
+                              setRankForm((prev) => ({
+                                ...prev,
+                                crlRank: e.target.value,
+                              }))
+                            }
+                            placeholder="e.g. 12000"
+                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#073d68] focus:ring-2 focus:ring-[#073d68]/10"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">
+                            Category Rank
+                          </label>
+                          <input
+                            type="text"
+                            value={rankForm.categoryRank}
+                            onChange={(e) =>
+                              setRankForm((prev) => ({
+                                ...prev,
+                                categoryRank: e.target.value,
+                              }))
+                            }
+                            placeholder="e.g. 5000"
+                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#073d68] focus:ring-2 focus:ring-[#073d68]/10"
+                          />
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-gray-600">
+                        At least one rank is required. These values override mentorship form ranks for tool usage.
+                      </p>
+
+                      {rankUpdateError && (
+                        <div className="flex items-start gap-2 text-red-600 text-xs bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                          {rankUpdateError}
+                        </div>
+                      )}
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleRankOverrideSubmit(purchase.purchaseId)}
+                          disabled={rankUpdateLoading}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#073d68] text-white text-xs font-semibold hover:bg-[#0a4c82] transition-colors disabled:opacity-60"
+                        >
+                          {rankUpdateLoading ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <BadgeCheck className="w-3.5 h-3.5" />
+                          )}
+                          Save Override
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingPurchaseId(null);
+                            setRankUpdateError(null);
+                          }}
+                          disabled={rankUpdateLoading}
+                          className="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 text-xs font-semibold hover:bg-gray-100 transition-colors disabled:opacity-60"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </Section>

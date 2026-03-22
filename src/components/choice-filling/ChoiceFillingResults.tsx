@@ -16,12 +16,13 @@ import {
   ChoiceRow,
   exportChoiceListExcel,
   exportChoiceListPDF,
-} from "@/network/predictor";
+} from "@/network/choice-filling";
 import { toast } from "sonner";
 
 interface ChoiceFillingResultsProps {
   results: ChoiceFillingResponse;
   requestData: ChoiceFillingRequest;
+  toolKey?: string;
 }
 
 const ORIGIN_COLORS: Record<string, { bg: string; text: string }> = {
@@ -35,6 +36,7 @@ const ORIGIN_COLORS: Record<string, { bg: string; text: string }> = {
 export default function ChoiceFillingResults({
   results,
   requestData,
+  toolKey,
 }: ChoiceFillingResultsProps) {
   const [showAll, setShowAll] = useState(false);
   const [exportingExcel, setExportingExcel] = useState(false);
@@ -47,7 +49,7 @@ export default function ChoiceFillingResults({
   const handleExportExcel = async () => {
     setExportingExcel(true);
     try {
-      const blob = await exportChoiceListExcel(requestData);
+      const blob = await exportChoiceListExcel(requestData, toolKey);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -67,7 +69,7 @@ export default function ChoiceFillingResults({
   const handleExportPDF = async () => {
     setExportingPDF(true);
     try {
-      const blob = await exportChoiceListPDF(requestData);
+      const blob = await exportChoiceListPDF(requestData, toolKey);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
