@@ -95,11 +95,6 @@ const formatFieldLabel = (key: string) =>
     .replace(/([A-Z])/g, " $1")
     .replace(/^./, (ch) => ch.toUpperCase());
 
-const hasRankOverrideValues = (
-  purchase: StudentDetailData["activePurchases"][number],
-) =>
-  purchase.rankOverrides?.crlRank != null ||
-  purchase.rankOverrides?.categoryRank != null;
 
 const hasMentorshipFormValues = (
   purchase: StudentDetailData["activePurchases"][number],
@@ -116,7 +111,6 @@ const isMentorshipPurchase = (
   Boolean(
     hasMentorshipFormValues(purchase) ||
       purchase.mentorshipFormSubmittedAt ||
-      hasRankOverrideValues(purchase) ||
       purchase.rankOverrides?.lockedByAdmin,
   );
 
@@ -183,7 +177,7 @@ interface Props {
   orderId?: string;
 }
 
-export default function StudentDetail({ studentId, orderId }: Props) {
+export default function StudentDetail({ studentId }: Props) {
   const [data, setData] = useState<StudentDetailData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -201,12 +195,9 @@ export default function StudentDetail({ studentId, orderId }: Props) {
   const fetchDetail = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try { 
-      const params: Record<string, string> = {};
-      if (orderId) params.orderId = orderId;
+    try {
       const res = await apiClient.get(
-        `/api/counsellor/students/${studentId}/detail`,
-        { params }
+        `/api/counsellor/students/${studentId}/detail`
       );
       if (res.data.success) {
         setData(res.data.data);
@@ -218,7 +209,7 @@ export default function StudentDetail({ studentId, orderId }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [studentId, orderId]);
+  }, [studentId]);
 
   useEffect(() => {
     fetchDetail();
@@ -524,10 +515,9 @@ export default function StudentDetail({ studentId, orderId }: Props) {
           <div className="space-y-4">
             {mentorshipPurchases.map((purchase) => {
               const formEntries = Object.entries(purchase.mentorshipFormData || {});
-              const hasRankOverride = hasRankOverrideValues(purchase);
               const isRankLocked = Boolean(purchase.rankOverrides?.lockedByAdmin);
               const isEditing = editingPurchaseId === purchase.purchaseId;
-              const canOverrideRank = !isRankLocked && hasRankOverride;
+              const canOverrideRank = !isRankLocked;
 
               return (
                 <div
