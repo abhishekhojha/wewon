@@ -1,6 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "@/hooks/Axios";
-import { Order, PaymentVerification } from "../types";
+import { Order, PaymentVerification, WhatsappClickResponseData } from "../types";
+import { getInvoiceFilename, downloadBlobAsFile, resolveApiErrorMessage } from "@/utils/apiHelpers";
 
 // Response type from create-order API
 export interface CreateOrderResponse {
@@ -112,27 +113,55 @@ export const downloadInvoice = createAsyncThunk(
   async (orderId: string, { rejectWithValue }) => {
     try {
       const response = await apiClient.get(
-        `/api/student/orders/${orderId}/invoice`,
+        `/api/student/orders/${orderId}/receipt`,
         {
           responseType: "blob",
         },
       );
 
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `invoice-${orderId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      return { success: true };
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to download invoice",
+      const contentDisposition = response.headers[
+        "content-disposition"
+      ] as string | undefined;
+      const filename = getInvoiceFilename(
+        contentDisposition,
+        `Invoice_${orderId}.pdf`,
       );
+
+      downloadBlobAsFile(response.data as Blob, filename);
+
+      return { success: true, filename };
+    } catch (error: any) {
+      const errorMessage = await resolveApiErrorMessage(
+        error,
+        "Failed to download invoice",
+      );
+      return rejectWithValue(errorMessage);
+    }
+  },
+);
+
+// Record WhatsApp channel click for an active service
+export const markWhatsappChannelClick = createAsyncThunk(
+  "order/markWhatsappChannelClick",
+  async (purchaseId: string, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.patch(
+        `/api/student/active-services/${purchaseId}/whatsapp-click`,
+      );
+
+      if (!response.data?.success) {
+        return rejectWithValue(
+          response.data?.message || "Failed to record WhatsApp channel click",
+        );
+      }
+
+      return response.data.data as WhatsappClickResponseData;
+    } catch (error: any) {
+      const errorMessage = await resolveApiErrorMessage(
+        error,
+        "Failed to record WhatsApp channel click",
+      );
+      return rejectWithValue(errorMessage);
     }
   },
 );

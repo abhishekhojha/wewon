@@ -437,6 +437,11 @@ export interface PaymentVerification {
   razorpay_signature: string;
 }
 
+export interface WhatsappClickResponseData {
+  isWhatsappClicked: boolean;
+  whatsappClickedAt: string;
+}
+
 // User Purchase Types
 export interface UserPurchase {
   productId: string;

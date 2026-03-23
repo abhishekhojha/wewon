@@ -6,7 +6,9 @@ import { X, Tag, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { validateCoupon, CouponValidationResponse } from "@/network/coupon";
-import RazorpayPayment from "@/components/program/RazorpayPayment";
+import RazorpayPayment, {
+  PaymentSuccessData,
+} from "@/components/program/RazorpayPayment";
 import { PredictorProduct } from "@/data/counsellingProducts";
 import { useAppSelector } from "@/store/hooks";
 import { selectUser } from "@/store/auth/authSlice";
@@ -72,7 +74,7 @@ export default function PredictorPaymentModal({
     setCouponError("");
   };
 
-  const handlePaymentSuccess = (orderId: string) => {
+  const handlePaymentSuccess = (_paymentData: PaymentSuccessData) => {
     toast.success("Payment successful! You can now access predictions.");
     onPaymentSuccess();
     onClose();
