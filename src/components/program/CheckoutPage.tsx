@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 import {
   CouponValidationResponse,
   MentorshipForm,
@@ -8,11 +9,14 @@ import {
 } from "@/store/types";
 import CouponInput from "./CouponInput";
 import CheckoutSummary from "./CheckoutSummary";
-import RazorpayPayment from "./RazorpayPayment";
 import PaymentSuccessModal from "./PaymentSuccessModal";
 import { useRouter } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";
-import { downloadInvoice } from "@/store/order/orderThunk";
+import {
+  downloadInvoice,
+  markWhatsappChannelClick,
+} from "@/store/order/orderThunk";
+import RazorpayPayment, { PaymentSuccessData } from "./RazorpayPayment";
 
 interface CheckoutPageProps {
   productId: string;
@@ -42,6 +46,7 @@ export default function CheckoutPage({
     useState<CouponValidationResponse | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [completedOrderId, setCompletedOrderId] = useState<string>("");
+  const [completedPurchaseId, setCompletedPurchaseId] = useState<string>("");
   const [whatsappLink, setWhatsappLink] = useState<string>("");
 
   const mentorshipFields = useMemo(
@@ -91,11 +96,23 @@ export default function CheckoutPage({
     setAppliedCoupon(null);
   };
 
-  const handlePaymentSuccess = (orderId: string) => {
-    setCompletedOrderId(orderId);
-    // TODO: Fetch WhatsApp link from order details
-    setWhatsappLink("https://wa.me/1234567890"); // Placeholder
+  const handlePaymentSuccess = (paymentData: PaymentSuccessData) => {
+    setCompletedOrderId(paymentData.orderId);
+    if (paymentData.purchaseId) {
+      setCompletedPurchaseId(paymentData.purchaseId);
+    }
+    setWhatsappLink(paymentData.whatsappChannelLink || "");
     setShowSuccessModal(true);
+  };
+
+  const handleWhatsappClick = async () => {
+    if (completedPurchaseId) {
+      try {
+        await dispatch(markWhatsappChannelClick(completedPurchaseId)).unwrap();
+      } catch (error) {
+        console.error("Failed to mark WhatsApp click", error);
+      }
+    }
   };
 
   const handlePaymentFailure = (error: string) => {
@@ -103,8 +120,17 @@ export default function CheckoutPage({
   };
 
   const handleDownloadInvoice = async () => {
-    if (completedOrderId) {
-      await dispatch(downloadInvoice(completedOrderId));
+    if (!completedOrderId) {
+      toast.error("Failed to download Invoice.")
+      return
+    }
+    try {
+      await dispatch(downloadInvoice(completedOrderId)).unwrap();
+      toast.success("Invoice downloaded successfully.");
+    } catch (error) {
+      toast.error(
+        typeof error === "string" ? error : "Failed to download Invoice.",
+      );
     }
   };
 
@@ -474,6 +500,7 @@ export default function CheckoutPage({
         onClose={() => setShowSuccessModal(false)}
         onDownloadInvoice={handleDownloadInvoice}
         onViewProgram={handleViewProgram}
+        onWhatsappClick={handleWhatsappClick}
       />
     </div>
   );

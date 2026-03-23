@@ -4,7 +4,6 @@ import {
   createOrder,
   verifyPayment,
   fetchUserOrders,
-  downloadInvoice,
 } from "./orderThunk";
 import { RootState } from "../store";
 
@@ -80,20 +79,6 @@ const orderSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Download Invoice
-    builder
-      .addCase(downloadInvoice.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(downloadInvoice.fulfilled, (state) => {
-        state.loading = false;
-        state.error = null;
-      })
-      .addCase(downloadInvoice.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      });
   },
 });
 
