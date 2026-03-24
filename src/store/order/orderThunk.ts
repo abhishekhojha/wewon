@@ -2,6 +2,31 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "@/hooks/Axios";
 import { Order, PaymentVerification, WhatsappClickResponseData } from "../types";
 import { getInvoiceFilename, downloadBlobAsFile, resolveApiErrorMessage } from "@/utils/apiHelpers";
+import type { RootState } from "../store";
+
+const USER_ORDER_CACHE_TTL_MS = 5 * 60 * 1000;
+
+const resolveCurrentUserId = (state: RootState): string | null => {
+  const fromUserId = state.auth.user?.userId?._id;
+  if (fromUserId && fromUserId.trim().length > 0) {
+    return fromUserId;
+  }
+  const fromRootUser = state.auth.user?._id;
+  if (fromRootUser && fromRootUser.trim().length > 0) {
+    return fromRootUser;
+  }
+  return null;
+};
+
+interface FetchUserOrdersArgs {
+  force?: boolean;
+}
+
+interface FetchUserOrdersResponse {
+  orders: Order[];
+  fetchedForUserId: string | null;
+  fetchedAt: number;
+}
 
 // Response type from create-order API
 export interface CreateOrderResponse {
@@ -86,9 +111,13 @@ export const verifyPayment = createAsyncThunk(
 );
 
 // Fetch user orders
-export const fetchUserOrders = createAsyncThunk(
+export const fetchUserOrders = createAsyncThunk<
+  FetchUserOrdersResponse,
+  FetchUserOrdersArgs | undefined,
+  { state: RootState; rejectValue: string }
+>(
   "order/fetchUserOrders",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
       const response = await apiClient.get("/api/student/orders");
 
@@ -98,12 +127,52 @@ export const fetchUserOrders = createAsyncThunk(
         );
       }
 
-      return response.data.data as Order[];
+      const state = getState();
+      return {
+        orders: response.data.data as Order[],
+        fetchedForUserId: resolveCurrentUserId(state),
+        fetchedAt: Date.now(),
+      };
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch user orders",
       );
     }
+  },
+  {
+    condition: (args, { getState }) => {
+      const state = getState();
+      const forceRefresh = Boolean(args?.force);
+
+      if (!state.auth.isAuthenticated) {
+        return false;
+      }
+
+      if (forceRefresh) {
+        return true;
+      }
+
+      if (state.order.loading) {
+        return false;
+      }
+
+      const currentUserId = resolveCurrentUserId(state);
+      if (!currentUserId) {
+        return false;
+      }
+
+      const isSameUser = state.order.userOrdersForUserId === currentUserId;
+      if (!state.order.userOrdersLoaded || !isSameUser) {
+        return true;
+      }
+
+      if (!state.order.userOrdersLastFetchedAt) {
+        return true;
+      }
+
+      const age = Date.now() - state.order.userOrdersLastFetchedAt;
+      return age > USER_ORDER_CACHE_TTL_MS;
+    },
   },
 );
 

@@ -92,7 +92,12 @@ export default function ChoiceFillingProductDetailPage() {
       </div>
 
       <div className="container mx-auto px-4">
-        <ChoiceFillingForm toolKey={resolvedToolKey} toolLabel={toolLabel} />
+        <ChoiceFillingForm
+          toolKey={resolvedToolKey}
+          toolLabel={toolLabel}
+          productId={product._id}
+          productSlug={product.slug}
+        />
       </div>
     </>
   );

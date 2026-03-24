@@ -393,25 +393,63 @@ export interface CouponState {
 }
 
 // Order Types
+export interface OrderProduct {
+  _id: string;
+  title?: string;
+  name?: string;
+  slug?: string;
+  mentorshipForm?: MentorshipForm;
+  features?: {
+    hasMentorship?: boolean;
+    choiceFilling?: {
+      isEnabled?: boolean;
+      usageLimit?: number;
+    };
+    collegePredictor?: {
+      isEnabled?: boolean;
+      usageLimit?: number;
+      allowedPredictors?: string[];
+    };
+    hasCourseContent?: boolean;
+  };
+}
+
+export interface OrderRankOverrides {
+  crlRank?: number | null;
+  categoryRank?: number | null;
+  lockedByAdmin?: boolean;
+  lastModifiedAt?: string;
+  lastModifiedBy?: string;
+}
+
 export interface Order {
   _id: string;
-  userId: string;
-  productId: string;
-  productType: "counseling" | "mentorship";
-  originalAmount: number;
-  discountAmount: number;
-  finalAmount: number;
-  coupon?: string;
-  paymentStatus: "pending" | "completed" | "failed";
+  user?: string;
+  userId?: string;
+  productId?: string;
+  productType?: "counseling" | "mentorship";
+  product?: OrderProduct;
+  amount?: number;
+  currency?: string;
+  status?: "pending" | "completed" | "failed";
+  originalAmount?: number;
+  discountAmount?: number;
+  finalAmount?: number;
+  coupon?: string | { _id?: string; code?: string };
+  paymentStatus?: "pending" | "completed" | "failed";
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   razorpaySignature?: string;
   invoice?: string;
   assignedMentor?: string;
   whatsappChannelLink?: string;
-  validUntil: string;
+  validUntil?: string;
+  mentorshipFormData?: Record<string, string | number | boolean | null>;
+  mentorshipFormSubmittedAt?: string | null;
+  rankOverrides?: OrderRankOverrides;
   createdAt: string;
   updatedAt: string;
+  __v?: number;
 }
 
 export interface OrderState {
@@ -421,6 +459,9 @@ export interface OrderState {
   error: string | null;
   paymentLoading: boolean;
   paymentError: string | null;
+  userOrdersLoaded: boolean;
+  userOrdersLastFetchedAt: number | null;
+  userOrdersForUserId: string | null;
 }
 
 // Payment Types

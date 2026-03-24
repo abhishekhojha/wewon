@@ -6,8 +6,17 @@ import { predictHBTU } from "@/network/predictor";
 import hbtuOptions from "./data/hbtuOptions.json";
 import PredictionResults from "./PredictionResults";
 import { toast } from "sonner";
+import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
+
+const PRODUCT_SLUG = "hbtu-predictor";
 
 export default function HBTUCollegePredictor() {
+  const {
+    prefill,
+    crlRankLocked,
+    lockMessage,
+  } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
+
   const [formData, setFormData] = useState({
     counselingType: "B.TECH",
     round: "",
@@ -22,7 +31,31 @@ export default function HBTUCollegePredictor() {
 
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [rankLockMessage, setRankLockMessage] = useState(
+    "Your rank has been set by your counsellor.",
+  );
   const resultsRef = useRef(null);
+
+  useEffect(() => {
+    if (!prefill) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      crlRank:
+        typeof prefill.crlRank === "number" ? String(prefill.crlRank) : prev.crlRank,
+      categoryRank:
+        typeof prefill.categoryRank === "number"
+          ? String(prefill.categoryRank)
+          : prev.categoryRank,
+      category: prefill.category || prev.category,
+      gender: prefill.gender || prev.gender,
+      homeState: prefill.homeState || prev.homeState,
+    }));
+
+    if (lockMessage) {
+      setRankLockMessage(lockMessage);
+    }
+  }, [lockMessage, prefill]);
 
   // Auto-scroll to results when they become available
   useEffect(() => {
@@ -83,6 +116,10 @@ export default function HBTUCollegePredictor() {
 
   const handleChange = (e) => {
     const { id, value, type } = e.target;
+
+    if (id === "crlRank" && crlRankLocked) {
+      return;
+    }
 
     // Validate number inputs to prevent negative values
     if (type === "number") {
@@ -342,9 +379,15 @@ export default function HBTUCollegePredictor() {
                 placeholder="25000"
                 min="1"
                 required
+                disabled={crlRankLocked}
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
+              {crlRankLocked && (
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
+                  {rankLockMessage}
+                </p>
+              )}
             </div>
 
             {/* Category Rank */}
