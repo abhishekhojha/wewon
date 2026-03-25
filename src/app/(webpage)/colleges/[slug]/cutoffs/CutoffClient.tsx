@@ -64,6 +64,159 @@ interface FilterOption {
   value: string;
 }
 
+const CATEGORY_ALIASES: Record<string, Record<string, string[]>> = {
+  OPEN: {
+    "": ["OPEN", "OPEN()", "OPEN(NA)", "Not Applicable"],
+    AF: ["OPEN(AF)"],
+    FF: ["OPEN(FF)"],
+    GIRL: [
+      "OPEN(GIRL)",
+      "OPEN(GL)",
+      "OPEN(Girl)",
+      "OPEN(girl)",
+      "OPEN(gl)",
+      "OPENGL)",
+      "OPEN GIRL",
+    ],
+    PH: ["OPEN(PH)"],
+    TF: ["OPEN(TF)"],
+  },
+  EWS: {
+    "": ["EWS", "Not Applicable", "EWS(OPEN)", "EWS(Open)"],
+    AF: ["EWS(AF)"],
+    FF: ["EWS(FF)"],
+    GIRL: ["EWS(GIRL)", "EWS(GL)", "EWS(Girl)", "EWS(girl)", "EWS(gl)"],
+    PH: ["EWS(PH)"],
+  },
+  OBC: {
+    "": ["BC", "OBC", "OBC-NCL", "BC-NCL", "Not Applicable"],
+    AF: ["BC(AF)", "OBC(AF)", "OBC-NCL(AF)"],
+    FF: ["BC(FF)", "OBC(FF)", "OBC-NCL(FF)"],
+    GIRL: [
+      "BC(GIRL)",
+      "BC(GL)",
+      "BC(Girl)",
+      "BC(girl)",
+      "BC(gl)",
+      "BC GIRL",
+      "OBC(GIRL)",
+      "OBC(GL)",
+      "OBC(Girl)",
+      "OBC(girl)",
+      "OBC(gl)",
+      "OBC GIRL",
+      "OBC-NCL(GIRL)",
+      "OBC-NCL(GL)",
+      "OBC-NCL GIRL",
+    ],
+    PH: ["BC(PH)", "OBC(PH)", "OBC-NCL(PH)"],
+  },
+  SC: {
+    "": ["SC", "Not Applicable"],
+    AF: ["SC(AF)"],
+    FF: ["SC(FF)"],
+    GIRL: ["SC(GIRL)", "SC(GL)", "SC(Girl)", "SC(girl)", "SC(gl)", "SC GIRL"],
+    PH: ["SC(PH)"],
+  },
+  ST: {
+    "": ["ST", "Not Applicable"],
+    AF: ["ST(AF)"],
+    FF: ["ST(FF)"],
+    GIRL: ["ST(GIRL)", "ST(GL)", "ST(Girl)", "ST(girl)", "ST(gl)", "ST GIRL"],
+    PH: ["ST(PH)"],
+  },
+};
+
+const SUB_CATEGORY_LABELS: Record<string, string> = {
+  "": "Not Applicable",
+  AF: "AF",
+  FF: "FF",
+  GIRL: "GIRL",
+  PH: "PH",
+  TF: "TF",
+};
+
+const ALIAS_MATCHING_TYPES: CollegeType[] = ["UPTAC", "CUSTOM", "HBTU", "MMMUT"];
+
+const normalizeAliasToken = (value: string): string =>
+  (value || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+const resolveCanonicalCategory = (value: string): string => {
+  const token = normalizeAliasToken(value);
+  if (!token) return "";
+  if (token.includes("NOTAPPLICABLE") || token === "NA") return "";
+
+  for (const [categoryKey, subCategoryAliases] of Object.entries(
+    CATEGORY_ALIASES,
+  )) {
+    if (normalizeAliasToken(categoryKey) === token) {
+      return categoryKey;
+    }
+    for (const aliases of Object.values(subCategoryAliases)) {
+      if (aliases.some((alias) => normalizeAliasToken(alias) === token)) {
+        return categoryKey;
+      }
+    }
+  }
+
+  return value;
+};
+
+const resolveCanonicalSubCategory = (
+  categoryKey: string,
+  value: string,
+): string => {
+  const token = normalizeAliasToken(value);
+  const categoryAliasMap = CATEGORY_ALIASES[categoryKey];
+  if (!categoryAliasMap) {
+    return value;
+  }
+
+  if (!token) {
+    return "";
+  }
+
+  for (const [subCategoryKey, aliases] of Object.entries(categoryAliasMap)) {
+    if (aliases.some((alias) => normalizeAliasToken(alias) === token)) {
+      return subCategoryKey;
+    }
+  }
+
+  if (
+    token.includes("NOTAPPLICABLE") ||
+    token.endsWith("NA") ||
+    token === normalizeAliasToken(categoryKey)
+  ) {
+    return "";
+  }
+  if (token.endsWith("AF")) return "AF";
+  if (token.endsWith("FF")) return "FF";
+  if (token.includes("GIRL") || token.endsWith("GL")) return "GIRL";
+  if (token.endsWith("PH") || token.includes("PWD")) return "PH";
+  if (token.endsWith("TF") || token.includes("TFW")) return "TF";
+
+  return value;
+};
+
+const getCanonicalSubCategoryLabel = (subCategoryKey: string): string =>
+  SUB_CATEGORY_LABELS[subCategoryKey] || subCategoryKey || "Not Applicable";
+
+const getOptionsByCategoryAlias = (
+  subCategoryMap: Record<string, FilterOption[]>,
+  categoryValue: string,
+): FilterOption[] => {
+  if (subCategoryMap[categoryValue]) {
+    return subCategoryMap[categoryValue];
+  }
+
+  const selectedCategoryKey = resolveCanonicalCategory(categoryValue);
+  const matched = Object.entries(subCategoryMap).find(
+    ([categoryKey]) =>
+      resolveCanonicalCategory(categoryKey) === selectedCategoryKey,
+  );
+  return matched?.[1] || [];
+};
+
 export default function CutoffClient() {
   const { slug } = useParams();
   const router = useRouter();
@@ -234,53 +387,89 @@ export default function CutoffClient() {
   }, [college?.Type, college?.Name]);
 
   const collegeType = detectCollegeType();
+  const useAliasMatching = ALIAS_MATCHING_TYPES.includes(collegeType);
 
   // Get category options based on college type
   const getCategoryOptions = (): FilterOption[] => {
+    let categoryOptions: FilterOption[] = [];
+
     switch (collegeType) {
       case "JOSAA":
-        return josaaOptions.categories;
+        categoryOptions = josaaOptions.categories;
+        break;
       case "UPTAC":
-        return uptacOptions.categories;
+        categoryOptions = uptacOptions.categories;
+        break;
       case "CUSTOM":
-        return customOptions.categories;
+        categoryOptions = customOptions.categories;
+        break;
       case "HBTU":
-        return hbtuOptions.categories;
+        categoryOptions = hbtuOptions.categories;
+        break;
       case "MMMUT":
-        return mmmutOptions.categories;
+        categoryOptions = mmmutOptions.categories;
+        break;
       case "JAC_DELHI":
-        return jacDelhiOptions.categories;
+        categoryOptions = jacDelhiOptions.categories;
+        break;
       case "JAC_CHANDIGARH":
-        return jacChandigarhOptions.categories;
+        categoryOptions = jacChandigarhOptions.categories;
+        break;
       default:
         // Default categories
-        return [
+        categoryOptions = [
           { label: "OPEN", value: "OPEN" },
           { label: "EWS", value: "EWS" },
           { label: "OBC", value: "OBC" },
           { label: "SC", value: "SC" },
           { label: "ST", value: "ST" },
         ];
+        break;
     }
+
+    if (!useAliasMatching) {
+      return categoryOptions;
+    }
+
+    const seen = new Set<string>();
+    return categoryOptions
+      .map((option) => {
+        const canonicalCategory = resolveCanonicalCategory(
+          option.value || option.label,
+        );
+        return {
+          label: canonicalCategory || option.label,
+          value: canonicalCategory || option.value,
+        };
+      })
+      .filter((option) => {
+        if (!option.value || seen.has(option.value)) {
+          return false;
+        }
+        seen.add(option.value);
+        return true;
+      });
   };
 
   // Get sub-category options based on category (for applicable college types)
   const getSubCategoryOptions = (): FilterOption[] => {
     if (!selectedCategory) return [];
 
+    let subCategoryOptions: FilterOption[] = [];
+
     switch (collegeType) {
       case "UPTAC":
-        return (
-          (uptacOptions.subCategories as Record<string, FilterOption[]>)[
-            selectedCategory
-          ] || []
+        subCategoryOptions = getOptionsByCategoryAlias(
+          uptacOptions.subCategories as Record<string, FilterOption[]>,
+          selectedCategory,
         );
+        break;
       case "CUSTOM":
-        return (
-          (customOptions.subCategories as Record<string, FilterOption[]>)[
-            selectedCategory
-          ] || []
+        subCategoryOptions = getOptionsByCategoryAlias(
+          customOptions.subCategories as Record<string, FilterOption[]>,
+          selectedCategory,
         );
+        break;
       case "HBTU":
         // HBTU has nested subCategories by counseling type - use B.TECH as default
         const hbtuSubs = (
@@ -289,20 +478,69 @@ export default function CutoffClient() {
             Record<string, FilterOption[]>
           >
         )["B.TECH"];
-        return hbtuSubs?.[selectedCategory] || [];
-      case "MMMUT":
-        return (
-          (mmmutOptions.subCategories as Record<string, FilterOption[]>)[
-            selectedCategory
-          ] || []
+        subCategoryOptions = getOptionsByCategoryAlias(
+          hbtuSubs || {},
+          selectedCategory,
         );
+        break;
+      case "MMMUT":
+        subCategoryOptions = getOptionsByCategoryAlias(
+          mmmutOptions.subCategories as Record<string, FilterOption[]>,
+          selectedCategory,
+        );
+        break;
       case "JAC_DELHI":
         // JAC Delhi has a shared sub-category list
-        return jacDelhiOptions.subCategories;
+        subCategoryOptions = jacDelhiOptions.subCategories;
+        break;
       default:
-        return [];
+        subCategoryOptions = [];
+        break;
     }
+
+    if (!useAliasMatching) {
+      return subCategoryOptions;
+    }
+
+    const selectedCategoryKey = resolveCanonicalCategory(selectedCategory);
+    const seen = new Set<string>();
+    return subCategoryOptions
+      .map((option) => {
+        const canonicalSubCategory = resolveCanonicalSubCategory(
+          selectedCategoryKey,
+          option.value || option.label,
+        );
+        return {
+          label: getCanonicalSubCategoryLabel(canonicalSubCategory),
+          value: canonicalSubCategory,
+        };
+      })
+      .filter((option) => {
+        if (seen.has(option.value)) {
+          return false;
+        }
+        seen.add(option.value);
+        return true;
+      });
   };
+
+  const selectedCategoryLabel = useMemo(() => {
+    if (!selectedCategory) return "";
+    return useAliasMatching
+      ? resolveCanonicalCategory(selectedCategory)
+      : selectedCategory;
+  }, [selectedCategory, useAliasMatching]);
+
+  const selectedSubCategoryLabel = useMemo(() => {
+    if (!selectedSubCategory) return "Not Applicable";
+    if (!useAliasMatching || !selectedCategory) return selectedSubCategory;
+    const categoryKey = resolveCanonicalCategory(selectedCategory);
+    const subCategoryKey = resolveCanonicalSubCategory(
+      categoryKey,
+      selectedSubCategory,
+    );
+    return getCanonicalSubCategoryLabel(subCategoryKey);
+  }, [selectedCategory, selectedSubCategory, useAliasMatching]);
 
   // Get gender options for JOSAA type
   const getGenderOptions = (): FilterOption[] => {
@@ -376,7 +614,32 @@ export default function CutoffClient() {
 
     // Filter by category (Seat_Type) - required
     if (selectedCategory) {
-      if (hasSubCategory() && selectedSubCategory) {
+      if (useAliasMatching) {
+        const selectedCategoryKey = resolveCanonicalCategory(selectedCategory);
+        const selectedSubCategoryKey = hasSubCategory()
+          ? resolveCanonicalSubCategory(
+              selectedCategoryKey,
+              selectedSubCategory,
+            )
+          : "";
+
+        filtered = filtered.filter((c) => {
+          const seatType = c.Seat_Type || "";
+          const rowCategoryKey =
+            resolveCanonicalCategory(seatType) || selectedCategoryKey;
+          if (rowCategoryKey !== selectedCategoryKey) return false;
+
+          if (hasSubCategory()) {
+            const rowSubCategoryKey = resolveCanonicalSubCategory(
+              selectedCategoryKey,
+              seatType,
+            );
+            return rowSubCategoryKey === selectedSubCategoryKey;
+          }
+
+          return true;
+        });
+      } else if (hasSubCategory() && selectedSubCategory) {
         filtered = filtered.filter((c) => c.Seat_Type === selectedSubCategory);
       } else {
         filtered = filtered.filter((c) => c.Seat_Type == selectedCategory);
@@ -395,6 +658,7 @@ export default function CutoffClient() {
     selectedSubCategory,
     selectedGender,
     collegeType,
+    useAliasMatching,
   ]);
 
   // Get available rounds based on filtered cutoffs
@@ -598,7 +862,7 @@ export default function CutoffClient() {
                     selectedCategory ? "text-gray-900" : "text-gray-400"
                   }
                 >
-                  {selectedCategory || "Select Category"}
+                  {selectedCategoryLabel || "Select Category"}
                 </span>
                 <ChevronDown
                   className={`w-5 h-5 text-gray-600 transition-transform ${
@@ -661,7 +925,7 @@ export default function CutoffClient() {
                       selectedSubCategory ? "text-gray-900" : "text-gray-400"
                     }
                   >
-                    {selectedSubCategory || "Not Applicable"}
+                    {selectedSubCategoryLabel}
                   </span>
                   <ChevronDown
                     className={`w-5 h-5 text-gray-600 transition-transform ${
@@ -801,7 +1065,7 @@ export default function CutoffClient() {
             ) : !hasDataForCurrentFilters ? (
               <div className="p-6 bg-gray-50 rounded-xl border border-gray-200 text-center">
                 <p className="text-gray-500">
-                  No data available for the selected {selectedCategory}
+                  No data available for the selected {selectedCategoryLabel}
                   {hasGender() && selectedGender
                     ? ` - ${selectedGender}`
                     : ""}{" "}
@@ -843,14 +1107,14 @@ export default function CutoffClient() {
                           <span className="text-gray-600 font-medium">
                             Category:
                           </span>{" "}
-                          {selectedCategory || "All"}
+                          {selectedCategoryLabel || "All"}
                         </span>
                         {selectedSubCategory && (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] font-semibold">
                             <span className="text-gray-600 font-medium">
                               Sub Category:
                             </span>{" "}
-                            {selectedSubCategory}
+                            {selectedSubCategoryLabel}
                           </span>
                         )}
                         {hasSubCategory() &&
