@@ -2,12 +2,26 @@
 
 import { useState, useRef, useEffect } from "react";
 import GoogleAds from "../sections/GoogleAds";
-import { predict } from "@/network/predictor";
+import { predict, fetchPredictorBySlug } from "@/network/predictor";
 import options from "./data/options.json";
 import PredictionResults from "./PredictionResults";
 import { toast } from "sonner";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
+import { fetchUserOrders } from "@/store/order/orderThunk";
+import { selectUserOrders } from "@/store/order/orderSlice";
+import PredictorPaymentModal from "./PredictorPaymentModal";
+
+const PRODUCT_SLUG = "jee-advanced-predictor";
+const RETURN_URL = "/jee-advanced-predictor";
 
 export default function IITCollegePredictor() {
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectIsAuthenticated);
+  const userData = useAppSelector(selectUser);
+  const userOrders = useAppSelector(selectUserOrders);
+  const isCounsellor = userData?.userId?.role === "counsellor";
+
   const [formData, setFormData] = useState({
     crlRank: "",
     categoryRank: "",
@@ -21,7 +35,70 @@ export default function IITCollegePredictor() {
 
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [checkingPurchase, setCheckingPurchase] = useState(true);
+  const [product, setProduct] = useState(null);
+  const [productLoading, setProductLoading] = useState(true);
   const resultsRef = useRef(null);
+
+  // Fetch product data dynamically
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setProductLoading(true);
+        const productData = await fetchPredictorBySlug(PRODUCT_SLUG);
+        setProduct(productData);
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        toast.error("Failed to load predictor data. Please refresh.");
+      } finally {
+        setProductLoading(false);
+      }
+    };
+    fetchProduct();
+  }, []);
+
+  // Check if user has purchased the product
+  useEffect(() => {
+    const checkPurchaseStatus = async () => {
+      if (product && product.price === 0 && product.discountPrice === 0) {
+        setHasPurchased(true);
+        setCheckingPurchase(false);
+        return;
+      }
+      if (user && isCounsellor) {
+        setHasPurchased(true);
+        setCheckingPurchase(false);
+        return;
+      }
+      if (!user) {
+        setHasPurchased(false);
+        setCheckingPurchase(false);
+        return;
+      }
+      try {
+        await dispatch(fetchUserOrders()).unwrap();
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      } finally {
+        setCheckingPurchase(false);
+      }
+    };
+    checkPurchaseStatus();
+  }, [user, isCounsellor, dispatch, product]);
+
+  // Update hasPurchased when userOrders change
+  useEffect(() => {
+    if (userOrders.length > 0) {
+      const isPurchased = userOrders.some(
+        (order) =>
+          order.product?.slug === PRODUCT_SLUG && order.status === "completed",
+      );
+      setHasPurchased(isPurchased);
+    }
+  }, [userOrders]);
 
   // Auto-scroll to results when they become available
   useEffect(() => {
@@ -38,7 +115,6 @@ export default function IITCollegePredictor() {
 
     // Validate categoryRank to accept only numbers or numbers ending with 'P'
     if (id === "categoryRank") {
-      // Allow empty value (for clearing the field)
       if (value === "") {
         setFormData((prev) => ({
           ...prev,
@@ -46,15 +122,10 @@ export default function IITCollegePredictor() {
         }));
         return;
       }
-
-      // Validate format: must be a number or number ending with 'P' or 'p'
       const categoryRankPattern = /^\d+[Pp]?$/;
       if (!categoryRankPattern.test(value)) {
-        // Don't update state if format is invalid
         return;
       }
-
-      // Convert lowercase 'p' to uppercase 'P'
       const normalizedValue = value.replace(/p$/, "P");
       setFormData((prev) => ({
         ...prev,
@@ -65,7 +136,6 @@ export default function IITCollegePredictor() {
 
     // Validate number inputs to prevent negative values
     if (type === "number") {
-      // If value is empty, allow it (for clearing the field)
       if (value === "") {
         setFormData((prev) => ({
           ...prev,
@@ -73,11 +143,8 @@ export default function IITCollegePredictor() {
         }));
         return;
       }
-
-      // Convert to number and check if it's negative or zero
       const numValue = Number(value);
       if (numValue < 1) {
-        // Don't update state if value is negative or zero
         return;
       }
     }
@@ -87,7 +154,7 @@ export default function IITCollegePredictor() {
       setFormData((prev) => ({
         ...prev,
         [id]: value,
-        roundNumber: 1, // Reset to round 1 when counseling type changes
+        roundNumber: 1,
       }));
       return;
     }
@@ -105,36 +172,9 @@ export default function IITCollegePredictor() {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const fetchPredictions = async () => {
     setLoading(true);
     setResults(null);
-
-    // Validate that category rank is provided when category is not OPEN
-    if (formData.category !== "OPEN" && !formData.categoryRank) {
-      toast.error("Please enter Category Rank for the selected category");
-      setLoading(false);
-      return;
-    }
-
-    // Validate that CRL Rank is provided for OPEN category
-    if (formData.category === "OPEN" && !formData.crlRank) {
-      toast.error("Please enter CRL Rank for OPEN category");
-      setLoading(false);
-      return;
-    }
-
-    // Validate categoryRank format if provided
-    if (formData.categoryRank) {
-      const categoryRankPattern = /^\d+P?$/;
-      if (!categoryRankPattern.test(formData.categoryRank)) {
-        toast.error(
-          "Category Rank must be a number or a number ending with 'P'",
-        );
-        setLoading(false);
-        return;
-      }
-    }
 
     try {
       const payload = {
@@ -152,13 +192,62 @@ export default function IITCollegePredictor() {
       const response = await predict(payload);
       console.log("Prediction response:", response.data);
       setResults(response.data);
-      // alert("Prediction successful! Check console for results.");
     } catch (error) {
       console.error("Prediction error:", error);
       toast.error("Failed to get prediction. Please try again.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validate that category rank is provided when category is not OPEN
+    if (formData.category !== "OPEN" && !formData.categoryRank) {
+      toast.error("Please enter Category Rank for the selected category");
+      return;
+    }
+
+    // Validate that CRL Rank is provided for OPEN category
+    if (formData.category === "OPEN" && !formData.crlRank) {
+      toast.error("Please enter CRL Rank for OPEN category");
+      return;
+    }
+
+    // Validate categoryRank format if provided
+    if (formData.categoryRank) {
+      const categoryRankPattern = /^\d+P?$/;
+      if (!categoryRankPattern.test(formData.categoryRank)) {
+        toast.error("Category Rank must be a number or a number ending with 'P'");
+        return;
+      }
+    }
+
+    // Check if user is logged in
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    // Check if user has purchased
+    if (
+      !hasPurchased &&
+      product &&
+      (product.price > 0 ||
+        (product.discountPrice && product.discountPrice > 0))
+    ) {
+      setShowPaymentModal(true);
+      return;
+    }
+
+    await fetchPredictions();
+  };
+
+  const handlePaymentSuccess = () => {
+    setHasPurchased(true);
+    setShowPaymentModal(false);
+    fetchPredictions();
   };
 
   return (
@@ -375,6 +464,58 @@ export default function IITCollegePredictor() {
           />
         )}
       </div>
+
+      {/* Payment Modal */}
+      {product && (
+        <PredictorPaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onPaymentSuccess={handlePaymentSuccess}
+          product={product}
+        />
+      )}
+
+      {/* Login Required Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 relative overflow-hidden animate-in fade-in zoom-in duration-200">
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <div className="text-center mb-6 mt-2">
+              <div className="w-16 h-16 bg-[var(--primary)]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--primary)]">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                  <polyline points="10 17 15 12 10 7"></polyline>
+                  <line x1="15" y1="12" x2="3" y2="12"></line>
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">Login Required</h2>
+              <p className="text-sm text-gray-600">
+                Please login to your account to get your personalized college predictions.
+              </p>
+            </div>
+            <a
+              href={`/auth?returnUrl=${RETURN_URL}`}
+              className="block w-full py-3 px-4 bg-[var(--primary)] text-white font-semibold rounded-xl hover:bg-[var(--accent)] transition-colors text-center"
+            >
+              Login / Sign Up
+            </a>
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="block w-full py-3 px-4 mt-3 text-gray-500 font-medium rounded-xl hover:bg-gray-50 transition-colors text-center"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
