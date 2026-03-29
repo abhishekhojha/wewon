@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import PredictorCard from "./PredictorCard";
 import { fetchAllPredictors, PredictorListItem } from "@/network/predictor";
 import { PredictorCategory } from "@/store/types";
+import { PREDICTOR_PRODUCTS } from "@/data/counsellingProducts";
 import { Loader2 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
@@ -45,6 +46,61 @@ const mapToPredictorProduct = (
   ],
 });
 
+const localActivePredictors: PredictorListItem[] = PREDICTOR_PRODUCTS.filter(
+  (predictor) => predictor.isActive,
+).map((predictor) => ({
+  _id: predictor._id || predictor.slug,
+  title: predictor.title,
+  slug: predictor.slug,
+  description: predictor.description,
+  thumbnail: predictor.thumbnail,
+  price: predictor.price,
+  discountPrice: predictor.discountPrice,
+  features: {
+    collegePredictor: predictor.features.collegePredictor,
+    hasMentorship: predictor.features.hasMentorship,
+    choiceFilling: predictor.features.choiceFilling,
+    hasCourseContent: predictor.features.hasCourseContent,
+  },
+  isActive: predictor.isActive,
+  createdAt: "",
+}));
+
+const mergePredictorsWithLocal = (
+  apiPredictors: PredictorListItem[],
+): PredictorListItem[] => {
+  const apiBySlug = new Map(
+    apiPredictors.map((predictor) => [predictor.slug, predictor]),
+  );
+
+  return localActivePredictors.map((localPredictor) => {
+    const apiPredictor = apiBySlug.get(localPredictor.slug);
+    if (!apiPredictor) return localPredictor;
+
+    return {
+      ...localPredictor,
+      ...apiPredictor,
+      features: {
+        ...localPredictor.features,
+        ...apiPredictor.features,
+        collegePredictor:
+          apiPredictor.features.collegePredictor ??
+          localPredictor.features.collegePredictor,
+        choiceFilling:
+          apiPredictor.features.choiceFilling ??
+          localPredictor.features.choiceFilling,
+        hasMentorship:
+          apiPredictor.features.hasMentorship ??
+          localPredictor.features.hasMentorship,
+        hasCourseContent:
+          apiPredictor.features.hasCourseContent ??
+          localPredictor.features.hasCourseContent,
+      },
+      isActive: true,
+    };
+  });
+};
+
 const PredictorsGrid: React.FC = () => {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
@@ -81,13 +137,13 @@ const PredictorsGrid: React.FC = () => {
         setError(null);
         const response = await fetchAllPredictors({ limit: 50 });
         if (response.success) {
-          setPredictors(response.data);
+          setPredictors(mergePredictorsWithLocal(response.data));
         } else {
           setError("Failed to load predictors");
         }
       } catch (err: any) {
         console.error("Error fetching predictors:", err);
-        setError(err.message || "Failed to load predictors");
+        setPredictors(localActivePredictors);
       } finally {
         setLoading(false);
       }
@@ -139,7 +195,7 @@ const PredictorsGrid: React.FC = () => {
               key={predictor._id}
               predictor={mapToPredictorProduct(
                 predictor,
-                isCounsellor || isPredictorPurchased(predictor.slug),
+                isPredictorPurchased(predictor.slug),
               )}
             />
           ))}

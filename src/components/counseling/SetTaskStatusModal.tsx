@@ -11,12 +11,12 @@ import {
 } from "lucide-react";
 import apiClient from "@/hooks/Axios";
 
-type TaskStatus = "completed" | "incomplete" | "other_issue";
+type TaskStatus = "pending" | "completed" | "incomplete" | "other_issue";
 
 interface Props {
   studentId: string;
   orderId: string;
-  currentStatus: string;
+  currentStatus: TaskStatus;
   onSuccess: () => void;
   onClose: () => void;
 }
@@ -50,7 +50,7 @@ export default function SetTaskStatusModal({
   onSuccess,
   onClose,
 }: Props) {
-  const [status, setStatus] = useState<TaskStatus>("completed");
+  const [status, setStatus] = useState<TaskStatus>(currentStatus ?? "pending");
   const [issueDescription, setIssueDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +94,7 @@ export default function SetTaskStatusModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-bold text-gray-800">Set Task Status</h2>
@@ -126,23 +126,6 @@ export default function SetTaskStatusModal({
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   New Status
                 </label>
-                <div className="relative">
-                  <select
-                    value={status}
-                    onChange={(e) => {
-                      setStatus(e.target.value as TaskStatus);
-                      setError(null);
-                    }}
-                    className="w-full appearance-none py-3 pl-4 pr-10 rounded-xl border border-gray-200 outline-none focus:border-[#073d68] focus:ring-2 focus:ring-[#073d68]/10 bg-white text-sm font-medium text-gray-800 cursor-pointer transition-all"
-                  >
-                    {STATUS_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                </div>
                 {/* Visual indicator */}
                 <div className="mt-2 flex gap-2">
                   {STATUS_OPTIONS.map((opt) => (

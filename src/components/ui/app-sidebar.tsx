@@ -87,6 +87,11 @@ export function AppSidebar() {
           icon: BarChart3,
         },
         {
+          title: "Choice Filling",
+          url: "/c/choice-filling",
+          icon: ListChecks,
+        },
+        {
           title: "My Profile",
           url: "/c/profile",
           icon: User2,

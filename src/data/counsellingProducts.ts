@@ -79,7 +79,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
       hasCourseContent: false,
     },
     totalMaterialCount: 0,
-    isActive: false,
+    isActive: true,
     // Frontend-specific fields
     icon: "🎓",
     category: PredictorCategory.JEE,
@@ -113,7 +113,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
       hasCourseContent: false,
     },
     totalMaterialCount: 0,
-    isActive: false,
+    isActive: true,
     // Frontend-specific fields
     icon: "🏆",
     category: PredictorCategory.JEE,
@@ -183,7 +183,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
       hasCourseContent: false,
     },
     totalMaterialCount: 0,
-    isActive: false,
+    isActive: true,
     // Frontend-specific fields
     icon: "🎯",
     category: PredictorCategory.STATE,
@@ -217,7 +217,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
       hasCourseContent: false,
     },
     totalMaterialCount: 0,
-    isActive: false,
+    isActive: true,
     // Frontend-specific fields
     icon: "🎓",
     category: PredictorCategory.STATE,
@@ -255,7 +255,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
     // Frontend-specific fields
     icon: "🎓",
     category: PredictorCategory.STATE,
-    purchased: true,
+    purchased: false,
     displayFeatures: [
       "HBTU College Predictions",
       "B.TECH & BS-MS Programs",
@@ -285,7 +285,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
       hasCourseContent: false,
     },
     totalMaterialCount: 0,
-    isActive: false,
+    isActive: true,
     // Frontend-specific fields
     icon: "🏛️",
     category: PredictorCategory.STATE,
@@ -319,7 +319,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
       hasCourseContent: false,
     },
     totalMaterialCount: 0,
-    isActive: false,
+    isActive: true,
     // Frontend-specific fields
     icon: "🎓",
     category: PredictorCategory.STATE,
