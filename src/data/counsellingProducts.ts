@@ -92,6 +92,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
     ],
   },
   {
+    _id: "69888981c6aafde7dfa7c201",
     title: "JEE Advanced College Predictor",
     slug: "jee-advanced-predictor",
     thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
@@ -196,6 +197,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
     ],
   },
   {
+    _id: "69888981c6aafde7dfa7c202",
     title: "MMMUT College Predictor",
     slug: "mmmut-predictor",
     thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
@@ -230,6 +232,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
     ],
   },
   {
+    _id: "69888981c6aafde7dfa7c203",
     title: "HBTU College Predictor",
     slug: "hbtu-predictor",
     thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
@@ -264,6 +267,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
     ],
   },
   {
+    _id: "69888981c6aafde7dfa7c204",
     title: "JAC Delhi College Predictor",
     slug: "jac-delhi-predictor",
     thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
@@ -298,6 +302,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
     ],
   },
   {
+    _id: "69888981c6aafde7dfa7c205",
     title: "JAC Chandigarh College Predictor",
     slug: "jac-chandigarh-predictor",
     thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",

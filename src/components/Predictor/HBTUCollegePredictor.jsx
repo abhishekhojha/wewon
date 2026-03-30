@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import GoogleAds from "../sections/GoogleAds";
 import { predictHBTU, fetchPredictorBySlug } from "@/network/predictor";
+import { getPredictorBySlug } from "@/data/counsellingProducts";
 import hbtuOptions from "./data/hbtuOptions.json";
 import PredictionResults from "./PredictionResults";
 import { toast } from "sonner";
@@ -48,10 +49,19 @@ export default function HBTUCollegePredictor() {
       try {
         setProductLoading(true);
         const productData = await fetchPredictorBySlug(PRODUCT_SLUG);
-        setProduct(productData);
+        if (productData) {
+          setProduct(productData);
+        } else {
+          setProduct(getPredictorBySlug(PRODUCT_SLUG) || null);
+        }
       } catch (error) {
-        console.error("Error fetching product:", error);
-        toast.error("Failed to load predictor data. Please refresh.");
+        if(error.status!=404){
+          console.error("Error fetching product:", error);
+        }
+        const fallbackProduct = getPredictorBySlug(PRODUCT_SLUG);
+        if (fallbackProduct) {
+          setProduct(fallbackProduct);
+        }
       } finally {
         setProductLoading(false);
       }
