@@ -58,9 +58,11 @@ export const fetchChoiceFillingProductBySlug = async (
 
 export interface ChoiceFillingMetadata {
   categories: string[];
-  homeStates: string[];
-  instituteTypes: string[];
+  homeStates?: string[];
+  instituteTypes?: string[];
   branchGroups: string[];
+  /** IIT-specific: list of IIT names (fullName / shortName) */
+  iitList?: { fullName: string; shortName: string }[];
   rankLocked?: boolean;
   lockMessage?: string;
   prefill?: ToolAutoFillData;
@@ -72,32 +74,38 @@ export interface ChoiceFillingRequest {
   categoryRank?: number;
   gender: string;
   category: string;
-  homeState: string;
+  homeState?: string;
   instituteType?: string | string[];
   branchGroup?: string | string[];
+  /** IIT-specific: full institute names to restrict results to */
+  includedIITs?: string | string[];
 }
 
 export interface ChoiceRow {
+  serialNo?: number;
   choiceNo: number;
   institute: string;
   program: string;
-  quota: string;
-  seatType: string;
-  gender: string;
-  openingRank: number;
-  closingRank: number;
-  origin: string;
-  isHomeState: boolean;
+  quota?: string;
+  seatType?: string;
+  gender?: string;
+  openingRank?: number;
+  closingRank?: number;
+  origin?: string;
+  isHomeState?: boolean;
 }
 
 export interface ChoiceFillingResponse {
   user: {
     name: string;
     crlRank: number;
-    categoryRank?: number;
+    categoryRank?: number | null;
     gender: string;
     category: string;
-    homeState: string;
+    homeState?: string;
+    /** IIT-specific */
+    branchGroup?: string[];
+    includedIITs?: string[];
   };
   searchRank: number;
   minRange: number;

@@ -6,20 +6,25 @@ import Link from "next/link";
 import apiClient from "@/hooks/Axios";
 
 interface ChoiceFillingTool {
+  id: string;
   type?: string;
   sourceProduct: string;
   slug?: string;
   toolLabel?: string;
+  usageLimit?: number;
 }
 
 const choiceFillingConfig: Record<
   string,
-  { label: string; route: string; color: string }
+  { label: string; color: string }
 > = {
   JEE_MAIN: {
     label: "JEE Main Choice Filling",
-    route: "/choice-filling",
     color: "from-blue-500 to-indigo-600",
+  },
+  IIT: {
+    label: "IIT Choice Filling",
+    color: "from-orange-500 to-red-600",
   },
 };
 
@@ -27,6 +32,91 @@ const choiceFillingEndpoints = [
   "/api/counsellor/choice-fillings",
   "/api/counsellor/choice-filling",
 ];
+
+const normalizeChoiceFillingTools = (
+  body: any,
+): ChoiceFillingTool[] | null => {
+  const extracted: any[] | null = Array.isArray(body?.data)
+    ? body.data
+    : Array.isArray(body?.tools)
+      ? body.tools
+      : Array.isArray(body)
+        ? body
+        : null;
+
+  if (extracted === null) {
+    return null;
+  }
+
+  if (extracted.length === 0) {
+    return [];
+  }
+
+  const looksLikeOrderShape = extracted.some((item) => item?.product);
+
+  if (!looksLikeOrderShape) {
+    return extracted.map((tool, index) => ({
+      id: String(
+        tool?._id ||
+          tool?.id ||
+          tool?.slug ||
+          tool?.sourceProduct ||
+          `choice-filling-${index}`,
+      ),
+      type: typeof tool?.type === "string" ? tool.type : undefined,
+      sourceProduct:
+        typeof tool?.sourceProduct === "string" && tool.sourceProduct.trim()
+          ? tool.sourceProduct.trim()
+          : "Assigned Product",
+      slug: typeof tool?.slug === "string" ? tool.slug.trim() : undefined,
+      toolLabel:
+        typeof tool?.toolLabel === "string" ? tool.toolLabel : undefined,
+      usageLimit:
+        typeof tool?.usageLimit === "number" ? tool.usageLimit : undefined,
+    }));
+  }
+
+  const uniqueTools = new Map<string, ChoiceFillingTool>();
+
+  extracted.forEach((order, index) => {
+    const product = order?.product;
+    if (!product) return;
+
+    const choiceFillingFeature = product?.features?.choiceFilling;
+    if (choiceFillingFeature?.isEnabled === false) return;
+
+    const slug =
+      typeof product?.slug === "string" ? product.slug.trim() : undefined;
+    const sourceProduct =
+      typeof product?.title === "string" && product.title.trim()
+        ? product.title.trim()
+        : "Assigned Product";
+
+    const uniqueKey = String(
+      slug || product?._id || order?.orderId || `choice-filling-${index}`,
+    );
+
+    if (uniqueTools.has(uniqueKey)) return;
+
+    uniqueTools.set(uniqueKey, {
+      id: uniqueKey,
+      type:
+        typeof product?.toolKey === "string" ? product.toolKey.trim() : undefined,
+      sourceProduct,
+      slug,
+      toolLabel:
+        typeof product?.toolLabel === "string" && product.toolLabel.trim()
+          ? product.toolLabel.trim()
+          : sourceProduct,
+      usageLimit:
+        typeof choiceFillingFeature?.usageLimit === "number"
+          ? choiceFillingFeature.usageLimit
+          : undefined,
+    });
+  });
+
+  return Array.from(uniqueTools.values());
+};
 
 export default function ChoiceFillingPage() {
   const [tools, setTools] = useState<ChoiceFillingTool[]>([]);
@@ -39,19 +129,21 @@ export default function ChoiceFillingPage() {
 
       try {
         setLoading(true);
+        setError(null);
 
         for (const endpoint of choiceFillingEndpoints) {
           try {
             const response = await apiClient.get(endpoint);
+            const body = response.data;
+            const extracted = normalizeChoiceFillingTools(body);
 
-            if (response.data.success) {
-              setTools(response.data.data || []);
+            if (extracted !== null) {
+              setTools(extracted);
               return;
             }
 
-            setError(
-              response.data.message || "Failed to fetch choice-filling tools",
-            );
+            // Response came back but in an unexpected shape — treat as error
+            setError(body?.message || "Unexpected response from server.");
             return;
           } catch (err: any) {
             if (err?.response?.status === 404) {
@@ -135,9 +227,12 @@ export default function ChoiceFillingPage() {
         {tools.length > 0 && (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {tools.map((tool, index) => {
-              const config = tool.type
-                ? choiceFillingConfig[tool.type]
-                : undefined;
+              const typeKey = tool.type
+                ? tool.type.toUpperCase().replace(/-/g, "_")
+                : "";
+              const config =
+                choiceFillingConfig[typeKey] ??
+                choiceFillingConfig[tool.type ?? ""];
               const label =
                 tool.toolLabel ||
                 config?.label ||
@@ -146,12 +241,16 @@ export default function ChoiceFillingPage() {
               const route =
                 tool.slug && tool.slug.trim()
                   ? `/choice-filling/${tool.slug}`
-                  : config?.route || "/choice-filling";
-              const gradient = config?.color || "from-gray-500 to-gray-700";
-
+                  : "/choice-filling";
+              const gradient = config?.color || "from-[#073d68] to-[#1a5490]";
+              const accessText =
+                typeof tool.usageLimit === "number" && tool.usageLimit > 0
+                  ? `${tool.usageLimit} Uses Available`
+                  : "Choice Filling Enabled";
+             
               return (
                 <div
-                  key={`${tool.sourceProduct}-${index}`}
+                  key={`${tool.id}-${index}`}
                   className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow"
                 >
                   <div
@@ -174,7 +273,7 @@ export default function ChoiceFillingPage() {
 
                     <div className="flex items-center gap-2 mb-5">
                       <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                        ✓ Unlimited Access
+                        ✓ {accessText}
                       </span>
                     </div>
 

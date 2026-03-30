@@ -25,6 +25,12 @@ interface ChoiceFillingResultsProps {
   toolKey?: string;
 }
 
+const hasValue = (value: unknown): boolean => {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string") return value.trim().length > 0;
+  return true;
+};
+
 const ORIGIN_COLORS: Record<string, { bg: string; text: string }> = {
   BASE: { bg: "bg-blue-100", text: "text-blue-700" },
   HOME_STATE_DREAM: { bg: "bg-purple-100", text: "text-purple-700" },
@@ -42,9 +48,48 @@ export default function ChoiceFillingResults({
   const [exportingExcel, setExportingExcel] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
 
-  const displayedChoices: ChoiceRow[] = showAll
+  const allChoices = results.choices?.length
     ? results.choices
-    : results.top100Choices || results.choices.slice(0, 100);
+    : results.top100Choices || [];
+  const displayedChoices: ChoiceRow[] = showAll
+    ? allChoices
+    : (results.top100Choices?.length
+        ? results.top100Choices
+        : allChoices.slice(0, 100));
+
+  const hasHomeState = allChoices.some((c) => c.isHomeState);
+  const hasSerialNo = allChoices.some((c) => c.serialNo != null);
+  const showQuota = allChoices.some((c) => hasValue(c.quota));
+  const showSeatType = allChoices.some((c) => hasValue(c.seatType));
+  const showGender = allChoices.some((c) => hasValue(c.gender));
+  const showOpeningRank = allChoices.some((c) => hasValue(c.openingRank));
+  const showClosingRank = allChoices.some((c) => hasValue(c.closingRank));
+  const showOrigin = allChoices.some((c) => hasValue(c.origin));
+
+  const summaryItems = [
+    { label: "Name", value: results.user?.name },
+    {
+      label: "CRL Rank",
+      value: hasValue(results.user?.crlRank)
+        ? results.user.crlRank?.toLocaleString()
+        : undefined,
+    },
+    { label: "Category", value: results.user?.category },
+    {
+      label: "Home State",
+      value: results.user?.homeState,
+    },
+    {
+      label: "Search Rank",
+      value: hasValue(results.searchRank)
+        ? results.searchRank?.toLocaleString()
+        : undefined,
+    },
+    {
+      label: "Total Choices",
+      value: hasValue(results.totalChoices) ? results.totalChoices : undefined,
+    },
+  ].filter((item) => hasValue(item.value));
 
   const handleExportExcel = async () => {
     setExportingExcel(true);
@@ -94,51 +139,52 @@ export default function ChoiceFillingResults({
           Choice List Summary
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-          <div>
-            <p className="text-white/70 text-xs sm:text-sm">Name</p>
-            <p className="font-semibold text-sm sm:text-base">
-              {results.user.name}
-            </p>
-          </div>
-          <div>
-            <p className="text-white/70 text-xs sm:text-sm">CRL Rank</p>
-            <p className="font-semibold text-sm sm:text-base">
-              {results.user.crlRank?.toLocaleString()}
-            </p>
-          </div>
-          <div>
-            <p className="text-white/70 text-xs sm:text-sm">Category</p>
-            <p className="font-semibold text-sm sm:text-base">
-              {results.user.category}
-            </p>
-          </div>
-          <div>
-            <p className="text-white/70 text-xs sm:text-sm">Home State</p>
-            <p className="font-semibold text-sm sm:text-base">
-              {results.user.homeState}
-            </p>
-          </div>
-          <div>
-            <p className="text-white/70 text-xs sm:text-sm">Search Rank</p>
-            <p className="font-semibold text-sm sm:text-base">
-              {results.searchRank?.toLocaleString()}
-            </p>
-          </div>
-          <div>
-            <p className="text-white/70 text-xs sm:text-sm">Total Choices</p>
-            <p className="font-semibold text-sm sm:text-base">
-              {results.totalChoices}
-            </p>
-          </div>
+          {summaryItems.map((item) => (
+            <div key={item.label}>
+              <p className="text-white/70 text-xs sm:text-sm">{item.label}</p>
+              <p className="font-semibold text-sm sm:text-base">
+                {String(item.value)}
+              </p>
+            </div>
+          ))}
         </div>
-        <div className="mt-3 pt-3 border-t border-white/20">
-          <p className="text-white/70 text-xs sm:text-sm">
-            Rank Range: {results.minRange?.toLocaleString()} –{" "}
-            {results.maxRange?.toLocaleString()}
+        {(hasValue(results.minRange) || hasValue(results.maxRange)) && (
+          <div className="mt-3 pt-3 border-t border-white/20">
+            <p className="text-white/70 text-xs sm:text-sm">
+              Rank Range:{" "}
+              {hasValue(results.minRange) ? results.minRange?.toLocaleString() : "-"}{" "}
+              –{" "}
+              {hasValue(results.maxRange) ? results.maxRange?.toLocaleString() : "-"}
+            </p>
+          </div>
+        )}
+      </div>
+   {/* Disclaimer */}
+      {results.disclaimer && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-amber-800">
+            <strong>Disclaimer:</strong> {results.disclaimer}
+          </p>
+        </div>
+      )}
+
+      {/* Download Reminder */}
+      <div className="bg-[var(--light-blue)] border border-[var(--primary)]/20 rounded-lg p-3 sm:p-4 flex items-start gap-3">
+        <Download
+          size={20}
+          className="text-[var(--primary)] mt-0.5 flex-shrink-0"
+        />
+        <div>
+          <p className="text-sm font-semibold text-[var(--primary)]">
+            Download your complete choice list
+          </p>
+          <p className="text-xs text-[var(--muted-text)] mt-1">
+            Use the Export buttons above to download your personalized choice
+            list as an Excel or PDF file for offline reference during
+            counselling.
           </p>
         </div>
       </div>
-
       {/* Action Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <h3 className="text-lg sm:text-xl font-bold text-[var(--foreground)]">
@@ -187,33 +233,47 @@ export default function ChoiceFillingResults({
                 <th className="px-2 sm:px-4 py-2 sm:py-3 min-w-[180px]">
                   Program
                 </th>
-                <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                  Quota
-                </th>
-                <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                  Seat Type
-                </th>
-                <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                  Gender
-                </th>
-                <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                  Opening
-                </th>
-                <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                  Closing
-                </th>
-                <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                  Origin
-                </th>
-                <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                  HS
-                </th>
+                {showQuota && (
+                  <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                    Quota
+                  </th>
+                )}
+                {showSeatType && (
+                  <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                    Seat Type
+                  </th>
+                )}
+                {showGender && (
+                  <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                    Gender
+                  </th>
+                )}
+                {showOpeningRank && (
+                  <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                    Opening
+                  </th>
+                )}
+                {showClosingRank && (
+                  <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                    Closing
+                  </th>
+                )}
+                {showOrigin && (
+                  <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                    Origin
+                  </th>
+                )}
+                {hasHomeState && (
+                  <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                    HS
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {displayedChoices.map((choice, index) => {
                 const originStyle =
-                  ORIGIN_COLORS[choice.origin] || ORIGIN_COLORS.BASE;
+                  ORIGIN_COLORS[choice.origin ?? "BASE"] || ORIGIN_COLORS.BASE;
                 return (
                   <tr
                     key={index}
@@ -222,7 +282,7 @@ export default function ChoiceFillingResults({
                     }`}
                   >
                     <td className="px-2 sm:px-4 py-3 font-semibold text-[var(--primary)]">
-                      {choice.choiceNo}
+                      {hasSerialNo ? (choice.serialNo ?? index + 1) : choice.choiceNo}
                     </td>
                     <td className="px-2 sm:px-4 py-3 font-medium text-[var(--foreground)] break-words max-w-[300px]">
                       {choice.institute}
@@ -230,44 +290,70 @@ export default function ChoiceFillingResults({
                     <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] break-words max-w-[280px]">
                       {choice.program}
                     </td>
-                    <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap">
-                      {choice.quota}
-                    </td>
-                    <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap">
-                      {choice.seatType}
-                    </td>
-                    <td className="px-2 sm:px-4 py-3">
-                      <span
-                        className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium ${
-                          choice.gender?.toLowerCase().includes("female")
-                            ? "bg-pink-100 text-pink-700"
-                            : "bg-blue-100 text-blue-700"
-                        }`}
-                      >
-                        {choice.gender}
-                      </span>
-                    </td>
-                    <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap">
-                      {choice.openingRank?.toLocaleString()}
-                    </td>
-                    <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap font-medium">
-                      {choice.closingRank?.toLocaleString()}
-                    </td>
-                    <td className="px-2 sm:px-4 py-3">
-                      <span
-                        className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap ${originStyle.bg} ${originStyle.text}`}
-                      >
-                        {choice.origin?.replace(/_/g, " ")}
-                      </span>
-                    </td>
-                    <td className="px-2 sm:px-4 py-3 text-center">
-                      {choice.isHomeState && (
-                        <Home
-                          size={16}
-                          className="text-blue-600 inline-block"
-                        />
-                      )}
-                    </td>
+                    {showQuota && (
+                      <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap">
+                        {hasValue(choice.quota) ? choice.quota : "-"}
+                      </td>
+                    )}
+                    {showSeatType && (
+                      <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap">
+                        {hasValue(choice.seatType) ? choice.seatType : "-"}
+                      </td>
+                    )}
+                    {showGender && (
+                      <td className="px-2 sm:px-4 py-3">
+                        {hasValue(choice.gender) ? (
+                          <span
+                            className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium ${
+                              choice.gender?.toLowerCase().includes("female")
+                                ? "bg-pink-100 text-pink-700"
+                                : "bg-blue-100 text-blue-700"
+                            }`}
+                          >
+                            {choice.gender}
+                          </span>
+                        ) : (
+                          <span className="text-[var(--muted-text)]">-</span>
+                        )}
+                      </td>
+                    )}
+                    {showOpeningRank && (
+                      <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap">
+                        {hasValue(choice.openingRank)
+                          ? choice.openingRank?.toLocaleString()
+                          : "-"}
+                      </td>
+                    )}
+                    {showClosingRank && (
+                      <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap font-medium">
+                        {hasValue(choice.closingRank)
+                          ? choice.closingRank?.toLocaleString()
+                          : "-"}
+                      </td>
+                    )}
+                    {showOrigin && (
+                      <td className="px-2 sm:px-4 py-3">
+                        {hasValue(choice.origin) ? (
+                          <span
+                            className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap ${originStyle.bg} ${originStyle.text}`}
+                          >
+                            {choice.origin?.replace(/_/g, " ")}
+                          </span>
+                        ) : (
+                          <span className="text-[var(--muted-text)]">-</span>
+                        )}
+                      </td>
+                    )}
+                    {hasHomeState && (
+                      <td className="px-2 sm:px-4 py-3 text-center">
+                        {choice.isHomeState && (
+                          <Home
+                            size={16}
+                            className="text-blue-600 inline-block"
+                          />
+                        )}
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -297,32 +383,7 @@ export default function ChoiceFillingResults({
         )}
       </div>
 
-      {/* Disclaimer */}
-      {results.disclaimer && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4">
-          <p className="text-xs sm:text-sm text-amber-800">
-            <strong>Disclaimer:</strong> {results.disclaimer}
-          </p>
-        </div>
-      )}
-
-      {/* Download Reminder */}
-      <div className="bg-[var(--light-blue)] border border-[var(--primary)]/20 rounded-lg p-3 sm:p-4 flex items-start gap-3">
-        <Download
-          size={20}
-          className="text-[var(--primary)] mt-0.5 flex-shrink-0"
-        />
-        <div>
-          <p className="text-sm font-semibold text-[var(--primary)]">
-            Download your complete choice list
-          </p>
-          <p className="text-xs text-[var(--muted-text)] mt-1">
-            Use the Export buttons above to download your personalized choice
-            list as an Excel or PDF file for offline reference during
-            counselling.
-          </p>
-        </div>
-      </div>
+   
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { selectIsAuthenticated } from "@/store/auth/authSlice";
+import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchUserOrders } from "@/store/order/orderThunk";
 import {
@@ -19,12 +19,15 @@ export const useMentorshipToolPrefill = (
 ) => {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const user = useAppSelector(selectUser);
   const userOrders = useAppSelector(selectUserOrders);
   const orderLoading = useAppSelector(selectOrderLoading);
   const userOrdersLoaded = useAppSelector(selectUserOrdersLoaded);
+  const isCounsellor = user?.userId?.role === "counsellor";
 
   useEffect(() => {
     if (!isAuthenticated) return;
+    if (isCounsellor) return;
     if (!params.productId && !params.productSlug) return;
     if (userOrdersLoaded || orderLoading) return;
 
@@ -32,6 +35,7 @@ export const useMentorshipToolPrefill = (
   }, [
     dispatch,
     isAuthenticated,
+    isCounsellor,
     orderLoading,
     params.productId,
     params.productSlug,
@@ -40,9 +44,16 @@ export const useMentorshipToolPrefill = (
 
   const resolvedPrefill = useMemo(() => {
     if (!isAuthenticated) return null;
+    if (isCounsellor) return null;
     if (!params.productId && !params.productSlug) return null;
     return resolveMentorshipToolPrefill(userOrders, params);
-  }, [isAuthenticated, params.productId, params.productSlug, userOrders]);
+  }, [
+    isAuthenticated,
+    isCounsellor,
+    params.productId,
+    params.productSlug,
+    userOrders,
+  ]);
 
   return {
     prefill: resolvedPrefill?.prefill,

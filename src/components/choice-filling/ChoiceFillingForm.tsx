@@ -26,6 +26,7 @@ type ChoiceFillingFormState = {
   homeState: string;
   instituteTypes: string[];
   branchGroups: string[];
+  includedIITs: string[]; // stores shortNames; resolved to fullNames on submit (IIT only)
 };
 
 const mergePrefillIntoForm = (
@@ -114,6 +115,7 @@ export default function ChoiceFillingForm({
     homeState: "",
     instituteTypes: [] as string[],
     branchGroups: [] as string[],
+    includedIITs: [] as string[],
   });
 
   const [results, setResults] = useState<ChoiceFillingResponse | null>(null);
@@ -226,6 +228,20 @@ export default function ChoiceFillingForm({
     });
   };
 
+  const handleIITToggle = (shortName: string) => {
+    setFormData((prev) => {
+      const current = prev.includedIITs;
+      return {
+        ...prev,
+        includedIITs: current.includes(shortName)
+          ? current.filter((n) => n !== shortName)
+          : [...current, shortName],
+      };
+    });
+  };
+
+  const isIIT = toolKey === "iit";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -250,7 +266,7 @@ export default function ChoiceFillingForm({
       return;
     }
 
-    if (!formData.homeState) {
+    if (!formData.homeState && !isIIT) {
       toast.error("Please select your Home State.");
       return;
     }
@@ -267,11 +283,24 @@ export default function ChoiceFillingForm({
           : undefined,
         gender: formData.gender,
         category: formData.category,
-        homeState: formData.homeState,
-        instituteType:
-          formData.instituteTypes.length > 0
-            ? formData.instituteTypes
-            : undefined,
+        ...(isIIT
+          ? {
+              // Resolve shortNames → fullNames
+              includedIITs: (() => {
+                const iitMap = new Map(
+                  (metadata?.iitList || []).map((iit) => [iit.shortName, iit.fullName]),
+                );
+                const resolved = formData.includedIITs.map((sn) => iitMap.get(sn) ?? sn);
+                return resolved.length > 0 ? resolved : undefined;
+              })(),
+            }
+          : {
+              homeState: formData.homeState,
+              instituteType:
+                formData.instituteTypes.length > 0
+                  ? formData.instituteTypes
+                  : undefined,
+            }),
         branchGroup:
           formData.branchGroups.length > 0 ? formData.branchGroups : undefined,
       };
@@ -492,59 +521,100 @@ export default function ChoiceFillingForm({
               </select>
             </div>
 
-            {/* Home State */}
-            <div>
-              <label
-                htmlFor="homeState"
-                className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
-              >
-                Select Your Home State
-              </label>
-              <select
-                required
-                id="homeState"
-                value={formData.homeState}
-                onChange={handleChange}
-                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
-              >
-                <option value="">Select Your Home State</option>
-                {(metadata?.homeStates || []).map((state) => (
-                  <option key={state} value={state}>
-                    {state}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Institute Type - Multi Select */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
-                Institute Type (Optional – select multiple)
-              </label>
-              <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                {(metadata?.instituteTypes || ["NIT", "IIIT", "GFTI"]).map(
-                  (type) => (
+            {/* IIT Picker (IIT only) OR Home State + Institute Type (JEE Main / others) */}
+            {isIIT ? (
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
+                  Include IITs{" "}
+                  <span className="text-[var(--muted-text)] font-normal">
+                    (Optional – select specific IITs)
+                  </span>
+                </label>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-48 overflow-y-auto pr-1">
+                  {(metadata?.iitList || []).map((iit) => (
                     <button
-                      key={type}
+                      key={iit.shortName}
                       type="button"
-                      onClick={() => handleInstituteTypeToggle(type)}
-                      className={`px-3 sm:px-4 py-1.5 sm:py-2 border rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer ${
-                        formData.instituteTypes.includes(type)
+                      onClick={() => handleIITToggle(iit.shortName)}
+                      className={`px-3 py-1.5 border rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer ${
+                        formData.includedIITs.includes(iit.shortName)
                           ? "bg-[var(--primary)] text-white border-[var(--primary)]"
                           : "bg-white text-[var(--muted-text)] border-[var(--border)] hover:bg-[var(--muted-background)]"
                       }`}
                     >
-                      {type}
+                      {iit.shortName}
                     </button>
-                  ),
+                  ))}
+                </div>
+                {formData.includedIITs.length === 0 && (
+                  <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1">
+                    No selection = All 23 IITs included
+                  </p>
+                )}
+                {formData.includedIITs.length > 0 && (
+                  <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1 font-medium">
+                    {formData.includedIITs.length} IIT
+                    {formData.includedIITs.length > 1 ? "s" : ""} selected
+                  </p>
                 )}
               </div>
-              {formData.instituteTypes.length === 0 && (
-                <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1">
-                  No selection = All institute types
-                </p>
-              )}
-            </div>
+            ) : (
+              <>
+                {/* Home State */}
+                <div>
+                  <label
+                    htmlFor="homeState"
+                    className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
+                  >
+                    Select Your Home State
+                  </label>
+                  <select
+                    required
+                    id="homeState"
+                    value={formData.homeState}
+                    onChange={handleChange}
+                    className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
+                  >
+                    <option value="">Select Your Home State</option>
+                    {(metadata?.homeStates || []).map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Institute Type - Multi Select */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
+                    Institute Type (Optional – select multiple)
+                  </label>
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                    {(metadata?.instituteTypes || ["NIT", "IIIT", "GFTI"]).map(
+                      (type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => handleInstituteTypeToggle(type)}
+                          className={`px-3 sm:px-4 py-1.5 sm:py-2 border rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer ${
+                            formData.instituteTypes.includes(type)
+                              ? "bg-[var(--primary)] text-white border-[var(--primary)]"
+                              : "bg-white text-[var(--muted-text)] border-[var(--border)] hover:bg-[var(--muted-background)]"
+                          }`}
+                        >
+                          {type}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                  {formData.instituteTypes.length === 0 && (
+                    <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1">
+                      No selection = All institute types
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
 
             {/* Branch Group - Multi Select */}
             <div>

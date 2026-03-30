@@ -81,11 +81,11 @@ export default function ChoiceFillingProductDetailPage() {
       <div className="container mx-auto mb-8 px-4">
         <div className="mb-6 mt-6">
           <Link
-            href={`/choice-filling/${product.slug}`}
+            href={`/choice-filling`}
             className="inline-flex items-center gap-2 text-sm font-semibold text-[#0f3a67] hover:text-[#0a2847]"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back To Product
+            Back To Choice-Filling
           </Link>
         </div>
         <MainHeading top={toolLabel} bottom="Choice Filling Tool" />
