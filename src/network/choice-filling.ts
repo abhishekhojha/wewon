@@ -59,6 +59,10 @@ export const fetchChoiceFillingProductBySlug = async (
 export interface ChoiceFillingMetadata {
   categories: string[];
   homeStates?: string[];
+  /** Optional states list for institute-level state filter (JEE Main) */
+  instituteStates?: string[];
+  /** Backward-compatible alias if backend sends generic `states` */
+  states?: string[];
   instituteTypes?: string[];
   branchGroups: string[];
   /** IIT-specific: list of IIT names (fullName / shortName) */
@@ -75,6 +79,7 @@ export interface ChoiceFillingRequest {
   gender: string;
   category: string;
   homeState?: string;
+  includedStates?: string | string[];
   instituteType?: string | string[];
   branchGroup?: string | string[];
   /** IIT-specific: full institute names to restrict results to */
@@ -82,7 +87,7 @@ export interface ChoiceFillingRequest {
 }
 
 export interface ChoiceRow {
-  serialNo?: number;
+  serialNo: number;
   choiceNo: number;
   institute: string;
   program: string;
@@ -103,6 +108,7 @@ export interface ChoiceFillingResponse {
     gender: string;
     category: string;
     homeState?: string;
+    includedStates?: string[];
     /** IIT-specific */
     branchGroup?: string[];
     includedIITs?: string[];

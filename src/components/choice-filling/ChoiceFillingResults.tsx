@@ -31,6 +31,14 @@ const hasValue = (value: unknown): boolean => {
   return true;
 };
 
+const normalizeToList = (value?: string | string[]): string[] => {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.filter((v) => v.trim().length > 0);
+  }
+  return value.trim().length > 0 ? [value] : [];
+};
+
 const ORIGIN_COLORS: Record<string, { bg: string; text: string }> = {
   BASE: { bg: "bg-blue-100", text: "text-blue-700" },
   HOME_STATE_DREAM: { bg: "bg-purple-100", text: "text-purple-700" },
@@ -59,12 +67,18 @@ export default function ChoiceFillingResults({
 
   const hasHomeState = allChoices.some((c) => c.isHomeState);
   const hasSerialNo = allChoices.some((c) => c.serialNo != null);
+  const showChoiceNo = allChoices.some((c) => hasValue(c.choiceNo));
   const showQuota = allChoices.some((c) => hasValue(c.quota));
   const showSeatType = allChoices.some((c) => hasValue(c.seatType));
   const showGender = allChoices.some((c) => hasValue(c.gender));
   const showOpeningRank = allChoices.some((c) => hasValue(c.openingRank));
   const showClosingRank = allChoices.some((c) => hasValue(c.closingRank));
   const showOrigin = allChoices.some((c) => hasValue(c.origin));
+  const selectedIncludedStates =
+    results.user?.includedStates && results.user.includedStates.length > 0
+      ? results.user.includedStates
+      : normalizeToList(requestData.includedStates);
+  const showIncludedStates = toolKey !== "iit";
 
   const summaryItems = [
     { label: "Name", value: results.user?.name },
@@ -78,6 +92,14 @@ export default function ChoiceFillingResults({
     {
       label: "Home State",
       value: results.user?.homeState,
+    },
+    {
+      label: "Included States",
+      value: showIncludedStates
+        ? selectedIncludedStates.length > 0
+          ? selectedIncludedStates.join(", ")
+          : "All"
+        : undefined,
     },
     {
       label: "Search Rank",
@@ -224,9 +246,16 @@ export default function ChoiceFillingResults({
           <table className="w-full text-left text-xs sm:text-sm">
             <thead className="bg-gray-50 text-[var(--muted-text)] uppercase font-semibold text-[10px] sm:text-xs border-b-2 border-[var(--border)]">
               <tr>
-                <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                  #
-                </th>
+                {hasSerialNo && (
+                  <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                    S.No
+                  </th>
+                )}
+                {showChoiceNo && (
+                  <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                    Choice No
+                  </th>
+                )}
                 <th className="px-2 sm:px-4 py-2 sm:py-3 min-w-[200px]">
                   Institute
                 </th>
@@ -278,12 +307,23 @@ export default function ChoiceFillingResults({
                   <tr
                     key={index}
                     className={`hover:bg-gray-50 transition-colors ${
-                      choice.isHomeState ? "bg-blue-50/30" : ""
+                      choice.isHomeState
+                        ? "bg-blue-50/30"
+                        : index % 2 === 0
+                          ? "bg-white"
+                          : "bg-slate-50/40"
                     }`}
                   >
-                    <td className="px-2 sm:px-4 py-3 font-semibold text-[var(--primary)]">
-                      {hasSerialNo ? (choice.serialNo ?? index + 1) : choice.choiceNo}
-                    </td>
+                    {hasSerialNo && (
+                      <td className="px-2 sm:px-4 py-3 font-semibold text-[var(--primary)] whitespace-nowrap">
+                        {choice.serialNo ?? index + 1}
+                      </td>
+                    )}
+                    {showChoiceNo && (
+                      <td className="px-2 sm:px-4 py-3 font-semibold text-[var(--foreground)] whitespace-nowrap">
+                        {choice.choiceNo}
+                      </td>
+                    )}
                     <td className="px-2 sm:px-4 py-3 font-medium text-[var(--foreground)] break-words max-w-[300px]">
                       {choice.institute}
                     </td>

@@ -24,6 +24,7 @@ type ChoiceFillingFormState = {
   gender: string;
   category: string;
   homeState: string;
+  includedStates: string[];
   instituteTypes: string[];
   branchGroups: string[];
   includedIITs: string[]; // stores shortNames; resolved to fullNames on submit (IIT only)
@@ -113,6 +114,7 @@ export default function ChoiceFillingForm({
     gender: "Male",
     category: "OPEN",
     homeState: "",
+    includedStates: [] as string[],
     instituteTypes: [] as string[],
     branchGroups: [] as string[],
     includedIITs: [] as string[],
@@ -215,6 +217,19 @@ export default function ChoiceFillingForm({
     });
   };
 
+  const handleIncludedStateToggle = (state: string) => {
+    setFormData((prev) => {
+      const current = prev.includedStates;
+      if (current.includes(state)) {
+        return {
+          ...prev,
+          includedStates: current.filter((s) => s !== state),
+        };
+      }
+      return { ...prev, includedStates: [...current, state] };
+    });
+  };
+
   const handleBranchGroupToggle = (group: string) => {
     setFormData((prev) => {
       const current = prev.branchGroups;
@@ -241,6 +256,8 @@ export default function ChoiceFillingForm({
   };
 
   const isIIT = toolKey === "iit";
+  const availableInstituteStates =
+    metadata?.instituteStates || metadata?.states || metadata?.homeStates || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -296,6 +313,10 @@ export default function ChoiceFillingForm({
             }
           : {
               homeState: formData.homeState,
+              includedStates:
+                formData.includedStates.length > 0
+                  ? formData.includedStates
+                  : undefined,
               instituteType:
                 formData.instituteTypes.length > 0
                   ? formData.instituteTypes
@@ -583,6 +604,42 @@ export default function ChoiceFillingForm({
                     ))}
                   </select>
                 </div>
+
+                {/* Included States - Multi Select (Inclusion Filter) */}
+                {availableInstituteStates.length > 0 && (
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
+                      States (Optional – select multiple)
+                    </label>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-48 overflow-y-auto pr-1">
+                      {availableInstituteStates.map((state) => (
+                        <button
+                          key={state}
+                          type="button"
+                          onClick={() => handleIncludedStateToggle(state)}
+                          className={`px-3 sm:px-4 py-1.5 sm:py-2 border rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer ${
+                            formData.includedStates.includes(state)
+                              ? "bg-[var(--primary)] text-white border-[var(--primary)]"
+                              : "bg-white text-[var(--muted-text)] border-[var(--border)] hover:bg-[var(--muted-background)]"
+                          }`}
+                        >
+                          {state}
+                        </button>
+                      ))}
+                    </div>
+                    {formData.includedStates.length === 0 && (
+                      <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1">
+                        No selection = All states shown
+                      </p>
+                    )}
+                    {formData.includedStates.length > 0 && (
+                      <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1 font-medium">
+                        {formData.includedStates.length} state
+                        {formData.includedStates.length > 1 ? "s" : ""} included
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Institute Type - Multi Select */}
                 <div>
