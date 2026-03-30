@@ -12,9 +12,10 @@ import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import PredictorPaymentModal from "./PredictorPaymentModal";
+const RETURN_URL = "/jac-delhi-predictor";
+import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
 
 const PRODUCT_SLUG = "jac-delhi-predictor";
-const RETURN_URL = "/jac-delhi-predictor";
 
 export default function JACDelhiCollegePredictor() {
   const dispatch = useAppDispatch();
@@ -22,6 +23,12 @@ export default function JACDelhiCollegePredictor() {
   const userData = useAppSelector(selectUser);
   const userOrders = useAppSelector(selectUserOrders);
   const isCounsellor = userData?.userId?.role === "counsellor";
+  const {
+    prefill,
+    crlRankLocked,
+    lockMessage,
+  } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
+
   const [formData, setFormData] = useState({
     crlRank: "",
     categoryRank: "",
@@ -36,6 +43,9 @@ export default function JACDelhiCollegePredictor() {
 
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [rankLockMessage, setRankLockMessage] = useState(
+    "Your rank has been set by your counsellor.",
+  );
   const [branchesData, setBranchesData] = useState({});
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -87,6 +97,26 @@ export default function JACDelhiCollegePredictor() {
       setHasPurchased(isPurchased);
     }
   }, [userOrders]);
+
+  useEffect(() => {
+    if (!prefill) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      crlRank:
+        typeof prefill.crlRank === "number" ? String(prefill.crlRank) : prev.crlRank,
+      categoryRank:
+        typeof prefill.categoryRank === "number"
+          ? String(prefill.categoryRank)
+          : prev.categoryRank,
+      category: prefill.category || prev.category,
+      gender: prefill.gender || prev.gender,
+    }));
+
+    if (lockMessage) {
+      setRankLockMessage(lockMessage);
+    }
+  }, [lockMessage, prefill]);
 
   // Auto-scroll to results when they become available
   useEffect(() => {
@@ -153,6 +183,10 @@ export default function JACDelhiCollegePredictor() {
 
   const handleChange = (e) => {
     const { id, value, type } = e.target;
+
+    if (id === "crlRank" && crlRankLocked) {
+      return;
+    }
 
     // Validate number inputs to prevent negative values
     if (type === "number") {
@@ -343,9 +377,15 @@ export default function JACDelhiCollegePredictor() {
                 placeholder="15000"
                 min="1"
                 required
+                disabled={crlRankLocked}
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
+              {crlRankLocked && (
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
+                  {rankLockMessage}
+                </p>
+              )}
             </div>
             <div>
               <label

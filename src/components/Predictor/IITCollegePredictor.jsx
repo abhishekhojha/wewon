@@ -7,6 +7,7 @@ import { getPredictorBySlug } from "@/data/counsellingProducts";
 import options from "./data/options.json";
 import PredictionResults from "./PredictionResults";
 import { toast } from "sonner";
+import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
@@ -17,6 +18,12 @@ const PRODUCT_SLUG = "jee-advanced-predictor";
 const RETURN_URL = "/jee-advanced-predictor";
 
 export default function IITCollegePredictor() {
+  const {
+    prefill,
+    crlRankLocked,
+    lockMessage,
+  } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
+
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectIsAuthenticated);
   const userData = useAppSelector(selectUser);
@@ -36,6 +43,9 @@ export default function IITCollegePredictor() {
 
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [rankLockMessage, setRankLockMessage] = useState(
+    "Your rank has been set by your counsellor.",
+  );
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
@@ -110,6 +120,26 @@ export default function IITCollegePredictor() {
     }
   }, [userOrders]);
 
+  useEffect(() => {
+    if (!prefill) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      crlRank:
+        typeof prefill.crlRank === "number" ? String(prefill.crlRank) : prev.crlRank,
+      categoryRank:
+        typeof prefill.categoryRank === "number"
+          ? String(prefill.categoryRank)
+          : prev.categoryRank,
+      category: prefill.category || prev.category,
+      gender: prefill.gender || prev.gender,
+    }));
+
+    if (lockMessage) {
+      setRankLockMessage(lockMessage);
+    }
+  }, [lockMessage, prefill]);
+
   // Auto-scroll to results when they become available
   useEffect(() => {
     if (results && resultsRef.current) {
@@ -122,6 +152,10 @@ export default function IITCollegePredictor() {
 
   const handleChange = (e) => {
     const { id, value, type } = e.target;
+
+    if (id === "crlRank" && crlRankLocked) {
+      return;
+    }
 
     // Validate categoryRank to accept only numbers or numbers ending with 'P'
     if (id === "categoryRank") {
@@ -324,9 +358,15 @@ export default function IITCollegePredictor() {
                 onChange={handleChange}
                 placeholder="15000"
                 min="1"
+                disabled={crlRankLocked}
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
+              {crlRankLocked && (
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
+                  {rankLockMessage}
+                </p>
+              )}
             </div>
 
             {/* Category Rank */}

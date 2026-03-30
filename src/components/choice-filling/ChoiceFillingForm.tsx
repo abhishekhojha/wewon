@@ -15,18 +15,88 @@ import {
 import { useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated } from "@/store/auth/authSlice";
 import { useRouter } from "next/navigation";
+import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
+
+type ChoiceFillingFormState = {
+  name: string;
+  crlRank: string;
+  categoryRank: string;
+  gender: string;
+  category: string;
+  homeState: string;
+  instituteTypes: string[];
+  branchGroups: string[];
+};
+
+const mergePrefillIntoForm = (
+  prev: ChoiceFillingFormState,
+  prefill?: {
+    name?: string;
+    crlRank?: number;
+    categoryRank?: number;
+    gender?: string;
+    category?: string;
+    homeState?: string;
+  },
+  preserveExistingValues: boolean = false,
+): ChoiceFillingFormState => {
+  if (!prefill) return prev;
+
+  return {
+    ...prev,
+    name:
+      prefill.name && (!preserveExistingValues || !prev.name.trim())
+        ? prefill.name
+        : prev.name,
+    crlRank:
+      typeof prefill.crlRank === "number" &&
+      (!preserveExistingValues || !prev.crlRank)
+        ? String(prefill.crlRank)
+        : prev.crlRank,
+    categoryRank:
+      typeof prefill.categoryRank === "number" &&
+      (!preserveExistingValues || !prev.categoryRank)
+        ? String(prefill.categoryRank)
+        : prev.categoryRank,
+    gender:
+      prefill.gender && (!preserveExistingValues || !prev.gender)
+        ? prefill.gender
+        : prev.gender,
+    category:
+      prefill.category && (!preserveExistingValues || !prev.category)
+        ? prefill.category
+        : prev.category,
+    homeState:
+      prefill.homeState && (!preserveExistingValues || !prev.homeState)
+        ? prefill.homeState
+        : prev.homeState,
+  };
+};
 
 interface ChoiceFillingFormProps {
   toolKey?: string;
   toolLabel?: string;
+  productId?: string;
+  productSlug?: string;
 }
 
 export default function ChoiceFillingForm({
   toolKey,
   toolLabel = "JEE Main",
+  productId,
+  productSlug,
 }: ChoiceFillingFormProps) {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const router = useRouter();
+
+  const {
+    prefill: orderPrefill,
+    crlRankLocked: isOrderRankLocked,
+    lockMessage: orderRankLockMessage,
+  } = useMentorshipToolPrefill({
+    productId,
+    productSlug,
+  });
 
   const [metadata, setMetadata] = useState<ChoiceFillingMetadata | null>(null);
   const [metaLoading, setMetaLoading] = useState(true);
@@ -53,6 +123,19 @@ export default function ChoiceFillingForm({
   const [loading, setLoading] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (!orderPrefill) return;
+
+    setFormData((prev) => mergePrefillIntoForm(prev, orderPrefill));
+
+    if (isOrderRankLocked) {
+      setRankLocked(true);
+    }
+    if (orderRankLockMessage) {
+      setRankLockMessage(orderRankLockMessage);
+    }
+  }, [isOrderRankLocked, orderPrefill, orderRankLockMessage]);
+
   // Fetch metadata on mount
   useEffect(() => {
     const loadMetadata = async () => {
@@ -61,27 +144,13 @@ export default function ChoiceFillingForm({
         const data = await fetchChoiceFillingMetadata(toolKey);
         setMetadata(data);
 
-        const prefill = data.prefill || {};
-        if (Object.keys(prefill).length > 0) {
-          setFormData((prev) => ({
-            ...prev,
-            name: prefill.name || prev.name,
-            crlRank:
-              typeof prefill.crlRank === "number"
-                ? String(prefill.crlRank)
-                : prev.crlRank,
-            categoryRank:
-              typeof prefill.categoryRank === "number"
-                ? String(prefill.categoryRank)
-                : prev.categoryRank,
-            gender: prefill.gender || prev.gender,
-            category: prefill.category || prev.category,
-            homeState: prefill.homeState || prev.homeState,
-          }));
+        const prefill = data.prefill;
+        if (prefill) {
+          setFormData((prev) => mergePrefillIntoForm(prev, prefill, true));
         }
 
-        setRankLocked(Boolean(data.rankLocked));
-        if (data.lockMessage) {
+        setRankLocked(Boolean(data.rankLocked || isOrderRankLocked));
+        if (data.lockMessage && !isOrderRankLocked) {
           setRankLockMessage(data.lockMessage);
         }
       } catch {
@@ -91,7 +160,7 @@ export default function ChoiceFillingForm({
       }
     };
     loadMetadata();
-  }, [toolKey]);
+  }, [isOrderRankLocked, toolKey]);
 
   // Auto-scroll to results
   useEffect(() => {
@@ -108,9 +177,11 @@ export default function ChoiceFillingForm({
   ) => {
     const { id, value, type } = e.target;
 
-    if (id === "categoryRank" || id === "crlRank") {
+    if (id === "crlRank") {
       if (rankLocked) return;
+    }
 
+    if (id === "categoryRank" || id === "crlRank") {
       if (value === "") {
         setFormData((prev) => ({ ...prev, [id]: value }));
         return;
@@ -218,20 +289,7 @@ export default function ChoiceFillingForm({
 
       const prefill = response.prefill;
       if (prefill) {
-        setFormData((prev) => ({
-          ...prev,
-          crlRank:
-            typeof prefill.crlRank === "number"
-              ? String(prefill.crlRank)
-              : prev.crlRank,
-          categoryRank:
-            typeof prefill.categoryRank === "number"
-              ? String(prefill.categoryRank)
-              : prev.categoryRank,
-          gender: prefill.gender || prev.gender,
-          category: prefill.category || prev.category,
-          homeState: prefill.homeState || prev.homeState,
-        }));
+        setFormData((prev) => mergePrefillIntoForm(prev, prefill));
       }
     } catch (error: any) {
       if (error?.response?.status === 403) {
@@ -372,7 +430,6 @@ export default function ChoiceFillingForm({
                 onChange={handleChange}
                 placeholder="e.g. 14211"
                 required={formData.category !== "OPEN"}
-                disabled={rankLocked}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
             </div>

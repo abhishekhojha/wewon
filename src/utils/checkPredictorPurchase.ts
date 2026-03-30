@@ -16,22 +16,22 @@ export const checkPredictorPurchase = (
 
   // Check if any order contains this predictor and is valid
   const hasPurchase = userOrders.some((order) => {
-    // Check if order is completed
-    if (order.paymentStatus !== "completed") {
+    const status = (order.status || order.paymentStatus || "").toLowerCase();
+    if (status !== "completed") {
       return false;
     }
 
     // Check if order is still valid (not expired)
-    const validUntil = new Date(order.validUntil);
-    const now = new Date();
-    if (validUntil < now) {
-      return false;
+    if (order.validUntil) {
+      const validUntil = new Date(order.validUntil);
+      const now = new Date();
+      if (validUntil < now) {
+        return false;
+      }
     }
 
     // Check if the order's product matches the predictor
-    // This assumes predictor purchases are tracked via productId
-    // You may need to adjust this logic based on your actual data structure
-    return order.productId === predictorId;
+    return order.product?._id === predictorId || order.productId === predictorId;
   });
 
   return hasPurchase;
@@ -49,17 +49,19 @@ export const getPurchasedPredictorIds = (userOrders: Order[]): string[] => {
 
   const purchasedIds = userOrders
     .filter((order) => {
-      // Only include completed orders
-      if (order.paymentStatus !== "completed") {
+      const status = (order.status || order.paymentStatus || "").toLowerCase();
+      if (status !== "completed") {
         return false;
       }
 
       // Only include non-expired orders
+      if (!order.validUntil) return true;
       const validUntil = new Date(order.validUntil);
       const now = new Date();
       return validUntil >= now;
     })
-    .map((order) => order.productId);
+    .map((order) => order.product?._id || order.productId)
+    .filter((id): id is string => Boolean(id));
 
   // Remove duplicates
   return Array.from(new Set(purchasedIds));

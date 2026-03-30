@@ -11,6 +11,7 @@ import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import PredictorPaymentModal from "./PredictorPaymentModal";
+import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
 
 const PRODUCT_SLUG = "jee-early-predictor";
 
@@ -19,6 +20,7 @@ export default function JEEEarlyPredictor() {
   const user = useAppSelector(selectIsAuthenticated);
   const userData = useAppSelector(selectUser);
   const userOrders = useAppSelector(selectUserOrders);
+  const { prefill } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
 
   const isCounsellor = userData?.userId?.role === "counsellor";
 
@@ -40,6 +42,17 @@ export default function JEEEarlyPredictor() {
   const [product, setProduct] = useState(null);
   const [productLoading, setProductLoading] = useState(true);
   const resultsRef = useRef(null);
+
+  useEffect(() => {
+    if (!prefill) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      category: prefill.category || prev.category,
+      gender: prefill.gender || prev.gender,
+      homeState: prefill.homeState || prev.homeState,
+    }));
+  }, [prefill]);
 
   // Fetch product data dynamically
   useEffect(() => {

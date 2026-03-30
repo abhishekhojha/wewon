@@ -12,6 +12,7 @@ import { getPredictorBySlug } from "@/data/counsellingProducts";
 import uptacOptions from "./data/uptacOptions.json";
 import PredictionResults from "./PredictionResults";
 import { toast } from "sonner";
+import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
@@ -27,6 +28,12 @@ export default function UPTACCollegePredictor() {
   const userData = useAppSelector(selectUser);
   const userOrders = useAppSelector(selectUserOrders);
   const isCounsellor = userData?.userId?.role === "counsellor";
+
+  const {
+    prefill,
+    crlRankLocked,
+    lockMessage,
+  } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
 
   const [formData, setFormData] = useState({
     crlRank: "",
@@ -46,6 +53,9 @@ export default function UPTACCollegePredictor() {
   const [instituteSearch, setInstituteSearch] = useState("");
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [rankLockMessage, setRankLockMessage] = useState(
+    "Your rank has been set by your counsellor.",
+  );
   const [branchesData, setBranchesData] = useState({});
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -55,6 +65,27 @@ export default function UPTACCollegePredictor() {
   const [product, setProduct] = useState(null);
   const [productLoading, setProductLoading] = useState(true);
   const resultsRef = useRef(null);
+
+  useEffect(() => {
+    if (!prefill) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      crlRank:
+        typeof prefill.crlRank === "number" ? String(prefill.crlRank) : prev.crlRank,
+      categoryRank:
+        typeof prefill.categoryRank === "number"
+          ? String(prefill.categoryRank)
+          : prev.categoryRank,
+      category: prefill.category || prev.category,
+      gender: prefill.gender || prev.gender,
+      homeState: prefill.homeState || prev.homeState,
+    }));
+
+    if (lockMessage) {
+      setRankLockMessage(lockMessage);
+    }
+  }, [lockMessage, prefill]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -179,6 +210,10 @@ export default function UPTACCollegePredictor() {
 
   const handleChange = (e) => {
     const { id, value, type } = e.target;
+
+    if (id === "crlRank" && crlRankLocked) {
+      return;
+    }
     if (type === "number") {
       if (value === "") { setFormData((prev) => ({ ...prev, [id]: value })); return; }
       if (Number(value) < 1) return;
@@ -289,8 +324,29 @@ export default function UPTACCollegePredictor() {
 
           <form className="space-y-3 sm:space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="crlRank" className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">Enter CRL Rank (Required)</label>
-              <input type="number" id="crlRank" value={formData.crlRank} onChange={handleChange} placeholder="15000" min="1" required onWheel={(e) => e.currentTarget.blur()} className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]" />
+              <label
+                htmlFor="crlRank"
+                className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
+              >
+                Enter CRL Rank (Required)
+              </label>
+              <input
+                type="number"
+                id="crlRank"
+                value={formData.crlRank}
+                onChange={handleChange}
+                placeholder="15000"
+                min="1"
+                required
+                disabled={crlRankLocked}
+                onWheel={(e) => e.currentTarget.blur()}
+                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
+              />
+              {crlRankLocked && (
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
+                  {rankLockMessage}
+                </p>
+              )}
             </div>
 
             <div>
