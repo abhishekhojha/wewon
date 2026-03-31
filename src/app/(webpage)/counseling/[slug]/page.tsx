@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import CounselingClient from "./CounselingClient";
+import TrustSection from "@/components/common/TrustSection";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -52,5 +53,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default function Page() {
-  return <CounselingClient />;
+  return (
+    <>
+      <CounselingClient />
+      <div className="container mx-auto mt-10 mb-16 px-4">
+        <TrustSection />
+      </div>
+    </>
+  );
 }

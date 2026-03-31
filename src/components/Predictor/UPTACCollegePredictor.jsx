@@ -466,6 +466,7 @@ export default function UPTACCollegePredictor() {
               {formData.programName.length > 0 && (<p className="text-xs text-[var(--muted-text)] mt-1">{formData.programName.length} program(s) selected</p>)}
             </div>
 
+            {/* Submit Button */}
             <div>
               <button type="submit" disabled={loading} className="w-full bg-[var(--primary)] text-white font-semibold p-2.5 sm:p-3.5 text-sm sm:text-base rounded-lg shadow-md hover:opacity-90 transition-opacity disabled:opacity-50">
                 {loading ? "Predicting..." : "Predict My College"}
