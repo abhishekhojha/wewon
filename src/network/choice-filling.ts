@@ -140,8 +140,8 @@ const choiceFillingToolPath = (toolKey: string, suffix: string) => {
 export const resolveChoiceFillingToolKey = (
   product?: ChoiceFillingProduct | null,
 ) => {
-  if (product?.toolKey) {
-    return normalizeChoiceFillingToolKey(product.toolKey);
+  if (product?.slug || product?.toolKey) {
+    return normalizeChoiceFillingToolKey(product.slug || product.toolKey);
   }
   return DEFAULT_CHOICE_FILLING_TOOL_KEY;
 };
