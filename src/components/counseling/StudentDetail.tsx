@@ -486,7 +486,6 @@ export default function StudentDetail({ studentId }: Props) {
                   )}
                 </div>
                 {/* Action */}
-                {order.taskStatus === "pending" ? (
                   <button
                     onClick={() => setModalOrderId(order.orderId)}
                     className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#073d68] text-white text-sm font-semibold hover:bg-[#0a4c82] transition-colors shadow-sm"
@@ -494,11 +493,6 @@ export default function StudentDetail({ studentId }: Props) {
                     <Edit2 className="w-3.5 h-3.5" />
                     Set Status
                   </button>
-                ) : (
-                  <span className="flex-shrink-0 text-xs text-gray-400 italic px-3 py-2 bg-gray-100 rounded-xl">
-                    Status locked
-                  </span>
-                )}
               </div>
             ))}
           </div>

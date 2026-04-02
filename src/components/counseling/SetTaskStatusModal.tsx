@@ -173,15 +173,6 @@ export default function SetTaskStatusModal({
                 </div>
               )}
 
-              {/* Warning: immutable action */}
-              <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-xl border border-amber-100">
-                <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-700">
-                  <strong>Note:</strong> This action is permanent and cannot be undone by the
-                  counsellor. Only an Admin can reset the status.
-                </p>
-              </div>
-
               {/* Buttons */}
               <div className="flex gap-3 pt-1">
                 <button
