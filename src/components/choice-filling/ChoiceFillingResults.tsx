@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useAppSelector } from "@/store/hooks";
+import { selectUser } from "@/store/auth/authSlice";
 import {
   Download,
   FileSpreadsheet,
@@ -53,6 +55,8 @@ export default function ChoiceFillingResults({
   toolKey,
 }: ChoiceFillingResultsProps) {
   const [showAll, setShowAll] = useState(false);
+  const user = useAppSelector(selectUser);
+  const isStudent = user?.userId?.role?.toLowerCase() === "student";
   const [exportingExcel, setExportingExcel] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
 
@@ -246,14 +250,14 @@ export default function ChoiceFillingResults({
           <table className="w-full text-left text-xs sm:text-sm">
             <thead className="bg-gray-50 text-[var(--muted-text)] uppercase font-semibold text-[10px] sm:text-xs border-b-2 border-[var(--border)]">
               <tr>
-                {hasSerialNo && (
+                {!isStudent && hasSerialNo && (
                   <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
                     S.No
                   </th>
                 )}
                 {showChoiceNo && (
                   <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                    Choice No
+                    {isStudent ? "S.No" : "Choice No"}
                   </th>
                 )}
                 <th className="px-2 sm:px-4 py-2 sm:py-3 min-w-[200px]">
