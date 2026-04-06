@@ -28,6 +28,8 @@ export async function GET(
             "/terms",
             "/refund",
             "/jee-mains-predictor",
+            "/josaa-predictor",
+            "/csab-predictor",
             "/jee-advanced-predictor",
             "/jee-early-predictor",
             "/uptac-predictor",

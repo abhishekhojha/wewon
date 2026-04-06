@@ -129,13 +129,17 @@ export default function UPTACCollegePredictor() {
         setCheckingPurchase(false);
         return;
       }
-      try {
-        await dispatch(fetchUserOrders()).unwrap();
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      } finally {
-        setCheckingPurchase(false);
+      const ordersAction = await dispatch(fetchUserOrders());
+      if (
+        fetchUserOrders.rejected.match(ordersAction) &&
+        !ordersAction.meta.condition
+      ) {
+        console.error(
+          "Error fetching orders:",
+          ordersAction.payload || ordersAction.error,
+        );
       }
+      setCheckingPurchase(false);
     };
     checkPurchaseStatus();
   }, [user, isCounsellor, dispatch, product]);

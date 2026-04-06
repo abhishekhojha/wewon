@@ -92,6 +92,74 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
     ],
   },
   {
+    _id: "69888981c6aafde7dfa7c888", // Mock ID
+    title: "JoSAA College Predictor",
+    slug: "josaa-predictor",
+    thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
+    description:
+      "Predict your chances of getting into IITs, NITs, IIITs, and GFTIs based on your JEE rank for JoSAA Rounds 1-6.",
+    price: 499,
+    discountPrice: 299,
+    validityInDays: 365,
+    features: {
+      hasMentorship: false,
+      choiceFilling: {
+        isEnabled: false,
+        usageLimit: 0,
+      },
+      collegePredictor: {
+        isEnabled: true,
+        usageLimit: -1,
+      },
+      hasCourseContent: false,
+    },
+    totalMaterialCount: 0,
+    isActive: true,
+    icon: "🎓",
+    category: PredictorCategory.JEE,
+    purchased: false,
+    displayFeatures: [
+      "IIT, NIT, IIIT & GFTI",
+      "Rounds 1-6 Predictions",
+      "Category-wise Analysis",
+      "Detailed Seat Info",
+    ],
+  },
+  {
+    _id: "69888981c6aafde7dfa7c999", // Mock ID
+    title: "CSAB College Predictor",
+    slug: "csab-predictor",
+    thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
+    description:
+      "Predict your chances for NITs, IIITs, and GFTIs for CSAB Special Rounds 1 & 2.",
+    price: 399,
+    discountPrice: 249,
+    validityInDays: 365,
+    features: {
+      hasMentorship: false,
+      choiceFilling: {
+        isEnabled: false,
+        usageLimit: 0,
+      },
+      collegePredictor: {
+        isEnabled: true,
+        usageLimit: -1,
+      },
+      hasCourseContent: false,
+    },
+    totalMaterialCount: 0,
+    isActive: true,
+    icon: "🎯",
+    category: PredictorCategory.JEE,
+    purchased: false,
+    displayFeatures: [
+      "Special Rounds 1 & 2",
+      "NIT, IIIT & GFTI Only",
+      "Vacancy Based Predictions",
+      "Home State Quota",
+    ],
+  },
+  {
     _id: "69888981c6aafde7dfa7c201",
     title: "JEE Advanced College Predictor",
     slug: "jee-advanced-predictor",

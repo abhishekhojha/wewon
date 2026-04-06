@@ -25,7 +25,6 @@ export interface PaymentSuccessData {
 interface RazorpayPaymentProps {
   productId: string;
   productName: string;
-  productType: "counseling" | "mentorship";
   amount: number;
   couponCode?: string;
   mentorshipFormData?: Record<string, string | number>;
@@ -36,7 +35,6 @@ interface RazorpayPaymentProps {
 export default function RazorpayPayment({
   productId,
   productName,
-  productType,
   amount,
   couponCode,
   mentorshipFormData,
@@ -119,7 +117,6 @@ export default function RazorpayPayment({
       const orderResult = await dispatch(
         createOrder({
           productId,
-          productType,
           couponCode,
           mentorshipFormData,
         }),

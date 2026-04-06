@@ -2,46 +2,48 @@
 
 import { useState, useRef, useEffect } from "react";
 import GoogleAds from "../sections/GoogleAds";
-import {
-  getJACChandigarhBranches,
-  predictJACChandigarh,
-  fetchPredictorBySlug,
-} from "@/network/predictor";
+import { predictJosaa, fetchPredictorBySlug } from "@/network/predictor";
 import { getPredictorBySlug } from "@/data/counsellingProducts";
-import jacChandigarhOptions from "./data/jacChandigarhOptions.json";
+import {
+  josaaRounds,
+  josaaInstituteTypes,
+  categories,
+  genders,
+  states,
+  branchGroups,
+} from "./data/josaaOptions";
 import PredictionResults from "./PredictionResults";
 import { toast } from "sonner";
-import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import PredictorPaymentModal from "./PredictorPaymentModal";
+import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
 
-const PRODUCT_SLUG = "jac-chandigarh-predictor";
-const RETURN_URL = "/jac-chandigarh-predictor";
+const PRODUCT_SLUG = "josaa-predictor";
+const RETURN_URL = "/josaa-predictor";
 
-export default function JACChandigarhCollegePredictor() {
-  const {
-    prefill,
-    crlRankLocked,
-    lockMessage,
-  } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
-
+export default function JoSAAPredictor() {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectIsAuthenticated);
   const userData = useAppSelector(selectUser);
   const userOrders = useAppSelector(selectUserOrders);
   const isCounsellor = userData?.userId?.role === "counsellor";
+
+  const { prefill, crlRankLocked, lockMessage } = useMentorshipToolPrefill({
+    productSlug: PRODUCT_SLUG,
+  });
+
   const [formData, setFormData] = useState({
     crlRank: "",
     categoryRank: "",
     category: "OPEN",
-    homeState: "Chandigarh",
-    round: "",
     gender: "Male",
-    instituteName: "All",
-    programName: [],
+    homeState: "",
+    roundNumber: 6,
+    instituteType: "",
+    branchGroup: "",
   });
 
   const [results, setResults] = useState(null);
@@ -49,8 +51,6 @@ export default function JACChandigarhCollegePredictor() {
   const [rankLockMessage, setRankLockMessage] = useState(
     "Your rank has been set by your counsellor.",
   );
-  const [branchesData, setBranchesData] = useState({ TFW: [], NON_TFW: [] });
-  const [loadingBranches, setLoadingBranches] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
@@ -58,6 +58,25 @@ export default function JACChandigarhCollegePredictor() {
   const [product, setProduct] = useState(null);
   const [productLoading, setProductLoading] = useState(true);
   const resultsRef = useRef(null);
+
+  useEffect(() => {
+    if (!prefill) return;
+    setFormData((prev) => ({
+      ...prev,
+      crlRank:
+        typeof prefill.crlRank === "number"
+          ? String(prefill.crlRank)
+          : prev.crlRank,
+      categoryRank:
+        typeof prefill.categoryRank === "number"
+          ? String(prefill.categoryRank)
+          : prev.categoryRank,
+      category: prefill.category || prev.category,
+      gender: prefill.gender || prev.gender,
+      homeState: prefill.homeState || prev.homeState,
+    }));
+    if (lockMessage) setRankLockMessage(lockMessage);
+  }, [lockMessage, prefill]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -74,9 +93,7 @@ export default function JACChandigarhCollegePredictor() {
           console.error("Error fetching product:", error);
         }
         const fallbackProduct = getPredictorBySlug(PRODUCT_SLUG);
-        if (fallbackProduct) {
-          setProduct(fallbackProduct);
-        }
+        if (fallbackProduct) setProduct(fallbackProduct);
       } finally {
         setProductLoading(false);
       }
@@ -86,9 +103,21 @@ export default function JACChandigarhCollegePredictor() {
 
   useEffect(() => {
     const checkPurchaseStatus = async () => {
-      if (product && product.price === 0 && product.discountPrice === 0) { setHasPurchased(true); setCheckingPurchase(false); return; }
-      if (user && isCounsellor) { setHasPurchased(true); setCheckingPurchase(false); return; }
-      if (!user) { setHasPurchased(false); setCheckingPurchase(false); return; }
+      if (product && product.price === 0 && product.discountPrice === 0) {
+        setHasPurchased(true);
+        setCheckingPurchase(false);
+        return;
+      }
+      if (user && isCounsellor) {
+        setHasPurchased(true);
+        setCheckingPurchase(false);
+        return;
+      }
+      if (!user) {
+        setHasPurchased(false);
+        setCheckingPurchase(false);
+        return;
+      }
       const ordersAction = await dispatch(fetchUserOrders());
       if (
         fetchUserOrders.rejected.match(ordersAction) &&
@@ -106,147 +135,46 @@ export default function JACChandigarhCollegePredictor() {
 
   useEffect(() => {
     if (userOrders.length > 0) {
-      const isPurchased = userOrders.some((order) => order.product?.slug === PRODUCT_SLUG && order.status === "completed");
+      const isPurchased = userOrders.some(
+        (order) =>
+          order.product?.slug === PRODUCT_SLUG && order.status === "completed",
+      );
       setHasPurchased(isPurchased);
     }
   }, [userOrders]);
 
   useEffect(() => {
-    if (!prefill) return;
-
-    setFormData((prev) => ({
-      ...prev,
-      crlRank:
-        typeof prefill.crlRank === "number" ? String(prefill.crlRank) : prev.crlRank,
-      categoryRank:
-        typeof prefill.categoryRank === "number"
-          ? String(prefill.categoryRank)
-          : prev.categoryRank,
-      category: prefill.category || prev.category,
-      gender: prefill.gender || prev.gender,
-      homeState: prefill.homeState || prev.homeState,
-    }));
-
-    if (lockMessage) {
-      setRankLockMessage(lockMessage);
-    }
-  }, [lockMessage, prefill]);
-
-  // Auto-scroll to results when they become available
-  useEffect(() => {
     if (results && resultsRef.current) {
-      resultsRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [results]);
-
-  // Fetch branches on component mount
-  useEffect(() => {
-    const fetchBranches = async () => {
-      setLoadingBranches(true);
-      try {
-        const response = await getJACChandigarhBranches();
-        setBranchesData(response.data || { TFW: [], NON_TFW: [] });
-      } catch (error) {
-        console.error("Error fetching branches:", error);
-        toast.error("Failed to load branches");
-      } finally {
-        setLoadingBranches(false);
-      }
-    };
-    fetchBranches();
-  }, []);
-
-  // Check if the selected category is a TFW category
-  const isTFWCategory = () => {
-    const selectedCategory = jacChandigarhOptions.categories.find(
-      (cat) => cat.value === formData.category
-    );
-    return selectedCategory?.isTFW === true;
-  };
-
-  // Get available programs based on category (TFW or Non-TFW)
-  const getAvailablePrograms = () => {
-    if (isTFWCategory()) {
-      // Use API data if available, fallback to static
-      return branchesData.TFW?.length > 0
-        ? branchesData.TFW
-        : jacChandigarhOptions.tfwPrograms;
-    }
-    // Non-TFW programs
-    return branchesData.NON_TFW?.length > 0
-      ? branchesData.NON_TFW
-      : jacChandigarhOptions.nonTfwPrograms;
-  };
 
   const handleChange = (e) => {
     const { id, value, type } = e.target;
 
-    if (id === "crlRank" && crlRankLocked) {
-      return;
+    if (id === "crlRank" && crlRankLocked) return;
+
+    if (id === "categoryRank") {
+      if (value === "") {
+        setFormData((prev) => ({ ...prev, [id]: value }));
+        return;
+      }
+      if (!/^\d+$/.test(value)) return;
     }
 
-    // Validate number inputs to prevent negative values
     if (type === "number") {
       if (value === "") {
-        setFormData((prev) => ({
-          ...prev,
-          [id]: value,
-        }));
+        setFormData((prev) => ({ ...prev, [id]: value }));
         return;
       }
-
-      const numValue = Number(value);
-      if (numValue < 1) {
-        return;
-      }
+      if (Number(value) < 1) return;
     }
 
-    // Reset program selection when category changes (TFW affects programs)
-    if (id === "category") {
-      setFormData((prev) => ({
-        ...prev,
-        [id]: value,
-        programName: [],
-      }));
-      return;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
   const handleGenderChange = (gender) => {
-    setFormData((prev) => ({
-      ...prev,
-      gender,
-    }));
-  };
-
-  const handleProgramSelection = (program) => {
-    setFormData((prev) => {
-      const isSelected = prev.programName.includes(program);
-
-      return {
-        ...prev,
-        programName: isSelected
-          ? prev.programName.filter((name) => name !== program)
-          : [...prev.programName, program],
-      };
-    });
-  };
-
-  const handleSelectAllPrograms = () => {
-    const availablePrograms = getAvailablePrograms();
-    if (formData.programName.length === availablePrograms.length) {
-      setFormData((prev) => ({ ...prev, programName: [] }));
-    } else {
-      setFormData((prev) => ({ ...prev, programName: [...availablePrograms] }));
-    }
+    setFormData((prev) => ({ ...prev, gender }));
   };
 
   const fetchPredictions = async () => {
@@ -255,21 +183,20 @@ export default function JACChandigarhCollegePredictor() {
     try {
       const payload = {
         crlRank: Number(formData.crlRank),
+        ...(formData.categoryRank
+          ? { categoryRank: Number(formData.categoryRank) }
+          : {}),
         category: formData.category,
-        homeState: formData.homeState,
-        round: formData.round,
         gender: formData.gender,
-        instituteName: formData.instituteName === "All" ? "All" : formData.instituteName,
-        programName: formData.programName.length > 0 ? formData.programName : "All",
+        homeState: formData.homeState,
+        roundNumber: Number(formData.roundNumber),
+        ...(formData.instituteType ? { instituteType: formData.instituteType } : {}),
+        ...(formData.branchGroup ? { branchGroup: formData.branchGroup } : {}),
       };
-      console.log("Sending JAC Chandigarh payload:", payload);
-      const response = await predictJACChandigarh(payload);
-      console.log("JAC Chandigarh prediction response:", response.data);
-      const transformedResults = { homestatePredictions: response.data.predictions || [] };
-      console.log("Transformed results:", transformedResults);
-      setResults(transformedResults);
+      const response = await predictJosaa(payload);
+      setResults(response.data);
     } catch (error) {
-      console.error("JAC Chandigarh prediction error:", error);
+      console.error("JoSAA prediction error:", error);
       toast.error("Failed to get prediction. Please try again.");
     } finally {
       setLoading(false);
@@ -278,10 +205,27 @@ export default function JACChandigarhCollegePredictor() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.crlRank) { toast.error("Please enter CRL Rank"); return; }
-    if (!formData.round) { toast.error("Please select Round"); return; }
-    if (!user) { setShowLoginModal(true); return; }
-    if (!hasPurchased && product && (product.price > 0 || (product.discountPrice && product.discountPrice > 0))) { setShowPaymentModal(true); return; }
+
+    if (formData.category !== "OPEN" && !formData.categoryRank) {
+      toast.error("Please enter Category Rank for the selected category");
+      return;
+    }
+    if (formData.categoryRank && !/^\d+$/.test(formData.categoryRank)) {
+      toast.error("Category Rank must be a number");
+      return;
+    }
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    if (
+      !hasPurchased &&
+      product &&
+      (product.price > 0 || (product.discountPrice && product.discountPrice > 0))
+    ) {
+      setShowPaymentModal(true);
+      return;
+    }
     await fetchPredictions();
   };
 
@@ -302,15 +246,15 @@ export default function JACChandigarhCollegePredictor() {
               Enter your exam details
             </h3>
             <p className="text-xs sm:text-sm text-[var(--muted-text)] mt-1">
-              Enter your CRL Rank and category information
+              Select your stream, exam, and rank
             </p>
           </div>
           <div className="p-3 sm:p-6 bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-sm">
             <h3 className="text-base sm:text-xl font-semibold text-[var(--foreground)]">
-              Choose your preferences
+              Add your preferences
             </h3>
             <p className="text-xs sm:text-sm text-[var(--muted-text)] mt-1">
-              Home state, round, institutes, and programs
+              Category, gender, and home state
             </p>
           </div>
           <div className="p-3 sm:p-6 bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-sm">
@@ -318,7 +262,7 @@ export default function JACChandigarhCollegePredictor() {
               Get instant results
             </h3>
             <p className="text-xs sm:text-sm text-[var(--muted-text)] mt-1">
-              See your personalized college matches in Chandigarh & Punjab
+              See your personalized college matches
             </p>
           </div>
           <p className="text-xs text-[var(--muted-text)] px-2">
@@ -328,17 +272,15 @@ export default function JACChandigarhCollegePredictor() {
 
         {/* Right Column: Predictor Form */}
         <div className="bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-6 md:p-8">
-          {/* Header */}
           <div className="flex flex-col justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--primary)]">
-              JAC CHANDIGARH COLLEGE PREDICTOR
+              JoSAA COLLEGE PREDICTOR
             </h2>
             <span className="bg-[var(--light-blue)] text-[var(--primary)] text-[10px] sm:text-xs font-semibold px-2 sm:px-4 py-1 sm:py-2 rounded-full whitespace-nowrap w-fit">
-              CCET • UIET • Dr. SSB UICET
+              IIT · NIT · IIIT · GFTI
             </span>
           </div>
 
-          {/* Form */}
           <form className="space-y-3 sm:space-y-5" onSubmit={handleSubmit}>
             {/* CRL Rank */}
             <div>
@@ -346,14 +288,14 @@ export default function JACChandigarhCollegePredictor() {
                 htmlFor="crlRank"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Enter your CRL Rank (Required)
+                Enter CRL Rank (Required)
               </label>
               <input
                 type="number"
                 id="crlRank"
                 value={formData.crlRank}
                 onChange={handleChange}
-                placeholder="50000"
+                placeholder="15000"
                 min="1"
                 required
                 disabled={crlRankLocked}
@@ -373,15 +315,16 @@ export default function JACChandigarhCollegePredictor() {
                 htmlFor="categoryRank"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Enter Category Rank (Optional)
+                Enter Category Rank{" "}
+                {formData.category !== "OPEN" ? "(Required)" : "(Optional)"}
               </label>
               <input
-                type="number"
+                type="text"
                 id="categoryRank"
                 value={formData.categoryRank}
                 onChange={handleChange}
-                placeholder="5000"
-                min="1"
+                placeholder="2000"
+                required={formData.category !== "OPEN"}
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
@@ -393,7 +336,7 @@ export default function JACChandigarhCollegePredictor() {
                 Gender
               </label>
               <div className="flex space-x-1.5 sm:space-x-2">
-                {jacChandigarhOptions.genders.map((option) => (
+                {genders.map((option) => (
                   <button
                     key={option.value}
                     type="button"
@@ -410,7 +353,7 @@ export default function JACChandigarhCollegePredictor() {
               </div>
             </div>
 
-            {/* Select Category */}
+            {/* Category */}
             <div>
               <label
                 htmlFor="category"
@@ -424,17 +367,12 @@ export default function JACChandigarhCollegePredictor() {
                 onChange={handleChange}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
-                {jacChandigarhOptions.categories.map((option) => (
+                {categories.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
               </select>
-              {isTFWCategory() && (
-                <p className="text-xs text-amber-600 mt-1">
-                  Note: TFW category selected. Only TFW programs will be shown.
-                </p>
-              )}
             </div>
 
             {/* Home State */}
@@ -443,61 +381,63 @@ export default function JACChandigarhCollegePredictor() {
                 htmlFor="homeState"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Choose Your Home State
+                Select Your Home State
               </label>
               <select
+                required
                 id="homeState"
                 value={formData.homeState}
                 onChange={handleChange}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
-                {jacChandigarhOptions.homeStates.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                <option value="">Select Your Home State</option>
+                {states.map((state) => (
+                  <option key={state} value={state}>
+                    {state}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Round */}
+            {/* Round Number */}
             <div>
               <label
-                htmlFor="round"
+                htmlFor="roundNumber"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Select Round
+                Round Number
               </label>
               <select
                 required
-                id="round"
-                value={formData.round}
+                id="roundNumber"
+                value={formData.roundNumber}
                 onChange={handleChange}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
-                <option value="">Select Round</option>
-                {jacChandigarhOptions.rounds.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                {josaaRounds.map((round) => (
+                  <option key={round.value} value={round.value}>
+                    {round.label}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Institute Name */}
+            {/* Institute Type */}
             <div>
               <label
-                htmlFor="instituteName"
+                htmlFor="instituteType"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Select Institute
+                Institute Type (Optional)
               </label>
               <select
-                id="instituteName"
-                value={formData.instituteName}
+                id="instituteType"
+                value={formData.instituteType}
                 onChange={handleChange}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
-                {jacChandigarhOptions.institutes.map((option) => (
+                <option value="">All</option>
+                {josaaInstituteTypes.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -505,79 +445,32 @@ export default function JACChandigarhCollegePredictor() {
               </select>
             </div>
 
-            {/* Program Name - Multi-select */}
+            {/* Branch Group */}
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
-                Program Name (Optional)
-                {isTFWCategory() && (
-                  <span className="text-amber-600 ml-1">(TFW Programs)</span>
-                )}
+              <label
+                htmlFor="branchGroup"
+                className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
+              >
+                Branch Group (Optional)
               </label>
-              <div className="border border-[var(--border)] rounded-lg p-2 max-h-48 overflow-y-auto bg-white">
-                {loadingBranches ? (
-                  <p className="text-xs text-[var(--muted-text)] p-2">
-                    Loading programs...
-                  </p>
-                ) : getAvailablePrograms().length > 0 ? (
-                  <>
-                    <label className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={
-                          formData.programName.length ===
-                            getAvailablePrograms().length &&
-                          getAvailablePrograms().length > 0
-                        }
-                        onChange={handleSelectAllPrograms}
-                        className="mr-2 accent-[var(--primary)]"
-                      />
-                      <span className="text-xs sm:text-sm font-semibold">
-                        Select All ({getAvailablePrograms().length})
-                      </span>
-                    </label>
-                    <div className="border-t border-[var(--border)] my-1"></div>
-                    {getAvailablePrograms().map((program) => (
-                      <label
-                        key={program}
-                        className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.programName.includes(program)}
-                          onChange={() => handleProgramSelection(program)}
-                          className="mr-2 accent-[var(--primary)]"
-                        />
-                        <span className="text-xs sm:text-sm">{program}</span>
-                        {formData.programName.includes(program) && (
-                          <svg
-                            className="w-4 h-4 text-green-500 flex-shrink-0 ml-auto"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                      </label>
-                    ))}
-                  </>
-                ) : (
-                  <p className="text-xs text-[var(--muted-text)] p-2">
-                    No programs available
-                  </p>
-                )}
-              </div>
-              {formData.programName.length > 0 && (
-                <p className="text-xs text-[var(--muted-text)] mt-1">
-                  {formData.programName.length} program(s) selected
-                </p>
-              )}
+              <select
+                id="branchGroup"
+                value={formData.branchGroup}
+                onChange={handleChange}
+                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
+              >
+                <option value="">All</option>
+                {branchGroups
+                  .filter((group) => group !== "Mining / Geo")
+                  .map((group) => (
+                    <option key={group} value={group}>
+                      {group}
+                    </option>
+                  ))}
+              </select>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <div>
               <button
                 type="submit"
@@ -587,46 +480,73 @@ export default function JACChandigarhCollegePredictor() {
                 {loading ? "Predicting..." : "Predict My College"}
               </button>
             </div>
-
-            {/* Footer Text */}
             <p className="text-center text-[10px] sm:text-xs text-[var(--muted-text)] pt-2">
-              Powered by official JAC Chandigarh cutoff data
+              Powered by real-time admissions data and official 2026 cutoff
             </p>
           </form>
         </div>
       </div>
 
-      {/* Results Section */}
+      {/* Results */}
       <div ref={resultsRef}>
         {results && (
           <PredictionResults
             results={results}
             userGender={formData.gender}
-            hideSeatType={true}
-            hideGender={true}
+            hideCategory={true}
+            counselingType="JoSAA"
           />
         )}
       </div>
 
+      {/* Payment Modal */}
       {product && (
-        <PredictorPaymentModal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} onPaymentSuccess={handlePaymentSuccess} product={product} />
+        <PredictorPaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onPaymentSuccess={handlePaymentSuccess}
+          product={product}
+        />
       )}
 
+      {/* Login Modal */}
       {showLoginModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 relative overflow-hidden animate-in fade-in zoom-in duration-200">
-            <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
             </button>
             <div className="text-center mb-6 mt-2">
               <div className="w-16 h-16 bg-[var(--primary)]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--primary)]"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--primary)]">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                  <polyline points="10 17 15 12 10 7"></polyline>
+                  <line x1="15" y1="12" x2="3" y2="12"></line>
+                </svg>
               </div>
               <h2 className="text-xl font-bold text-gray-800 mb-2">Login Required</h2>
-              <p className="text-sm text-gray-600">Please login to your account to get your personalized college predictions.</p>
+              <p className="text-sm text-gray-600">
+                Please login to your account to get your personalized college predictions.
+              </p>
             </div>
-            <a href={`/auth?returnUrl=${RETURN_URL}`} className="block w-full py-3 px-4 bg-[var(--primary)] text-white font-semibold rounded-xl hover:bg-[var(--accent)] transition-colors text-center">Login / Sign Up</a>
-            <button onClick={() => setShowLoginModal(false)} className="block w-full py-3 px-4 mt-3 text-gray-500 font-medium rounded-xl hover:bg-gray-50 transition-colors text-center">Cancel</button>
+            <a
+              href={`/auth?returnUrl=${RETURN_URL}`}
+              className="block w-full py-3 px-4 bg-[var(--primary)] text-white font-semibold rounded-xl hover:bg-[var(--accent)] transition-colors text-center"
+            >
+              Login / Sign Up
+            </a>
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="block w-full py-3 px-4 mt-3 text-gray-500 font-medium rounded-xl hover:bg-gray-50 transition-colors text-center"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}

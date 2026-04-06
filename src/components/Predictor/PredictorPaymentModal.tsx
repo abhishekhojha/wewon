@@ -231,7 +231,6 @@ export default function PredictorPaymentModal({
                 <RazorpayPayment
                   productId={product._id || ""}
                   productName={product.title}
-                  productType="counseling"
                   amount={finalPrice}
                   couponCode={appliedCoupon?.couponCode}
                   onSuccess={handlePaymentSuccess}

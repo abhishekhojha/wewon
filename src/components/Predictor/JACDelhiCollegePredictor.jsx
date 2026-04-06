@@ -86,7 +86,17 @@ export default function JACDelhiCollegePredictor() {
       if (product && product.price === 0 && product.discountPrice === 0) { setHasPurchased(true); setCheckingPurchase(false); return; }
       if (user && isCounsellor) { setHasPurchased(true); setCheckingPurchase(false); return; }
       if (!user) { setHasPurchased(false); setCheckingPurchase(false); return; }
-      try { await dispatch(fetchUserOrders()).unwrap(); } catch (error) { console.error("Error fetching orders:", error); } finally { setCheckingPurchase(false); }
+      const ordersAction = await dispatch(fetchUserOrders());
+      if (
+        fetchUserOrders.rejected.match(ordersAction) &&
+        !ordersAction.meta.condition
+      ) {
+        console.error(
+          "Error fetching orders:",
+          ordersAction.payload || ordersAction.error,
+        );
+      }
+      setCheckingPurchase(false);
     };
     checkPurchaseStatus();
   }, [user, isCounsellor, dispatch, product]);

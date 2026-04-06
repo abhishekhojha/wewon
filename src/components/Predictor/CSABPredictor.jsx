@@ -2,9 +2,16 @@
 
 import { useState, useRef, useEffect } from "react";
 import GoogleAds from "../sections/GoogleAds";
-import { predict, fetchPredictorBySlug } from "@/network/predictor";
+import { predictCsab, fetchPredictorBySlug } from "@/network/predictor";
 import { getPredictorBySlug } from "@/data/counsellingProducts";
-import options from "./data/options.json";
+import {
+  csabRounds,
+  csabInstituteTypes,
+  categories,
+  genders,
+  states,
+  branchGroups,
+} from "./data/csabOptions";
 import PredictionResults from "./PredictionResults";
 import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -14,31 +21,26 @@ import { selectUserOrders } from "@/store/order/orderSlice";
 import PredictorPaymentModal from "./PredictorPaymentModal";
 import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
 
-const PRODUCT_SLUG = "jee-mains-predictor";
-const RETURN_URL = "/jee-mains-predictor";
+const PRODUCT_SLUG = "csab-predictor";
+const RETURN_URL = "/csab-predictor";
 
-
-export default function CollegePredictor() {
+export default function CSABPredictor() {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectIsAuthenticated);
   const userData = useAppSelector(selectUser);
   const userOrders = useAppSelector(selectUserOrders);
   const isCounsellor = userData?.userId?.role === "counsellor";
 
-  const {
-    prefill,
-    crlRankLocked,
-    lockMessage,
-  } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
+  const { prefill, crlRankLocked, lockMessage } = useMentorshipToolPrefill({
+    productSlug: PRODUCT_SLUG,
+  });
 
   const [formData, setFormData] = useState({
     crlRank: "",
-    categoryRank: "",
-    category: "OPEN", // Default to OPEN (General)
+    category: "OPEN",
     gender: "Male",
     homeState: "",
-    counselingType: "JoSAA",
-    roundNumber: 1,
+    roundNumber: 3,
     instituteType: "",
     branchGroup: "",
   });
@@ -58,26 +60,19 @@ export default function CollegePredictor() {
 
   useEffect(() => {
     if (!prefill) return;
-
     setFormData((prev) => ({
       ...prev,
       crlRank:
-        typeof prefill.crlRank === "number" ? String(prefill.crlRank) : prev.crlRank,
-      categoryRank:
-        typeof prefill.categoryRank === "number"
-          ? String(prefill.categoryRank)
-          : prev.categoryRank,
+        typeof prefill.crlRank === "number"
+          ? String(prefill.crlRank)
+          : prev.crlRank,
       category: prefill.category || prev.category,
       gender: prefill.gender || prev.gender,
       homeState: prefill.homeState || prev.homeState,
     }));
-
-    if (lockMessage) {
-      setRankLockMessage(lockMessage);
-    }
+    if (lockMessage) setRankLockMessage(lockMessage);
   }, [lockMessage, prefill]);
 
-  // Fetch product data dynamically
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -89,13 +84,11 @@ export default function CollegePredictor() {
           setProduct(getPredictorBySlug(PRODUCT_SLUG) || null);
         }
       } catch (error) {
-        if(error.status!=404){
+        if (error.status != 404) {
           console.error("Error fetching product:", error);
         }
         const fallbackProduct = getPredictorBySlug(PRODUCT_SLUG);
-        if (fallbackProduct) {
-          setProduct(fallbackProduct);
-        }
+        if (fallbackProduct) setProduct(fallbackProduct);
       } finally {
         setProductLoading(false);
       }
@@ -103,7 +96,6 @@ export default function CollegePredictor() {
     fetchProduct();
   }, []);
 
-  // Check if user has purchased the product
   useEffect(() => {
     const checkPurchaseStatus = async () => {
       if (product && product.price === 0 && product.discountPrice === 0) {
@@ -136,7 +128,6 @@ export default function CollegePredictor() {
     checkPurchaseStatus();
   }, [user, isCounsellor, dispatch, product]);
 
-  // Update hasPurchased when userOrders change
   useEffect(() => {
     if (userOrders.length > 0) {
       const isPurchased = userOrders.some(
@@ -147,101 +138,49 @@ export default function CollegePredictor() {
     }
   }, [userOrders]);
 
-  // Auto-scroll to results when they become available
   useEffect(() => {
     if (results && resultsRef.current) {
-      resultsRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [results]);
 
   const handleChange = (e) => {
     const { id, value, type } = e.target;
 
-    if (id === "crlRank" && crlRankLocked) {
-      return;
-    }
+    if (id === "crlRank" && crlRankLocked) return;
 
-    // Validate categoryRank to accept only numbers
-    if (id === "categoryRank") {
-      if (value === "") {
-        setFormData((prev) => ({
-          ...prev,
-          [id]: value,
-        }));
-        return;
-      }
-      const categoryRankPattern = /^\d+$/;
-      if (!categoryRankPattern.test(value)) {
-        return;
-      }
-    }
-
-    // Validate number inputs to prevent negative values
     if (type === "number") {
       if (value === "") {
-        setFormData((prev) => ({
-          ...prev,
-          [id]: value,
-        }));
+        setFormData((prev) => ({ ...prev, [id]: value }));
         return;
       }
-      const numValue = Number(value);
-      if (numValue < 1) {
-        return;
-      }
+      if (Number(value) < 1) return;
     }
 
-    // Reset round number to 1 when counseling type changes
-    if (id === "counselingType") {
-      setFormData((prev) => ({
-        ...prev,
-        [id]: value,
-        roundNumber: 1,
-      }));
-      return;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
   const handleGenderChange = (gender) => {
-    setFormData((prev) => ({
-      ...prev,
-      gender,
-    }));
+    setFormData((prev) => ({ ...prev, gender }));
   };
 
   const fetchPredictions = async () => {
     setLoading(true);
     setResults(null);
-
     try {
       const payload = {
         crlRank: Number(formData.crlRank),
-        categoryRank: formData.categoryRank
-          ? Number(formData.categoryRank)
-          : undefined,
         category: formData.category,
         gender: formData.gender,
         homeState: formData.homeState,
-        counselingType: formData.counselingType,
         roundNumber: Number(formData.roundNumber),
-        instituteType: formData.instituteType || undefined,
-        branchGroup: formData.branchGroup || undefined,
+        ...(formData.instituteType ? { instituteType: formData.instituteType } : {}),
+        ...(formData.branchGroup ? { branchGroup: formData.branchGroup } : {}),
       };
-
-      console.log("Sending payload:", payload);
-      const response = await predict(payload);
-      console.log("Prediction response:", response.data);
+      const response = await predictCsab(payload);
       setResults(response.data);
     } catch (error) {
-      console.error("Prediction error:", error);
+      console.error("CSAB prediction error:", error);
       toast.error("Failed to get prediction. Please try again.");
     } finally {
       setLoading(false);
@@ -251,38 +190,18 @@ export default function CollegePredictor() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate that category rank is provided when category is not OPEN
-    if (formData.category !== "OPEN" && !formData.categoryRank) {
-      toast.error("Please enter Category Rank for the selected category");
-      return;
-    }
-
-    // Validate categoryRank format if provided
-    if (formData.categoryRank) {
-      const categoryRankPattern = /^\d+$/;
-      if (!categoryRankPattern.test(formData.categoryRank)) {
-        toast.error("Category Rank must be a number");
-        return;
-      }
-    }
-
-    // Check if user is logged in
     if (!user) {
       setShowLoginModal(true);
       return;
     }
-
-    // Check if user has purchased
     if (
       !hasPurchased &&
       product &&
-      (product.price > 0 ||
-        (product.discountPrice && product.discountPrice > 0))
+      (product.price > 0 || (product.discountPrice && product.discountPrice > 0))
     ) {
       setShowPaymentModal(true);
       return;
     }
-
     await fetchPredictions();
   };
 
@@ -329,17 +248,15 @@ export default function CollegePredictor() {
 
         {/* Right Column: Predictor Form */}
         <div className="bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-6 md:p-8">
-          {/* Header */}
           <div className="flex flex-col justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--primary)]">
-              JEE MAIN COLLEGE PREDICTOR
+              CSAB COLLEGE PREDICTOR
             </h2>
             <span className="bg-[var(--light-blue)] text-[var(--primary)] text-[10px] sm:text-xs font-semibold px-2 sm:px-4 py-1 sm:py-2 rounded-full whitespace-nowrap w-fit">
-              Trusted by 50,000+ students
+              NIT · IIIT · GFTI (Special Rounds)
             </span>
           </div>
 
-          {/* Form */}
           <form className="space-y-3 sm:space-y-5" onSubmit={handleSubmit}>
             {/* CRL Rank */}
             <div>
@@ -354,7 +271,7 @@ export default function CollegePredictor() {
                 id="crlRank"
                 value={formData.crlRank}
                 onChange={handleChange}
-                placeholder="15000"
+                placeholder="45000"
                 min="1"
                 required
                 disabled={crlRankLocked}
@@ -368,34 +285,13 @@ export default function CollegePredictor() {
               )}
             </div>
 
-            {/* Category Rank */}
-            <div>
-              <label
-                htmlFor="categoryRank"
-                className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
-              >
-                Enter Category Rank{" "}
-                {formData.category !== "OPEN" ? "(Required)" : "(Optional)"}
-              </label>
-              <input
-                type="text"
-                id="categoryRank"
-                value={formData.categoryRank}
-                onChange={handleChange}
-                placeholder="2000"
-                required={formData.category !== "OPEN"}
-                onWheel={(e) => e.currentTarget.blur()}
-                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
-              />
-            </div>
-
             {/* Gender */}
             <div>
               <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
                 Gender
               </label>
               <div className="flex space-x-1.5 sm:space-x-2">
-                {options.genders.map((option) => (
+                {genders.map((option) => (
                   <button
                     key={option.value}
                     type="button"
@@ -412,7 +308,7 @@ export default function CollegePredictor() {
               </div>
             </div>
 
-            {/* Select Category */}
+            {/* Category */}
             <div>
               <label
                 htmlFor="category"
@@ -426,7 +322,7 @@ export default function CollegePredictor() {
                 onChange={handleChange}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
-                {options.categories.map((option) => (
+                {categories.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -434,7 +330,7 @@ export default function CollegePredictor() {
               </select>
             </div>
 
-            {/* Select Home State */}
+            {/* Home State */}
             <div>
               <label
                 htmlFor="homeState"
@@ -450,31 +346,9 @@ export default function CollegePredictor() {
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
                 <option value="">Select Your Home State</option>
-                {options.states.map((state) => (
+                {states.map((state) => (
                   <option key={state} value={state}>
                     {state}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Counseling Type */}
-            <div>
-              <label
-                htmlFor="counselingType"
-                className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
-              >
-                Counseling Type
-              </label>
-              <select
-                id="counselingType"
-                value={formData.counselingType}
-                onChange={handleChange}
-                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
-              >
-                {options.counselingTypes.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
                   </option>
                 ))}
               </select>
@@ -491,11 +365,11 @@ export default function CollegePredictor() {
               <select
                 required
                 id="roundNumber"
+                value={formData.roundNumber}
                 onChange={handleChange}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
-                <option value="">Select Round Number</option>
-                {options.rounds[formData.counselingType]?.map((round) => (
+                {csabRounds.map((round) => (
                   <option key={round.value} value={round.value}>
                     {round.label}
                   </option>
@@ -503,7 +377,7 @@ export default function CollegePredictor() {
               </select>
             </div>
 
-            {/* Institute Type (Optional) */}
+            {/* Institute Type */}
             <div>
               <label
                 htmlFor="instituteType"
@@ -518,7 +392,7 @@ export default function CollegePredictor() {
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
                 <option value="">All</option>
-                {options.instituteTypes.map((option) => (
+                {csabInstituteTypes.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -526,7 +400,7 @@ export default function CollegePredictor() {
               </select>
             </div>
 
-            {/* Branch Group (Optional) */}
+            {/* Branch Group */}
             <div>
               <label
                 htmlFor="branchGroup"
@@ -541,7 +415,7 @@ export default function CollegePredictor() {
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
                 <option value="">All</option>
-                {options.branchGroups
+                {branchGroups
                   .filter((group) => group !== "Mining / Geo")
                   .map((group) => (
                     <option key={group} value={group}>
@@ -551,7 +425,7 @@ export default function CollegePredictor() {
               </select>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <div>
               <button
                 type="submit"
@@ -561,8 +435,6 @@ export default function CollegePredictor() {
                 {loading ? "Predicting..." : "Predict My College"}
               </button>
             </div>
-
-            {/* Footer Text */}
             <p className="text-center text-[10px] sm:text-xs text-[var(--muted-text)] pt-2">
               Powered by real-time admissions data and official 2026 cutoff
             </p>
@@ -570,14 +442,14 @@ export default function CollegePredictor() {
         </div>
       </div>
 
-      {/* Results Section */}
+      {/* Results */}
       <div ref={resultsRef}>
         {results && (
           <PredictionResults
             results={results}
             userGender={formData.gender}
             hideCategory={true}
-            counselingType={formData.counselingType}
+            counselingType="CSAB"
           />
         )}
       </div>
@@ -592,7 +464,7 @@ export default function CollegePredictor() {
         />
       )}
 
-      {/* Login Required Modal */}
+      {/* Login Modal */}
       {showLoginModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 relative overflow-hidden animate-in fade-in zoom-in duration-200">

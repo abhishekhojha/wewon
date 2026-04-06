@@ -4,6 +4,33 @@ export const predict = (data: any) => {
   return apiClient.post("/api/predictor/v2", data);
 };
 
+// JoSAA Specialized Predictor API
+export const predictJosaa = (data: {
+  crlRank: number;
+  category: string;
+  gender: string;
+  homeState: string;
+  roundNumber: number;
+  categoryRank?: number;
+  instituteType?: string;
+  branchGroup?: string;
+}) => {
+  return apiClient.post("/api/predictor/josaa", data);
+};
+
+// CSAB Specialized Predictor API
+export const predictCsab = (data: {
+  crlRank: number;
+  category: string;
+  gender: string;
+  homeState: string;
+  roundNumber: number;
+  instituteType?: string;
+  branchGroup?: string;
+}) => {
+  return apiClient.post("/api/predictor/csab", data);
+};
+
 // UPTAC Predictor APIs
 export const getUPTACInstitutes = (type: string) => {
   return apiClient.get(`/api/uptac/institutes/${type}`);

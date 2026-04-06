@@ -43,7 +43,6 @@ export const createOrder = createAsyncThunk(
   async (
     orderData: {
       productId: string;
-      productType: "counseling" | "mentorship";
       couponCode?: string;
       mentorshipFormData?: Record<string, string | number>;
     },
@@ -52,7 +51,6 @@ export const createOrder = createAsyncThunk(
     try {
       const payload = {
         productId: orderData.productId,
-        productType: orderData.productType,
         ...(orderData.couponCode ? { couponCode: orderData.couponCode } : {}),
         ...(orderData.mentorshipFormData &&
         Object.keys(orderData.mentorshipFormData).length > 0

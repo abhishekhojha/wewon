@@ -97,13 +97,17 @@ export default function JEEEarlyPredictor() {
       }
 
       // Only fetch orders when user is logged in
-      try {
-        await dispatch(fetchUserOrders()).unwrap();
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      } finally {
-        setCheckingPurchase(false);
+      const ordersAction = await dispatch(fetchUserOrders());
+      if (
+        fetchUserOrders.rejected.match(ordersAction) &&
+        !ordersAction.meta.condition
+      ) {
+        console.error(
+          "Error fetching orders:",
+          ordersAction.payload || ordersAction.error,
+        );
       }
+      setCheckingPurchase(false);
     };
 
     checkPurchaseStatus();
