@@ -323,7 +323,7 @@ export default function ChoiceFillingResults({
                         {choice.serialNo ?? index + 1}
                       </td>
                     )}
-                    {showChoiceNo && (
+                    {!isStudent && showChoiceNo && (
                       <td className="px-2 sm:px-4 py-3 font-semibold text-[var(--foreground)] whitespace-nowrap">
                         {choice.choiceNo}
                       </td>
