@@ -250,14 +250,14 @@ export default function ChoiceFillingResults({
           <table className="w-full text-left text-xs sm:text-sm">
             <thead className="bg-gray-50 text-[var(--muted-text)] uppercase font-semibold text-[10px] sm:text-xs border-b-2 border-[var(--border)]">
               <tr>
-                {!isStudent && hasSerialNo && (
+                {hasSerialNo && (
                   <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                    S.No
+                    {isStudent ? "Choice No" : "S.No"}
                   </th>
                 )}
-                {showChoiceNo && (
+                {!isStudent && showChoiceNo && (
                   <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                    {isStudent ? "S.No" : "Choice No"}
+                    Choice No
                   </th>
                 )}
                 <th className="px-2 sm:px-4 py-2 sm:py-3 min-w-[200px]">

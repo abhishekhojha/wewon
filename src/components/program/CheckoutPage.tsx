@@ -459,7 +459,6 @@ export default function CheckoutPage({
                     <RazorpayPayment
                       productId={productId}
                       productName={productName}
-                      productType={productType}
                       amount={finalAmount}
                       couponCode={appliedCoupon?.couponCode}
                       mentorshipFormData={mentorshipFormPayload}
