@@ -174,7 +174,7 @@ export default function ChoiceFillingResults({
             </div>
           ))}
         </div>
-        {(hasValue(results.minRange) || hasValue(results.maxRange)) && (
+        {!isStudent &&(hasValue(results.minRange) || hasValue(results.maxRange)) && (
           <div className="mt-3 pt-3 border-t border-white/20">
             <p className="text-white/70 text-xs sm:text-sm">
               Rank Range:{" "}
