@@ -11,8 +11,8 @@ export default function TrustSection() {
   const [authorImage, setAuthorImage] = useState(trustAuthor.imageUrl);
 
   return (
-    <section className="mt-2 flex w-full max-w-[100vw] gap-8 rounded-2xl p-4 sm:p-5">
-      <div className="w-full max-w-[50vw] rounded-xl bg-gradient-to-r from-[var(--primary)] to-[#1a4a7d] p-4 sm:p-5 text-white">
+    <section className="mt-2 flex w-full flex-col md:flex-row gap-8 rounded-2xl p-4 sm:p-5">
+      <div className="w-full md:w-1/2 rounded-xl bg-gradient-to-r from-[var(--primary)] to-[#1a4a7d] p-4 sm:p-5 text-white">
         <p className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-[var(--accent)]">
           About the Author
         </p>
@@ -35,7 +35,7 @@ export default function TrustSection() {
         </p>
       </div>
 
-      <div className="mt-10 w-full max-w-[46vw]">
+      <div className="w-full min-w-0 md:w-1/2">
         <h3 className="text-base sm:text-lg font-bold text-[var(--primary)]">
           Student Testimonials
         </h3>

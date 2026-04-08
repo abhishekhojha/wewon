@@ -96,24 +96,6 @@ const formatFieldLabel = (key: string) =>
     .replace(/^./, (ch) => ch.toUpperCase());
 
 
-const hasMentorshipFormValues = (
-  purchase: StudentDetailData["activePurchases"][number],
-) =>
-  Object.entries(purchase.mentorshipFormData || {}).some(([, value]) => {
-    if (value == null) return false;
-    if (typeof value === "string") return value.trim().length > 0;
-    return true;
-  });
-
-const isMentorshipPurchase = (
-  purchase: StudentDetailData["activePurchases"][number],
-) =>
-  Boolean(
-    hasMentorshipFormValues(purchase) ||
-      purchase.mentorshipFormSubmittedAt ||
-      purchase.rankOverrides?.lockedByAdmin,
-  );
-
 const toValidRank = (input: string) => {
   const value = input.trim();
   if (!value) return undefined;
@@ -319,7 +301,6 @@ export default function StudentDetail({ studentId }: Props) {
   if (!data) return null;
 
   const { user, profile, orders, activePurchases } = data;
-  const mentorshipPurchases = activePurchases.filter(isMentorshipPurchase);
   const academics = profile?.academics;
   const exams = profile?.exams ?? [];
   const preferences = profile?.preferences;
@@ -499,15 +480,15 @@ export default function StudentDetail({ studentId }: Props) {
         )}
       </Section>
 
-      {/* ── Rank Overrides ───────────────────────────────────────────────────── */}
-      <Section title="Active Purchase" icon={<Lock className="w-5 h-5" />}>
-        {mentorshipPurchases.length === 0 ? (
+      {/* ── Active Purchases ───────────────────────────────────────────────────── */}
+      <Section title="Active Purchases" icon={<Lock className="w-5 h-5" />}>
+        {activePurchases.length === 0 ? (
           <p className="text-sm text-gray-400 italic">
-            No mentorship purchases found.
+            No active purchases found.
           </p>
         ) : (
           <div className="space-y-4">
-            {mentorshipPurchases.map((purchase) => {
+            {activePurchases.map((purchase) => {
               const formEntries = Object.entries(purchase.mentorshipFormData || {});
               const isRankLocked = Boolean(purchase.rankOverrides?.lockedByAdmin);
               const isEditing = editingPurchaseId === purchase.purchaseId;

@@ -37,7 +37,7 @@ export default function JACDelhiCollegePredictor() {
     gender: "Male",
     region: "Delhi",
     round: "",
-    instituteName: "ALL",
+    instituteName: [],
     programName: [],
   });
 
@@ -219,7 +219,7 @@ export default function JACDelhiCollegePredictor() {
       setFormData((prev) => ({
         ...prev,
         [id]: value,
-        instituteName: "ALL",
+        instituteName: [],
       }));
       return;
     }
@@ -229,7 +229,7 @@ export default function JACDelhiCollegePredictor() {
       setFormData((prev) => ({
         ...prev,
         [id]: value,
-        instituteName: "ALL",
+        instituteName: [],
       }));
       return;
     }
@@ -244,7 +244,7 @@ export default function JACDelhiCollegePredictor() {
     setFormData((prev) => ({
       ...prev,
       gender,
-      instituteName: "ALL", // Reset institute when gender changes
+      instituteName: [], // Reset institute when gender changes
     }));
   };
 
@@ -289,7 +289,7 @@ export default function JACDelhiCollegePredictor() {
         gender: formData.gender,
         region: formData.region,
         round: formData.round,
-        instituteName: formData.instituteName === "ALL" ? "ALL" : formData.instituteName,
+        instituteName: formData.instituteName.length > 0 ? formData.instituteName : "ALL",
         programName: formData.programName.length > 0 ? formData.programName : "All",
         ...(formData.categoryRank && { categoryRank: Number(formData.categoryRank) }),
       };
@@ -549,18 +549,103 @@ export default function JACDelhiCollegePredictor() {
               >
                 Select Institute
               </label>
-              <select
-                id="instituteName"
-                value={formData.instituteName}
-                onChange={handleChange}
-                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
-              >
-                {getAvailableInstitutes().map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <div className="border border-[var(--border)] rounded-lg p-2 max-h-48 overflow-y-auto bg-white">
+                {getAvailableInstitutes().length > 0 ? (
+                  <>
+                    <label className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={
+                          formData.instituteName.length ===
+                            getAvailableInstitutes().length &&
+                          getAvailableInstitutes().length > 0
+                        }
+                        onChange={() => {
+                          const availableInstitutes = getAvailableInstitutes().map(i => i.value);
+                          if (
+                            formData.instituteName.length ===
+                            availableInstitutes.length
+                          ) {
+                            // Deselect all
+                            setFormData((prev) => ({
+                              ...prev,
+                              instituteName: [],
+                            }));
+                          } else {
+                            // Select all
+                            setFormData((prev) => ({
+                              ...prev,
+                              instituteName: [...availableInstitutes],
+                            }));
+                          }
+                        }}
+                        className="mr-2 accent-[var(--primary)]"
+                      />
+                      <span className="text-xs sm:text-sm font-semibold">
+                        Select All ({getAvailableInstitutes().length})
+                      </span>
+                    </label>
+                    <div className="border-t border-[var(--border)] my-1"></div>
+                    {getAvailableInstitutes().map((inst) => (
+                      <label
+                        key={inst.value}
+                        className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={formData.instituteName.includes(inst.value)}
+                          onChange={() => {
+                            setFormData((prev) => {
+                              const isSelected = prev.instituteName.includes(inst.value);
+                              return {
+                                ...prev,
+                                instituteName: isSelected
+                                  ? prev.instituteName.filter((val) => val !== inst.value)
+                                  : [...prev.instituteName, inst.value],
+                              };
+                            });
+                          }}
+                          className="mr-2 accent-[var(--primary)]"
+                        />
+                        <span className="text-xs sm:text-sm">{inst.label}</span>
+                        {formData.instituteName.includes(inst.value) && (
+                          <svg
+                            className="w-4 h-4 text-green-500 flex-shrink-0 ml-auto"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        )}
+                      </label>
+                    ))}
+                  </>
+                ) : (
+                  <p className="text-xs text-[var(--muted-text)] p-2">
+                    No institutes available
+                  </p>
+                )}
+              </div>
+              {formData.instituteName.length > 0 && (
+                <p className="text-xs text-[var(--muted-text)] mt-1">
+                  {formData.instituteName.length} institute(s) selected
+                </p>
+              )}
+
+
+
+
+
+
+
+
+
+
+
             </div>
 
             {/* Program Name - Multi-select */}

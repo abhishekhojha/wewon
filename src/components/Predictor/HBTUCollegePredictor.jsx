@@ -13,6 +13,7 @@ import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import PredictorPaymentModal from "./PredictorPaymentModal";
+import { hasInvalidSubCategoryGenderCombination } from "./utils/subCategoryGenderValidation";
 
 const PRODUCT_SLUG = "hbtu-predictor";
 const RETURN_URL = "/hbtu-predictor";
@@ -48,6 +49,7 @@ export default function HBTUCollegePredictor() {
   );
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [subCategoryGenderError, setSubCategoryGenderError] = useState("");
   const [hasPurchased, setHasPurchased] = useState(false);
   const [checkingPurchase, setCheckingPurchase] = useState(true);
   const [product, setProduct] = useState(null);
@@ -209,6 +211,7 @@ export default function HBTUCollegePredictor() {
 
     // Reset sub-category and programs when category changes
     if (id === "category") {
+      setSubCategoryGenderError("");
       setFormData((prev) => ({
         ...prev,
         [id]: value,
@@ -220,6 +223,7 @@ export default function HBTUCollegePredictor() {
 
     // Reset programs when sub-category changes
     if (id === "subCategory") {
+      setSubCategoryGenderError("");
       setFormData((prev) => ({
         ...prev,
         [id]: value,
@@ -235,10 +239,28 @@ export default function HBTUCollegePredictor() {
   };
 
   const handleGenderChange = (gender) => {
+    setSubCategoryGenderError("");
     setFormData((prev) => ({
       ...prev,
       gender,
     }));
+  };
+
+  const validateSubCategoryGender = () => {
+    if (
+      hasInvalidSubCategoryGenderCombination({
+        subCategory: formData.subCategory,
+        gender: formData.gender,
+      })
+    ) {
+      setSubCategoryGenderError(
+        "Girls-only sub-category cannot be used with Male gender.",
+      );
+      return false;
+    }
+
+    setSubCategoryGenderError("");
+    return true;
   };
 
   const handleProgramSelection = (program) => {
@@ -317,6 +339,7 @@ export default function HBTUCollegePredictor() {
     if (formData.category !== "OPEN" && !formData.categoryRank) { toast.error("Please enter Category Rank for the selected category"); return; }
     if (!formData.round) { toast.error("Please select Round"); return; }
     if (!formData.homeState) { toast.error("Please select Home State"); return; }
+    if (!validateSubCategoryGender()) { return; }
     if (!user) { setShowLoginModal(true); return; }
     if (!hasPurchased && product && (product.price > 0 || (product.discountPrice && product.discountPrice > 0))) { setShowPaymentModal(true); return; }
     await fetchPredictions();
@@ -325,6 +348,7 @@ export default function HBTUCollegePredictor() {
   const handlePaymentSuccess = () => {
     setHasPurchased(true);
     setShowPaymentModal(false);
+    if (!validateSubCategoryGender()) { return; }
     fetchPredictions();
   };
 
@@ -513,7 +537,11 @@ export default function HBTUCollegePredictor() {
                 id="subCategory"
                 value={formData.subCategory}
                 onChange={handleChange}
-                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
+                className={`w-full p-2 sm:p-3 text-sm sm:text-base border rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 outline-none transition ${
+                  subCategoryGenderError
+                    ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                    : "border-[var(--border)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                }`}
               >
                 {getSubCategories().map((option) => (
                   <option key={option.value} value={option.value}>
@@ -521,6 +549,11 @@ export default function HBTUCollegePredictor() {
                   </option>
                 ))}
               </select>
+              {subCategoryGenderError ? (
+                <p className="text-xs sm:text-sm text-red-600 mt-1.5">
+                  {subCategoryGenderError}
+                </p>
+              ) : null}
             </div>
 
             {/* Home State */}

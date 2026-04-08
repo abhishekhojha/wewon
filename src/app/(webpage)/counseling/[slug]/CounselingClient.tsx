@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -7,16 +7,16 @@ import {
   selectSelectedProductLoading,
   selectSelectedProductError,
 } from "@/store/counseling/counselingSlice";
+import { fetchCounselingProductBySlug } from "@/store/counseling/counselingThunk";
+import { selectIsAuthenticated } from "@/store/auth/authSlice";
+import { selectUserOrders } from "@/store/order/orderSlice";
+import { fetchUserOrders, downloadInvoice, markWhatsappChannelClick } from "@/store/order/orderThunk";
+import { toast } from "sonner";
+import { PaymentSuccessData } from "@/components/program/RazorpayPayment";
+import PaymentSuccessModal from "@/components/program/PaymentSuccessModal";
 import {
-  fetchCounselingProductBySlug,
-  toggleLikeProduct,
-} from "@/store/counseling/counselingThunk";
-import { selectUser, selectIsAuthenticated } from "@/store/auth/authSlice";
-import {
-  ArrowLeft,
   CheckCircle,
   PlayCircle,
-  Video,
   FileText,
   ExternalLink,
 } from "lucide-react";
@@ -36,13 +36,54 @@ export default function CounselingClient() {
   const product = useAppSelector(selectSelectedProduct);
   const loading = useAppSelector(selectSelectedProductLoading);
   const error = useAppSelector(selectSelectedProductError);
-  const user = useAppSelector(selectUser);
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const userOrders = useAppSelector(selectUserOrders);
 
   const [activeTab, setActiveTab] = useState<string>("Overview");
   const [showLockedModal, setShowLockedModal] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [isPurchased, setIsPurchased] = useState(false); // TODO: Check from backend
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [completedOrderId, setCompletedOrderId] = useState<string>("");
+  const [completedPurchaseId, setCompletedPurchaseId] = useState<string>("");
+
+  const handlePaymentSuccess = async (paymentData: PaymentSuccessData) => {
+    setCompletedOrderId(paymentData.orderId);
+    if (paymentData.purchaseId) {
+      setCompletedPurchaseId(paymentData.purchaseId);
+    }
+    setShowCheckout(false);
+    setShowSuccessModal(true);
+    dispatch(fetchUserOrders());
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!completedOrderId) {
+      toast.error("Failed to download Invoice.")
+      return
+    }
+    try {
+      await dispatch(downloadInvoice(completedOrderId)).unwrap();
+      toast.success("Invoice downloaded successfully.");
+    } catch (error) {
+      toast.error(
+        typeof error === "string" ? error : "Failed to download Invoice.",
+      );
+    }
+  };
+
+  const handleWhatsappClick = async () => {
+    if (completedPurchaseId) {
+      try {
+        await dispatch(markWhatsappChannelClick(completedPurchaseId)).unwrap();
+      } catch (error) {
+        console.error("Failed to mark WhatsApp click", error);
+      }
+    }
+  };
+
+  const handleViewProgram = () => {
+    setShowSuccessModal(false);
+  };
 
   useEffect(() => {
     if (slug) {
@@ -50,17 +91,88 @@ export default function CounselingClient() {
     }
   }, [slug, dispatch]);
 
-  const handleLike = async () => {
-    if (product) {
-      await dispatch(toggleLikeProduct(product._id));
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    dispatch(fetchUserOrders());
+  }, [dispatch, isAuthenticated]);
+
+  const isPurchased = useMemo(() => {
+    if (!product) return false;
+
+    const productWithPurchaseFlag = product as typeof product & {
+      isPurchased?: boolean;
+      purchased?: boolean;
+      hasPurchased?: boolean;
+    };
+
+    if (
+      productWithPurchaseFlag.isPurchased ||
+      productWithPurchaseFlag.purchased ||
+      productWithPurchaseFlag.hasPurchased
+    ) {
+      return true;
     }
-  };
+
+    if (!isAuthenticated) {
+      return false;
+    }
+
+    return userOrders.some((order) => {
+      const isCompleted =
+        order.status === "completed" || order.paymentStatus === "completed";
+      if (!isCompleted) return false;
+
+      const matchesProductById =
+        order.productId === product._id || order.product?._id === product._id;
+      const matchesProductBySlug = order.product?.slug === product.slug;
+
+      return matchesProductById || matchesProductBySlug;
+    });
+  }, [isAuthenticated, product, userOrders]);
+
+  const landingPageMaterials = useMemo(() => {
+    if (!product) return [];
+
+    const highlights = product.content.landingPageHighlights;
+    const materials: Array<{
+      id: string;
+      title: string;
+      type: "video" | "pdf" | "link";
+      url?: string;
+    }> = [];
+
+    if (highlights.introVideo?.url) {
+      materials.push({
+        id: "intro-video",
+        title: highlights.introVideo.title || "How We Work",
+        type: "video",
+        url: highlights.introVideo.url,
+      });
+    }
+
+    if (highlights.coursePdf?.url) {
+      materials.push({
+        id: "course-pdf",
+        title: highlights.coursePdf.title || "Program Structure.pdf",
+        type: "pdf",
+        url: highlights.coursePdf.url,
+      });
+    }
+
+    if (highlights.fullDescriptionVideo?.url) {
+      materials.push({
+        id: "full-description-video",
+        title:
+          highlights.fullDescriptionVideo.title || "Complete Program Overview",
+        type: "video",
+        url: highlights.fullDescriptionVideo.url,
+      });
+    }
+
+    return materials;
+  }, [product]);
 
   const handleBuyNow = () => {
-    if (!isAuthenticated) {
-      router.push("/auth");
-      return;
-    }
     setShowCheckout(true);
   };
 
@@ -71,6 +183,17 @@ export default function CounselingClient() {
   const handleLockedModalBuyNow = () => {
     setShowLockedModal(false);
     handleBuyNow();
+  };
+
+  const handleContentResourceClick = (resourceUrl?: string) => {
+    if (!isPurchased) {
+      handleLockedContentClick();
+      return;
+    }
+
+    if (resourceUrl) {
+      window.open(resourceUrl, "_blank", "noopener,noreferrer");
+    }
   };
 
   // Loading state
@@ -119,7 +242,9 @@ export default function CounselingClient() {
         productSlug={product.slug}
         hasMentorship={product.features.hasMentorship}
         mentorshipForm={product.mentorshipForm}
+        whatsappLink={product.whatsappChannelLink}
         onBack={() => setShowCheckout(false)}
+        onPaymentSuccess={handlePaymentSuccess}
       />
     );
   }
@@ -210,9 +335,7 @@ export default function CounselingClient() {
 
               {isPurchased && (
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-green-700 font-semibold">
-                    ✓ You have access to this program
-                  </p>
+                  <p className="text-green-700 font-semibold">Purchased</p>
                 </div>
               )}
             </div>
@@ -368,7 +491,6 @@ export default function CounselingClient() {
                         />
                       );
                     }
-
                     // For direct video files (mp4, webm, etc.)
                     return (
                       <video
@@ -390,6 +512,10 @@ export default function CounselingClient() {
             totalMaterialCount={product.totalMaterialCount}
             isPurchased={isPurchased}
             onLockedClick={handleLockedContentClick}
+            materials={landingPageMaterials}
+            onMaterialClick={(material) =>
+              handleContentResourceClick(material.url)
+            }
           />
         </>
       )}
@@ -416,10 +542,7 @@ export default function CounselingClient() {
                         {section.resources.map((resource) => (
                           <button
                             key={resource._id}
-                            onClick={() =>
-                              !isPurchased && handleLockedContentClick()
-                            }
-                            disabled={isPurchased}
+                            onClick={() => handleContentResourceClick(resource.url)}
                             className="w-full flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-left"
                           >
                             {resource.type === "video" && (
@@ -471,6 +594,16 @@ export default function CounselingClient() {
         onClose={() => setShowLockedModal(false)}
         onBuyNow={handleLockedModalBuyNow}
         productTitle={product.title}
+      />
+
+      <PaymentSuccessModal
+        isOpen={showSuccessModal}
+        whatsappLink={product.whatsappChannelLink || ""}
+        orderId={completedOrderId}
+        onClose={() => setShowSuccessModal(false)}
+        onDownloadInvoice={handleDownloadInvoice}
+        onViewProgram={handleViewProgram}
+        onWhatsappClick={handleWhatsappClick}
       />
     </div>
   );

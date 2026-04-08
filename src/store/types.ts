@@ -313,6 +313,7 @@ export interface CounselingProduct {
     hasCourseContent: boolean;
   };
   mentorshipForm?: MentorshipForm;
+  whatsappChannelLink: string;
   content: {
     landingPageHighlights: {
       introVideo?: {

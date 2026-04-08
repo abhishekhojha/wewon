@@ -18,6 +18,7 @@ import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import PredictorPaymentModal from "./PredictorPaymentModal";
+import { hasInvalidSubCategoryGenderCombination } from "./utils/subCategoryGenderValidation";
 
 const PRODUCT_SLUG = "uptac-predictor";
 const RETURN_URL = "/uptac-predictor";
@@ -60,6 +61,7 @@ export default function UPTACCollegePredictor() {
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [subCategoryGenderError, setSubCategoryGenderError] = useState("");
   const [hasPurchased, setHasPurchased] = useState(false);
   const [checkingPurchase, setCheckingPurchase] = useState(true);
   const [product, setProduct] = useState(null);
@@ -222,14 +224,34 @@ export default function UPTACCollegePredictor() {
       if (value === "") { setFormData((prev) => ({ ...prev, [id]: value })); return; }
       if (Number(value) < 1) return;
     }
-    if (id === "category") { setFormData((prev) => ({ ...prev, [id]: value, subCategory: "NOT APPLICABLE", programName: [] })); return; }
-    if (id === "subCategory") { setFormData((prev) => ({ ...prev, [id]: value, programName: [] })); return; }
+    if (id === "category") { setSubCategoryGenderError(""); setFormData((prev) => ({ ...prev, [id]: value, subCategory: "NOT APPLICABLE", programName: [] })); return; }
+    if (id === "subCategory") { setSubCategoryGenderError(""); setFormData((prev) => ({ ...prev, [id]: value, programName: [] })); return; }
     if (id === "homeState") { setFormData((prev) => ({ ...prev, [id]: value, roundNumber: "" })); return; }
     if (id === "instituteType") { setFormData((prev) => ({ ...prev, [id]: value, instituteName: [] })); setInstituteSearch(""); return; }
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  const handleGenderChange = (gender) => setFormData((prev) => ({ ...prev, gender }));
+  const handleGenderChange = (gender) => {
+    setSubCategoryGenderError("");
+    setFormData((prev) => ({ ...prev, gender }));
+  };
+
+  const validateSubCategoryGender = () => {
+    if (
+      hasInvalidSubCategoryGenderCombination({
+        subCategory: formData.subCategory,
+        gender: formData.gender,
+      })
+    ) {
+      setSubCategoryGenderError(
+        "Girls-only sub-category cannot be used with Male gender.",
+      );
+      return false;
+    }
+
+    setSubCategoryGenderError("");
+    return true;
+  };
 
   const handleInstituteSelection = (instituteName) => {
     setFormData((prev) => {
@@ -289,6 +311,7 @@ export default function UPTACCollegePredictor() {
     if (formData.category !== "OPEN" && !formData.categoryRank) { toast.error("Please enter Category Rank for the selected category"); return; }
     if (!formData.homeState) { toast.error("Please select Home State"); return; }
     if (!formData.roundNumber) { toast.error("Please select Round Number"); return; }
+    if (!validateSubCategoryGender()) { return; }
     if (!user) { setShowLoginModal(true); return; }
     if (!hasPurchased && product && (product.price > 0 || (product.discountPrice && product.discountPrice > 0))) { setShowPaymentModal(true); return; }
     await fetchPredictions();
@@ -297,6 +320,7 @@ export default function UPTACCollegePredictor() {
   const handlePaymentSuccess = () => {
     setHasPurchased(true);
     setShowPaymentModal(false);
+    if (!validateSubCategoryGender()) { return; }
     fetchPredictions();
   };
 
@@ -376,9 +400,14 @@ export default function UPTACCollegePredictor() {
 
             <div>
               <label htmlFor="subCategory" className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">Select Sub-Category</label>
-              <select id="subCategory" value={formData.subCategory} onChange={handleChange} className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition">
+              <select id="subCategory" value={formData.subCategory} onChange={handleChange} className={`w-full p-2 sm:p-3 text-sm sm:text-base border rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 outline-none transition ${subCategoryGenderError ? "border-red-500 focus:ring-red-500 focus:border-red-500" : "border-[var(--border)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"}`}>
                 {getSubCategories().map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
               </select>
+              {subCategoryGenderError ? (
+                <p className="text-xs sm:text-sm text-red-600 mt-1.5">
+                  {subCategoryGenderError}
+                </p>
+              ) : null}
             </div>
 
             <div>
