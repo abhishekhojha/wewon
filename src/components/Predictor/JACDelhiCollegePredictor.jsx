@@ -12,6 +12,7 @@ import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import PredictorPaymentModal from "./PredictorPaymentModal";
+import { hasInvalidSubCategoryGenderCombination } from "./utils/subCategoryGenderValidation";
 const RETURN_URL = "/jac-delhi-predictor";
 import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
 
@@ -50,6 +51,7 @@ export default function JACDelhiCollegePredictor() {
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [subCategoryGenderError, setSubCategoryGenderError] = useState("");
   const [hasPurchased, setHasPurchased] = useState(false);
   const [checkingPurchase, setCheckingPurchase] = useState(true);
   const [product, setProduct] = useState(null);
@@ -226,12 +228,17 @@ export default function JACDelhiCollegePredictor() {
 
     // Reset institute selection when gender changes (for IGDTUW exclusion)
     if (id === "gender") {
+      setSubCategoryGenderError("");
       setFormData((prev) => ({
         ...prev,
         [id]: value,
         instituteName: [],
       }));
       return;
+    }
+
+    if (id === "subCategory") {
+      setSubCategoryGenderError("");
     }
 
     setFormData((prev) => ({
@@ -241,11 +248,29 @@ export default function JACDelhiCollegePredictor() {
   };
 
   const handleGenderChange = (gender) => {
+    setSubCategoryGenderError("");
     setFormData((prev) => ({
       ...prev,
       gender,
       instituteName: [], // Reset institute when gender changes
     }));
+  };
+
+  const validateSubCategoryGender = () => {
+    if (
+      hasInvalidSubCategoryGenderCombination({
+        subCategory: formData.subCategory,
+        gender: formData.gender,
+      })
+    ) {
+      setSubCategoryGenderError(
+        "Girls-only sub-category cannot be used with Male gender.",
+      );
+      return false;
+    }
+
+    setSubCategoryGenderError("");
+    return true;
   };
 
   const handleProgramSelection = (program) => {
@@ -311,6 +336,7 @@ export default function JACDelhiCollegePredictor() {
     e.preventDefault();
     if (!formData.crlRank) { toast.error("Please enter CRL Rank"); return; }
     if (!formData.round) { toast.error("Please select Round"); return; }
+    if (!validateSubCategoryGender()) { return; }
     if (!user) { setShowLoginModal(true); return; }
     if (!hasPurchased && product && (product.price > 0 || (product.discountPrice && product.discountPrice > 0))) { setShowPaymentModal(true); return; }
     await fetchPredictions();
@@ -319,6 +345,7 @@ export default function JACDelhiCollegePredictor() {
   const handlePaymentSuccess = () => {
     setHasPurchased(true);
     setShowPaymentModal(false);
+    if (!validateSubCategoryGender()) { return; }
     fetchPredictions();
   };
 
@@ -479,7 +506,11 @@ export default function JACDelhiCollegePredictor() {
                 id="subCategory"
                 value={formData.subCategory}
                 onChange={handleChange}
-                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
+                className={`w-full p-2 sm:p-3 text-sm sm:text-base border rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 outline-none transition ${
+                  subCategoryGenderError
+                    ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                    : "border-[var(--border)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                }`}
               >
                 {jacDelhiOptions.subCategories.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -487,6 +518,11 @@ export default function JACDelhiCollegePredictor() {
                   </option>
                 ))}
               </select>
+              {subCategoryGenderError ? (
+                <p className="text-xs sm:text-sm text-red-600 mt-1.5">
+                  {subCategoryGenderError}
+                </p>
+              ) : null}
             </div>
 
             {/* Region */}
