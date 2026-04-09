@@ -126,7 +126,14 @@ const PredictorsGrid: React.FC = () => {
     return userOrders.some((order: any) => {
       // The API returns product as an object with slug, not just productId
       const orderProductSlug = order.product?.slug;
-      return orderProductSlug === predictorSlug && order.status === "completed";
+      const orderProductPackagePredictors: string[] = order.product?.features?.collegePredictor?.allowedPredictors || []; 
+      
+      // Match "UPTAC", "JAC", etc. with slugs like "uptac-predictor", "jac-delhi-predictor"
+      const isAllowedViaPackage = orderProductPackagePredictors.some((p: string) => 
+        predictorSlug.toLowerCase().includes(p.toLowerCase())
+      );
+
+      return (orderProductSlug === predictorSlug || isAllowedViaPackage) && order.status === "completed";
     });
   };
 

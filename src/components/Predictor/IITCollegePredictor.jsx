@@ -116,10 +116,14 @@ export default function IITCollegePredictor() {
   // Update hasPurchased when userOrders change
   useEffect(() => {
     if (userOrders.length > 0) {
-      const isPurchased = userOrders.some(
-        (order) =>
-          order.product?.slug === PRODUCT_SLUG && order.status === "completed",
-      );
+      const isPurchased = userOrders.some((order) => {
+        const orderProductSlug = order.product?.slug;
+        const allowedPredictors = order.product?.features?.collegePredictor?.allowedPredictors || [];
+        const isAllowedViaPackage = allowedPredictors.some((p) => 
+          PRODUCT_SLUG.toLowerCase().includes(p.toLowerCase())
+        );
+        return (orderProductSlug === PRODUCT_SLUG || isAllowedViaPackage) && order.status === "completed";
+      });
       setHasPurchased(isPurchased);
     }
   }, [userOrders]);
