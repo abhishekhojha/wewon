@@ -1,0 +1,55 @@
+{
+  "exams": [
+    { "label": "WBJEE", "value": "WBJEE" },
+    { "label": "JEE", "value": "JEE" }
+  ],
+  "categories": {
+    "WBJEE": [
+      { "label": "Open", "value": "Open" },
+      { "label": "OBC - A", "value": "OBC - A" },
+      { "label": "OBC - B", "value": "OBC - B" },
+      { "label": "SC", "value": "SC" },
+      { "label": "ST", "value": "ST" },
+      { "label": "EWS", "value": "EWS" },
+      { "label": "Tuition Fee Waiver", "value": "Tuition Fee Waiver" },
+      { "label": "Open (PwD)", "value": "Open (PwD)" },
+      { "label": "OBC - A (PwD)", "value": "OBC - A (PwD)" },
+      { "label": "OBC - B (PwD)", "value": "OBC - B (PwD)" },
+      { "label": "SC (PwD)", "value": "SC (PwD)" },
+      { "label": "ST (PwD)", "value": "ST (PwD)" },
+      { "label": "EWS (PwD)", "value": "EWS (PwD)" }
+    ],
+    "JEE": [
+      { "label": "Open", "value": "Open" },
+      { "label": "OBC-NCL", "value": "OBC-NCL" },
+      { "label": "SC", "value": "SC" },
+      { "label": "ST", "value": "ST" },
+      { "label": "EWS", "value": "EWS" },
+      { "label": "Open (PwD)", "value": "Open (PwD)" },
+      { "label": "OBC-NCL (PwD)", "value": "OBC-NCL (PwD)" },
+      { "label": "SC (PwD)", "value": "SC (PwD)" },
+      { "label": "ST (PwD)", "value": "ST (PwD)" },
+      { "label": "EWS (PwD)", "value": "EWS (PwD)" }
+    ]
+  },
+  "quotas": [
+    { "label": "All India", "value": "All India" },
+    { "label": "Home State", "value": "Home State" }
+  ],
+  "rounds": [
+    { "label": "Round 1", "value": "Round 1" },
+    { "label": "Round 2", "value": "Round 2" }
+  ],
+  "programGroups": [
+    "Computer Science & IT",
+    "Electrical Engineering",
+    "Electronics & Communication",
+    "Mechanical Engineering",
+    "Civil Engineering",
+    "Chemical Engineering",
+    "Information Technology",
+    "Biotechnology",
+    "Food Technology",
+    "Others"
+  ]
+}

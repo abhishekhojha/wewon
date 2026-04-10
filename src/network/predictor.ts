@@ -80,6 +80,19 @@ export const predictJACChandigarh = (data: any) => {
   return apiClient.post("/api/jac-chandigarh/predict", data);
 };
 
+// WBJEE Predictor API
+export const predictWBJEE = (data: {
+  exam: string;
+  rank: number;
+  category: string;
+  quota: string;
+  round: string;
+  institutes?: string[];
+  program_groups?: string[];
+}) => {
+  return apiClient.post("/api/wbjee/predict", data);
+};
+
 // JEE Main Percentile to Rank Converter API
 export const predictJEEMainRank = (data: {
   percentile: number;
