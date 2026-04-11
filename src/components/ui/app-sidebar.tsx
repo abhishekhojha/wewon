@@ -51,12 +51,12 @@ export function AppSidebar() {
         },
         {
           title: "College Predictor",
-          url: "/predictor",
+          url: "/s/predictor",
           icon: TrendingUp,
         },
         {
           title: "Choice Filling",
-          url: "/choice-filling",
+          url: "/s/choice-filling",
           icon: ListChecks,
         },
         {

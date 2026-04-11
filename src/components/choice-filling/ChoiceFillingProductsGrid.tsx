@@ -3,16 +3,45 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import {
   ChoiceFillingProduct,
   fetchAllChoiceFillingProducts,
 } from "@/network/choice-filling";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { selectIsAuthenticated } from "@/store/auth/authSlice";
+import { selectUserOrders } from "@/store/order/orderSlice";
+import { fetchUserOrders } from "@/store/order/orderThunk";
 
-export default function ChoiceFillingProductsGrid() {
+interface ChoiceFillingProductsGridProps {
+  onlyPurchased?: boolean;
+}
+
+export default function ChoiceFillingProductsGrid({ onlyPurchased = false }: ChoiceFillingProductsGridProps) {
+  const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const userOrders = useAppSelector(selectUserOrders);
+
   const [products, setProducts] = useState<ChoiceFillingProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch user orders when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchUserOrders());
+    }
+  }, [isAuthenticated, dispatch]);
+
+  // Check if a choice-filling product is purchased
+  const isProductPurchased = (productSlug: string): boolean => {
+    return userOrders.some((order: any) => {
+      const orderProductSlug = order.product?.slug;
+      // Also check if this order has choiceFilling enabled (bundle orders)
+      const hasChoiceFillingEnabled = order.product?.features?.choiceFilling?.isEnabled === true;
+      return (orderProductSlug === productSlug || hasChoiceFillingEnabled) && order.status === "completed";
+    });
+  };
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -60,11 +89,17 @@ export default function ChoiceFillingProductsGrid() {
     );
   }
 
-  if (products.length === 0) {
+  const displayProducts = onlyPurchased
+    ? products.filter((product) => isProductPurchased(product.slug))
+    : products;
+
+  if (displayProducts.length === 0) {
     return (
       <div className="text-center py-16">
         <p className="text-gray-500 text-lg">
-          No choice-filling products are available right now.
+          {onlyPurchased
+            ? "You haven't purchased any choice-filling tools yet."
+            : "No choice-filling products are available right now."}
         </p>
       </div>
     );
@@ -72,7 +107,7 @@ export default function ChoiceFillingProductsGrid() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {products.map((product) => (
+      {displayProducts.map((product) => (
         <div
           key={product._id}
           className="bg-white rounded-2xl shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col h-full hover:shadow-xl"
@@ -101,7 +136,12 @@ export default function ChoiceFillingProductsGrid() {
 
             <div className="flex items-center justify-between gap-4">
               <div>
-                {product.discountPrice && product.discountPrice > 0 ? (
+                {isProductPurchased(product.slug) ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 font-semibold text-sm rounded-full">
+                    <Check size={14} />
+                    Purchased
+                  </span>
+                ) : product.discountPrice && product.discountPrice > 0 ? (
                   <div className="flex items-baseline gap-2">
                     <span className="text-2xl font-bold text-[#0f3a67]">
                       ₹{product.discountPrice}

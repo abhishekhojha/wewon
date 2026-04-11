@@ -112,7 +112,11 @@ const mergePredictorsWithLocal = (
   );
 };
 
-const PredictorsGrid: React.FC = () => {
+interface PredictorsGridProps {
+  onlyPurchased?: boolean;
+}
+
+const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false }) => {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const userData = useAppSelector(selectUser);
@@ -195,13 +199,10 @@ const PredictorsGrid: React.FC = () => {
     );
   }
 
-  // Only show predictors that exist in the user's orders
-  // const displayPredictors = isAuthenticated
-  //   ? predictors.filter((predictor) =>
-  //       userOrders.some((order: any) => order.product?.slug === predictor.slug),
-  //     )
-  //   : [];
-  const displayPredictors = predictors;
+  // Filter to only purchased predictors if onlyPurchased is true
+  const displayPredictors = onlyPurchased
+    ? predictors.filter((predictor) => isPredictorPurchased(predictor.slug))
+    : predictors;
 
   return (
     <div className="w-full">
