@@ -247,19 +247,36 @@ export default function WBJEECollegePredictor() {
 
   useEffect(() => {
     if (userOrders.length > 0) {
-      const isPurchased = userOrders.some((order: any) => {
+      const matchingOrders = userOrders.filter((order: any) => {
         const orderProductSlug = order.product?.slug;
-        const allowedPredictors: string[] =
-          order.product?.features?.collegePredictor?.allowedPredictors || [];
-        const isAllowedViaPackage = allowedPredictors.some((p: string) =>
-          PRODUCT_SLUG.toLowerCase().includes(p.toLowerCase()),
+        const allowedPredictors: string[] = order.product?.features?.collegePredictor?.allowedPredictors || [];
+        const isAllowedViaPackage = allowedPredictors.some((p: string) => 
+          PRODUCT_SLUG.toLowerCase().includes(p.toLowerCase())
         );
-        return (
-          (orderProductSlug === PRODUCT_SLUG || isAllowedViaPackage) &&
-          order.status === "completed"
-        );
+        return (orderProductSlug === PRODUCT_SLUG || isAllowedViaPackage) && order.status === "completed";
       });
-      setHasPurchased(isPurchased);
+      
+      setHasPurchased(matchingOrders.length > 0);
+
+      const orderWithFormData = matchingOrders.find(
+        (o: any) => o.mentorshipFormData && Object.keys(o.mentorshipFormData).length > 0
+      );
+      
+      if (orderWithFormData && orderWithFormData.mentorshipFormData) {
+        const prefillData = orderWithFormData.mentorshipFormData;
+        console.log("Prefill data from order:", prefillData);
+        setFormData((prev: any) => {
+          const updates: any = {};
+          if ('crlRank' in prev && prefillData.crlRank) updates.crlRank = String(prefillData.crlRank);
+          if ('categoryRank' in prev && prefillData.categoryRank) updates.categoryRank = String(prefillData.categoryRank);
+          if ('category' in prev && prefillData.category) updates.category = prefillData.category;
+          if ('gender' in prev && prefillData.gender) updates.gender = prefillData.gender;
+          if ('homeState' in prev && prefillData.homeState) updates.homeState = prefillData.homeState;
+          if ('quota' in prev && prefillData.quota) updates.quota = prefillData.quota;
+          
+          return Object.keys(updates).length > 0 ? { ...prev, ...updates } : prev;
+        });
+      }
     }
   }, [userOrders]);
 

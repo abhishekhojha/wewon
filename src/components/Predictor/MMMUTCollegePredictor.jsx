@@ -102,7 +102,7 @@ export default function MMMUTCollegePredictor() {
 
   useEffect(() => {
     if (userOrders.length > 0) {
-      const isPurchased = userOrders.some((order) => {
+      const matchingOrders = userOrders.filter((order) => {
         const orderProductSlug = order.product?.slug;
         const allowedPredictors = order.product?.features?.collegePredictor?.allowedPredictors || [];
         const isAllowedViaPackage = allowedPredictors.some((p) => 
@@ -110,7 +110,25 @@ export default function MMMUTCollegePredictor() {
         );
         return (orderProductSlug === PRODUCT_SLUG || isAllowedViaPackage) && order.status === "completed";
       });
-      setHasPurchased(isPurchased);
+      
+      setHasPurchased(matchingOrders.length > 0);
+
+      const orderWithFormData = matchingOrders.find(
+        (o) => o.mentorshipFormData && Object.keys(o.mentorshipFormData).length > 0
+      );
+      
+      if (orderWithFormData && orderWithFormData.mentorshipFormData) {
+        const prefillData = orderWithFormData.mentorshipFormData;
+        console.log("Prefill data from order:", prefillData);
+        setFormData((prev) => ({
+          ...prev,
+          crlRank: prefillData.crlRank ? String(prefillData.crlRank) : prev.crlRank,
+          categoryRank: prefillData.categoryRank ? String(prefillData.categoryRank) : prev.categoryRank,
+          category: prefillData.category || prev.category,
+          gender: prefillData.gender || prev.gender,
+          homeState: prefillData.homeState || prev.homeState,
+        }));
+      }
     }
   }, [userOrders]);
 
