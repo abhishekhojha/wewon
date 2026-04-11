@@ -8,12 +8,37 @@ interface ShareButtonProps {
   url: string;
   description: string;
 }
+const normalizeDescription = (html = "") => {
+  if (!html) return "";
 
+  return html
+    // Convert common block tags to spaces/newlines
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<\/div>/gi, "\n")
+
+    // Remove all remaining HTML tags
+    .replace(/<[^>]*>/g, "")
+
+    // Decode basic HTML entities
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+
+    // Clean extra whitespace
+    .replace(/\s+/g, " ")
+    .replace(/\n\s+/g, "\n")
+    .trim();
+};
 export default function ShareButton({
   title,
   url,
   description,
 }: ShareButtonProps) {
+  description = normalizeDescription(description);
   const [showMenu, setShowMenu] = useState(false);
   const [copied, setCopied] = useState(false);
 

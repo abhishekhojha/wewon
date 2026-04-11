@@ -7,6 +7,7 @@ export default function PredictionResults({
   userGender,
   hideSeatType = false,
   hideQuota = false,
+  hideRound = false,
   hideOpeningRank = false,
   isSpotRound = false,
   isPreparatoryRank = false,
@@ -286,9 +287,11 @@ export default function PredictionResults({
                       <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
                         Closing Rank
                       </th>
-                      <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                        Round
-                      </th>
+                      {!hideRound && (
+                        <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                          Round
+                        </th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border)]">
@@ -353,9 +356,11 @@ export default function PredictionResults({
                         <td className="px-2 sm:px-4 py-3 sm:py-4 text-[var(--muted-text)] whitespace-nowrap">
                           {item.closingRank}
                         </td>
-                        <td className="px-2 sm:px-4 py-3 sm:py-4 text-[var(--muted-text)] whitespace-nowrap">
-                          {item.round}
-                        </td>
+                        {!hideRound && (
+                          <td className="px-2 sm:px-4 py-3 sm:py-4 text-[var(--muted-text)] whitespace-nowrap">
+                            {item.round}
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>

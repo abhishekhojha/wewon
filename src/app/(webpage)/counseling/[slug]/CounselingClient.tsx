@@ -296,12 +296,10 @@ export default function CounselingClient() {
               <h1 className="text-3xl md:text-4xl font-bold text-[var(--primary)] mb-4">
                 {product.title}
               </h1>
-              <p className="text-gray-600 text-lg mb-6">
-                {/* show only 2 line then show ... */}
-                {product.description.length > 200
-                  ? product.description.substring(0, 200) + "..."
-                  : product.description}
-              </p>
+              <div
+                className="line-clamp-3 overflow-hidden text-ellipsis prose max-w-none text-gray-700 leading-relaxed whitespace-pre-line"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
 
               {/* Price and Validity */}
               <div className="flex flex-wrap items-center gap-4 mb-6">
@@ -349,9 +347,10 @@ export default function CounselingClient() {
             <h2 className="text-2xl font-bold text-[var(--primary)] mb-4">
               About This Course
             </h2>
-            <p className="text-gray-700 leading-relaxed">
-              {product.description}
-            </p>
+            <div
+              className="prose max-w-none text-gray-700 leading-relaxed whitespace-pre-line"
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
           </div>
 
           {/* Features Section */}

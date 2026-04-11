@@ -22,6 +22,8 @@ import PredictorPaymentModal from "./PredictorPaymentModal";
 
 const PRODUCT_SLUG = "wbjee-predictor";
 const RETURN_URL = "/wbjee-predictor";
+const JEE_LOCKED_CATEGORY = "Open";
+const JEE_LOCKED_QUOTA = "All India";
 
 interface WBJEEFormData {
   exam: string;
@@ -103,6 +105,9 @@ export default function WBJEECollegePredictor() {
   const isTFW =
     formData.category === "Tuition Fee Waiver" ||
     formData.category === "TFW";
+  const isJeeExam = formData.exam === "JEE";
+  const isCategoryLocked = isJeeExam;
+  const isQuotaLocked = isJeeExam || (isTFW && formData.exam === "WBJEE");
 
   // Get categories dependent on exam type
   const getCategories = () => {
@@ -324,13 +329,34 @@ export default function WBJEECollegePredictor() {
     }
   }, [isTFW, formData.exam]);
 
+  // --- For JEE, keep category and quota fixed ---
+  useEffect(() => {
+    if (!isJeeExam) return;
+
+    setFormData((prev) => {
+      if (
+        prev.category === JEE_LOCKED_CATEGORY &&
+        prev.quota === JEE_LOCKED_QUOTA
+      ) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        category: JEE_LOCKED_CATEGORY,
+        quota: JEE_LOCKED_QUOTA,
+      };
+    });
+  }, [isJeeExam]);
+
   // --- Reset category when exam changes ---
   const handleExamChange = (exam: string) => {
     const defaultCat = "Open";
     setFormData((prev) => ({
       ...prev,
       exam,
-      category: defaultCat,
+      category: exam === "JEE" ? JEE_LOCKED_CATEGORY : defaultCat,
+      quota: exam === "JEE" ? JEE_LOCKED_QUOTA : prev.quota,
       instituteType: "ALL",
       instituteName: [],
       programName: [],
@@ -341,6 +367,7 @@ export default function WBJEECollegePredictor() {
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value, type } = e.target;
     if (id === "crlRank" && crlRankLocked) return;
+    if (isJeeExam && (id === "category" || id === "quota")) return;
     if (type === "number") {
       if (value === "") {
         setFormData((prev) => ({ ...prev, [id]: value }));
@@ -410,8 +437,8 @@ export default function WBJEECollegePredictor() {
       const payload = {
         exam: formData.exam,
         rank: Number(formData.crlRank),
-        category: formData.exam === "JEE" && !formData.category ? undefined : formData.category,
-        quota: formData.exam === "JEE" ? formData.quota : (isTFW ? "Home State" : formData.quota),
+        category: isJeeExam ? JEE_LOCKED_CATEGORY : formData.category,
+        quota: isJeeExam ? JEE_LOCKED_QUOTA : (isTFW ? "Home State" : formData.quota),
         round: roundLabel,
         institutes: formData.instituteName.length > 0 ? formData.instituteName : undefined,
         program_groups: formData.programName.length > 0 ? formData.programName : undefined,
@@ -615,7 +642,8 @@ export default function WBJEECollegePredictor() {
                 id="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
+                disabled={isCategoryLocked}
+                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {getCategories().map((option) => (
                   <option key={option.value} value={option.value}>
@@ -623,6 +651,11 @@ export default function WBJEECollegePredictor() {
                   </option>
                 ))}
               </select>
+              {isJeeExam && (
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
+                  For JEE Main seats, category is fixed to Open.
+                </p>
+              )}
               {isTFW && formData.exam === "WBJEE" && (
                 <p className="text-xs text-amber-700 mt-1.5 font-medium">
                   TFW category automatically uses Home State quota.
@@ -642,7 +675,7 @@ export default function WBJEECollegePredictor() {
                 id="quota"
                 value={formData.quota}
                 onChange={handleChange}
-                disabled={isTFW && formData.exam === "WBJEE"}
+                disabled={isQuotaLocked}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {wbjeeOptions.quotas.map((option) => (
@@ -651,6 +684,11 @@ export default function WBJEECollegePredictor() {
                   </option>
                 ))}
               </select>
+              {isJeeExam && (
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
+                  For JEE Main seats, quota is fixed to All India.
+                </p>
+              )}
             </div>
 
             {/* Round */}
@@ -886,6 +924,7 @@ export default function WBJEECollegePredictor() {
             hideSeatType={true}
             hideOpeningRank={true}
             hideGender={true}
+            hideRound={true}
           />
         )}
       </div>
