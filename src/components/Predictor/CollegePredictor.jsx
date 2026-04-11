@@ -28,6 +28,7 @@ export default function CollegePredictor() {
   const {
     prefill,
     crlRankLocked,
+    categoryRankLocked,
     lockMessage,
   } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
 
@@ -186,6 +187,10 @@ export default function CollegePredictor() {
     const { id, value, type } = e.target;
 
     if (id === "crlRank" && crlRankLocked) {
+      return;
+    }
+
+    if (id === "categoryRank" && categoryRankLocked) {
       return;
     }
 

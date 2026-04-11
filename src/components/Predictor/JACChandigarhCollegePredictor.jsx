@@ -25,6 +25,7 @@ export default function JACChandigarhCollegePredictor() {
   const {
     prefill,
     crlRankLocked,
+    categoryRankLocked,
     lockMessage,
   } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
 
@@ -213,6 +214,10 @@ export default function JACChandigarhCollegePredictor() {
     const { id, value, type } = e.target;
 
     if (id === "crlRank" && crlRankLocked) {
+      return;
+    }
+
+    if (id === "categoryRank" && categoryRankLocked) {
       return;
     }
 
@@ -410,9 +415,15 @@ export default function JACChandigarhCollegePredictor() {
                 onChange={handleChange}
                 placeholder="5000"
                 min="1"
+                disabled={categoryRankLocked}
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
+              {categoryRankLocked && (
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
+                  {rankLockMessage}
+                </p>
+              )}
             </div>
 
             {/* Gender */}

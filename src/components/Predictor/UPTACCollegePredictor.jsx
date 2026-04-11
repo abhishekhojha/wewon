@@ -33,6 +33,7 @@ export default function UPTACCollegePredictor() {
   const {
     prefill,
     crlRankLocked,
+    categoryRankLocked,
     lockMessage,
   } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
 
@@ -245,6 +246,9 @@ export default function UPTACCollegePredictor() {
     if (id === "crlRank" && crlRankLocked) {
       return;
     }
+    if (id === "categoryRank" && categoryRankLocked) {
+      return;
+    }
     if (type === "number") {
       if (value === "") { setFormData((prev) => ({ ...prev, [id]: value })); return; }
       if (Number(value) < 1) return;
@@ -404,7 +408,12 @@ export default function UPTACCollegePredictor() {
 
             <div>
               <label htmlFor="categoryRank" className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">Enter Category Rank {formData.category !== "OPEN" ? "(Required)" : "(Optional)"}</label>
-              <input type="number" id="categoryRank" value={formData.categoryRank} onChange={handleChange} placeholder="2000" min="1" required={formData.category !== "OPEN"} onWheel={(e) => e.currentTarget.blur()} className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]" />
+              <input type="number" id="categoryRank" value={formData.categoryRank} onChange={handleChange} placeholder="2000" min="1" required={formData.category !== "OPEN"} disabled={categoryRankLocked} onWheel={(e) => e.currentTarget.blur()} className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]" />
+              {categoryRankLocked && (
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
+                  {rankLockMessage}
+                </p>
+              )}
             </div>
 
             <div>
