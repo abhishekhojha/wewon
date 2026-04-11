@@ -5,6 +5,8 @@ import GoogleAds from "../sections/GoogleAds";
 import {
   predictWBJEE,
   fetchPredictorBySlug,
+  getWBJEEInstitutes,
+  getWBJEEBranches,
   PredictorListItem,
 } from "@/network/predictor";
 import { getPredictorBySlug, PredictorProduct } from "@/data/counsellingProducts";
@@ -23,12 +25,14 @@ const RETURN_URL = "/wbjee-predictor";
 
 interface WBJEEFormData {
   exam: string;
-  rank: string;
+  crlRank: string;
+  categoryRank: string;
   category: string;
   quota: string;
-  round: string;
-  institutes: string[];
-  programGroups: string[];
+  roundNumber: string;
+  instituteType: string;
+  instituteName: string[];
+  programName: string[];
 }
 
 interface PredictionItem {
@@ -45,6 +49,12 @@ interface PredictionResultsData {
   homestatePredictions: PredictionItem[];
 }
 
+type OptionSet = typeof wbjeeOptions & {
+  institutes: Record<string, Record<string, string[]>>;
+  branches: Record<string, Record<string, string[]>>;
+  programGroups: Record<string, string[]>;
+};
+
 export default function WBJEECollegePredictor() {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectIsAuthenticated);
@@ -60,13 +70,21 @@ export default function WBJEECollegePredictor() {
 
   const [formData, setFormData] = useState<WBJEEFormData>({
     exam: "WBJEE",
-    rank: "",
+    crlRank: "",
+    categoryRank: "",
     category: "Open",
     quota: "Home State",
-    round: "",
-    institutes: [],
-    programGroups: [],
+    roundNumber: "",
+    instituteType: "ALL",
+    instituteName: [],
+    programName: [],
   });
+
+  const [availableInstitutes, setAvailableInstitutes] = useState<string[]>([]);
+  const [loadingInstitutes, setLoadingInstitutes] = useState(false);
+  const [instituteSearch, setInstituteSearch] = useState("");
+  const [branchesData, setBranchesData] = useState<Record<string, string[]>>({});
+  const [loadingBranches, setLoadingBranches] = useState(false);
 
   const [results, setResults] = useState<PredictionResultsData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -79,7 +97,6 @@ export default function WBJEECollegePredictor() {
   const [checkingPurchase, setCheckingPurchase] = useState(true);
   const [product, setProduct] = useState<PredictorListItem | PredictorProduct | null>(null);
   const [productLoading, setProductLoading] = useState(true);
-  const [instituteSearch, setInstituteSearch] = useState("");
   const resultsRef = useRef<HTMLDivElement>(null);
 
   // Determine if TFW is selected
@@ -103,15 +120,60 @@ export default function WBJEECollegePredictor() {
     return cats;
   };
 
+  const getInstituteTypes = () => {
+    return (wbjeeOptions.instituteTypes as Record<string, { label: string; value: string }[]>)[
+      formData.exam
+    ] || [];
+  };
+
+  const getFallbackBranches = (exam: string) => {
+    return ((wbjeeOptions as OptionSet).branches?.[exam] || {}) as Record<string, string[]>;
+  };
+
+  const getFallbackInstitutes = (exam: string, instituteType: string) => {
+    const instituteMap = ((wbjeeOptions as OptionSet).institutes?.[exam] || {}) as Record<
+      string,
+      string[]
+    >;
+
+    if (instituteType === "ALL") {
+      return [...new Set(Object.values(instituteMap).flat())];
+    }
+
+    return instituteMap[instituteType] || [];
+  };
+
+  const getAvailablePrograms = () => {
+    if (formData.exam === "JEE") {
+      const dynamicJeePrograms = [...new Set(Object.values(branchesData).flat())];
+      if (dynamicJeePrograms.length > 0) {
+        return dynamicJeePrograms;
+      }
+
+      return ((wbjeeOptions as OptionSet).programGroups?.[formData.exam] || []) as string[];
+    }
+
+    const programKeys = Object.keys(branchesData);
+    if (programKeys.length > 0) {
+      return programKeys;
+    }
+
+    return ((wbjeeOptions as OptionSet).programGroups?.[formData.exam] || []) as string[];
+  };
+
   // --- Prefill from mentorship ---
   useEffect(() => {
     if (!prefill) return;
     setFormData((prev) => ({
       ...prev,
-      rank:
+      crlRank:
         typeof prefill.crlRank === "number"
           ? String(prefill.crlRank)
-          : prev.rank,
+          : prev.crlRank,
+      categoryRank:
+        typeof prefill.categoryRank === "number"
+          ? String(prefill.categoryRank)
+          : prev.categoryRank,
       category: prefill.category || prev.category,
     }));
     if (lockMessage) {
@@ -203,12 +265,64 @@ export default function WBJEECollegePredictor() {
     }
   }, [results]);
 
+  // --- Dynamic Institutes ---
+  useEffect(() => {
+    const fetchInstitutes = async () => {
+      if (!formData.instituteType) return;
+      setLoadingInstitutes(true);
+      try {
+        const response = await getWBJEEInstitutes(formData.exam, formData.instituteType);
+        if (response.data && response.data.length > 0) {
+          setAvailableInstitutes(response.data);
+        } else {
+          throw new Error("No data from API");
+        }
+      } catch (error) {
+        // Fallback to static data if API is not yet available
+        setAvailableInstitutes(getFallbackInstitutes(formData.exam, formData.instituteType));
+      } finally {
+        setLoadingInstitutes(false);
+      }
+    };
+    fetchInstitutes();
+  }, [formData.exam, formData.instituteType]);
+
+  // --- Dynamic Branches ---
+  useEffect(() => {
+    const fetchBranches = async () => {
+      setLoadingBranches(true);
+      try {
+        const response = await getWBJEEBranches(formData.exam);
+        const data = response.data;
+        if (Array.isArray(data) && data.length > 0) {
+          setBranchesData({ Programs: data as string[] });
+        } else if (
+          typeof data === "object" &&
+          data !== null &&
+          !Array.isArray(data) &&
+          Object.keys(data).length > 0
+        ) {
+          setBranchesData(data);
+        } else {
+          throw new Error("No data from API");
+        }
+      } catch (error) {
+        // Fallback to static data from wbjeeOptions.branches
+        setBranchesData(getFallbackBranches(formData.exam));
+      } finally {
+        setLoadingBranches(false);
+      }
+    };
+    fetchBranches();
+  }, [formData.exam]);
+
+
   // --- When TFW selected, force Home State quota ---
   useEffect(() => {
-    if (isTFW) {
+    if (isTFW && formData.exam !== "JEE") {
       setFormData((prev) => ({ ...prev, quota: "Home State" }));
     }
-  }, [isTFW]);
+  }, [isTFW, formData.exam]);
 
   // --- Reset category when exam changes ---
   const handleExamChange = (exam: string) => {
@@ -217,15 +331,16 @@ export default function WBJEECollegePredictor() {
       ...prev,
       exam,
       category: defaultCat,
-      institutes: [],
-      programGroups: [],
+      instituteType: "ALL",
+      instituteName: [],
+      programName: [],
     }));
     setResults(null);
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value, type } = e.target;
-    if (id === "rank" && crlRankLocked) return;
+    if (id === "crlRank" && crlRankLocked) return;
     if (type === "number") {
       if (value === "") {
         setFormData((prev) => ({ ...prev, [id]: value }));
@@ -233,28 +348,53 @@ export default function WBJEECollegePredictor() {
       }
       if (Number(value) < 1) return;
     }
-    if (id === "category") {
-      setFormData((prev) => ({ ...prev, [id]: value }));
+    if (id === "instituteType") {
+      setFormData((prev) => ({ ...prev, [id]: value, instituteName: [] }));
+      setInstituteSearch("");
       return;
     }
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  const handleProgramSelection = (program: string) => {
+  const handleInstituteSelection = (institute: string) => {
     setFormData((prev) => {
-      const isSelected = prev.programGroups.includes(program);
-      if (program === "ALL" && !isSelected)
-        return {
-          ...prev,
-          programGroups: [...wbjeeOptions.programGroups],
-        };
-      if (program === "ALL" && isSelected)
-        return { ...prev, programGroups: [] };
+      const isSelected = prev.instituteName.includes(institute);
+      if (institute === "ALL" && !isSelected) {
+        return { ...prev, instituteName: [...availableInstitutes] };
+      }
+      if (institute === "ALL" && isSelected) {
+        return { ...prev, instituteName: [] };
+      }
       return {
         ...prev,
-        programGroups: isSelected
-          ? prev.programGroups.filter((n) => n !== program)
-          : [...prev.programGroups, program],
+        instituteName: isSelected
+          ? prev.instituteName.filter((n) => n !== institute)
+          : [...prev.instituteName, institute],
+      };
+    });
+  };
+
+  const handleSelectAllInstitutes = () => {
+    const filteredInstitutes = availableInstitutes.filter(i => 
+      i.toLowerCase().includes(instituteSearch.toLowerCase())
+    );
+    if (formData.instituteName.length === filteredInstitutes.length && filteredInstitutes.length > 0) {
+      setFormData(prev => ({ ...prev, instituteName: [] }));
+    } else {
+      setFormData(prev => ({ ...prev, instituteName: [...filteredInstitutes] }));
+    }
+  };
+
+  const handleProgramSelection = (program: string) => {
+    setFormData((prev) => {
+      const isSelected = prev.programName.includes(program);
+      if (program === "ALL" && !isSelected) return { ...prev, programName: [...getAvailablePrograms()] };
+      if (program === "ALL" && isSelected) return { ...prev, programName: [] };
+      return {
+        ...prev,
+        programName: isSelected
+          ? prev.programName.filter((n) => n !== program)
+          : [...prev.programName, program],
       };
     });
   };
@@ -264,39 +404,49 @@ export default function WBJEECollegePredictor() {
     setLoading(true);
     setResults(null);
     try {
+      const roundLabel =
+        formData.roundNumber === "1" ? "Round 1" : formData.roundNumber === "2" ? "Round 2" : "";
+
       const payload = {
         exam: formData.exam,
-        rank: Number(formData.rank),
-        category: formData.category,
-        quota: isTFW ? "Home State" : formData.quota,
-        round: formData.round,
-        institutes: formData.institutes.length > 0 ? formData.institutes : [],
-        program_groups:
-          formData.programGroups.length > 0 ? formData.programGroups : [],
+        rank: Number(formData.crlRank),
+        category: formData.exam === "JEE" && !formData.category ? undefined : formData.category,
+        quota: formData.exam === "JEE" ? formData.quota : (isTFW ? "Home State" : formData.quota),
+        round: roundLabel,
+        institutes: formData.instituteName.length > 0 ? formData.instituteName : undefined,
+        program_groups: formData.programName.length > 0 ? formData.programName : undefined,
       };
+      
       console.log("Sending WBJEE payload:", payload);
       const response = await predictWBJEE(payload);
       console.log("WBJEE prediction response:", response.data);
 
-      // Transform API response { high: [], medium: [], low: [] }
-      // into the flat format PredictionResults expects
+      // Handle backend response gracefully depending on the new backend format vs old
+      // We will assume backend still uses high/medium/low or flat results and transform properly
       const apiData = response.data?.data || response.data || {};
-      const mapItems = (items: any[], probability: string): PredictionItem[] =>
-        (items || []).map((item: any) => ({
-          institute: item.institute,
-          branch: item.program,
-          quota: item.quota,
-          category: item.category,
-          closingRank: item.closing_rank,
-          confidence: item.confidence,
-          probability,
-        }));
+      
+      let allPredictions: PredictionItem[] = [];
+      if (apiData.results && Array.isArray(apiData.results)) {
+         allPredictions = apiData.results;
+      } else {
+         const mapItems = (items: any[], probability: string): PredictionItem[] =>
+          (items || []).map((item: any) => ({
+            institute: item.institute,
+            branch: item.program || item.branch,
+            quota: item.quota,
+            category: item.category,
+            closingRank: item.closing_rank || item.closingRank,
+            confidence: item.confidence,
+            probability,
+          }));
 
-      const allPredictions = [
-        ...mapItems(apiData.high, "High"),
-        ...mapItems(apiData.medium, "Medium"),
-        ...mapItems(apiData.low, "Low"),
-      ];
+        allPredictions = [
+          ...mapItems(apiData.high, "High"),
+          ...mapItems(apiData.medium, "Medium"),
+          ...mapItems(apiData.low, "Low"),
+        ];
+      }
+      
       setResults({ homestatePredictions: allPredictions });
     } catch (error) {
       console.error("WBJEE prediction error:", error);
@@ -308,12 +458,12 @@ export default function WBJEECollegePredictor() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!formData.rank) {
-      toast.error("Please enter your rank");
+    if (!formData.crlRank) {
+      toast.error("Please enter your Engineering / CRL Rank");
       return;
     }
-    if (!formData.round) {
-      toast.error("Please select Round Number");
+    if (!formData.roundNumber) {
+      toast.error("Please select Counselling Round Number");
       return;
     }
     if (!user) {
@@ -386,7 +536,7 @@ export default function WBJEECollegePredictor() {
             {/* Exam Selector */}
             <div>
               <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
-                Select Exam
+                Choose One Exam Through
               </label>
               <div className="flex space-x-1.5 sm:space-x-2">
                 {wbjeeOptions.exams.map((option) => (
@@ -400,7 +550,7 @@ export default function WBJEECollegePredictor() {
                         : "bg-white text-[var(--muted-text)] border-[var(--border)] hover:bg-[var(--muted-background)]"
                     }`}
                   >
-                    {option.label}
+                    {option.value === "JEE" ? "JEE Main Seat" : "WBJEE Seat"}
                   </button>
                 ))}
               </div>
@@ -409,16 +559,15 @@ export default function WBJEECollegePredictor() {
             {/* Rank */}
             <div>
               <label
-                htmlFor="rank"
+                htmlFor="crlRank"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Enter {formData.exam === "WBJEE" ? "WBJEE" : "JEE"} Rank
-                (Required)
+                Engineering / CRL Rank (Required)
               </label>
               <input
                 type="number"
-                id="rank"
-                value={formData.rank}
+                id="crlRank"
+                value={formData.crlRank}
                 onChange={handleChange}
                 placeholder="20000"
                 min="1"
@@ -433,6 +582,26 @@ export default function WBJEECollegePredictor() {
                 </p>
               )}
             </div>
+            
+            {/* Category Rank */}
+            <div>
+              <label
+                htmlFor="categoryRank"
+                className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
+              >
+                Category Rank (Optional)
+              </label>
+              <input
+                type="number"
+                id="categoryRank"
+                value={formData.categoryRank}
+                onChange={handleChange}
+                placeholder="2000"
+                min="1"
+                onWheel={(e) => e.currentTarget.blur()}
+                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
+              />
+            </div>
 
             {/* Category */}
             <div>
@@ -440,7 +609,7 @@ export default function WBJEECollegePredictor() {
                 htmlFor="category"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Select Your Category
+                Category
               </label>
               <select
                 id="category"
@@ -454,11 +623,9 @@ export default function WBJEECollegePredictor() {
                   </option>
                 ))}
               </select>
-              {isTFW && (
+              {isTFW && formData.exam === "WBJEE" && (
                 <p className="text-xs text-amber-700 mt-1.5 font-medium">
                   TFW category automatically uses Home State quota.
-                  {formData.exam === "JEE" &&
-                    " Note: TFW seats are not available via JEE."}
                 </p>
               )}
             </div>
@@ -469,13 +636,13 @@ export default function WBJEECollegePredictor() {
                 htmlFor="quota"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Select Quota
+                Quota
               </label>
               <select
                 id="quota"
                 value={formData.quota}
                 onChange={handleChange}
-                disabled={isTFW}
+                disabled={isTFW && formData.exam === "WBJEE"}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {wbjeeOptions.quotas.map((option) => (
@@ -489,20 +656,42 @@ export default function WBJEECollegePredictor() {
             {/* Round */}
             <div>
               <label
-                htmlFor="round"
+                htmlFor="roundNumber"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Round Number
+                Counselling Round
               </label>
               <select
                 required
-                id="round"
-                value={formData.round}
+                id="roundNumber"
+                value={formData.roundNumber}
                 onChange={handleChange}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
-                <option value="">Select Round Number</option>
+                <option value="">Select Round</option>
                 {wbjeeOptions.rounds.map((option) => (
+                  <option key={option.value} value={option.value === "Round 1" ? "1" : "2"}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Institute Type */}
+            <div>
+              <label
+                htmlFor="instituteType"
+                className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
+              >
+                Institute Type
+              </label>
+              <select
+                id="instituteType"
+                value={formData.instituteType}
+                onChange={handleChange}
+                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
+              >
+                {getInstituteTypes().map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -510,60 +699,140 @@ export default function WBJEECollegePredictor() {
               </select>
             </div>
 
+            {/* Institutes Multi-select */}
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
+                Institute Name (Optional)
+              </label>
+              <div className="border border-[var(--border)] rounded-lg bg-white">
+                <div className="p-2 border-b border-[var(--border)]">
+                  <input
+                    type="text"
+                    placeholder="Search institutes..."
+                    value={instituteSearch}
+                    onChange={(e) => setInstituteSearch(e.target.value)}
+                    className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto p-2">
+                  {loadingInstitutes ? (
+                    <p className="text-xs text-[var(--muted-text)] p-2">
+                      Loading institutes...
+                    </p>
+                  ) : availableInstitutes.length > 0 ? (
+                    <>
+                      <label className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={
+                            availableInstitutes.filter(i => i.toLowerCase().includes(instituteSearch.toLowerCase())).length > 0 &&
+                            formData.instituteName.length === availableInstitutes.filter(i => i.toLowerCase().includes(instituteSearch.toLowerCase())).length
+                          }
+                          onChange={handleSelectAllInstitutes}
+                          className="mr-2 accent-[var(--primary)]"
+                        />
+                        <span className="text-xs sm:text-sm font-semibold">
+                          Select All ({availableInstitutes.filter(i => i.toLowerCase().includes(instituteSearch.toLowerCase())).length})
+                        </span>
+                      </label>
+                      <div className="border-t border-[var(--border)] my-1"></div>
+                      {availableInstitutes
+                        .filter((i) =>
+                          i.toLowerCase().includes(instituteSearch.toLowerCase())
+                        )
+                        .map((institute) => (
+                          <label
+                            key={institute}
+                            className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.instituteName.includes(institute)}
+                              onChange={() => handleInstituteSelection(institute)}
+                              className="mr-2 accent-[var(--primary)]"
+                            />
+                            <span className="text-xs sm:text-sm flex-1">
+                              {institute}
+                            </span>
+                            {formData.instituteName.includes(institute) && (
+                              <svg
+                                className="w-4 h-4 text-green-500 flex-shrink-0"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </label>
+                        ))}
+                      {availableInstitutes.filter((i) =>
+                        i.toLowerCase().includes(instituteSearch.toLowerCase())
+                      ).length === 0 && (
+                        <p className="text-xs text-[var(--muted-text)] p-2">
+                          No institutes match your search
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-xs text-[var(--muted-text)] p-2">
+                      No institutes available
+                    </p>
+                  )}
+                </div>
+              </div>
+              {formData.instituteName.length > 0 && (
+                <p className="text-xs text-[var(--muted-text)] mt-1">
+                  {formData.instituteName.length} institute(s) selected
+                </p>
+              )}
+            </div>
+
             {/* Program Groups (Optional) */}
             <div>
               <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
-                Program Group (Optional)
+                Program Name (Optional)
               </label>
               <div className="border border-[var(--border)] rounded-lg p-2 max-h-48 overflow-y-auto bg-white">
-                {wbjeeOptions.programGroups.length > 0 ? (
+                {loadingBranches ? (
+                  <p className="text-xs text-[var(--muted-text)] p-2">Loading programs...</p>
+                ) : getAvailablePrograms().length > 0 ? (
                   <>
                     <label className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={
-                          formData.programGroups.length ===
-                            wbjeeOptions.programGroups.length &&
-                          wbjeeOptions.programGroups.length > 0
-                        }
+                        checked={formData.programName.length === getAvailablePrograms().length && getAvailablePrograms().length > 0}
                         onChange={() => {
-                          if (
-                            formData.programGroups.length ===
-                            wbjeeOptions.programGroups.length
-                          ) {
-                            setFormData((prev) => ({
-                              ...prev,
-                              programGroups: [],
-                            }));
+                          const ap = getAvailablePrograms();
+                          if (formData.programName.length === ap.length) {
+                            setFormData((prev) => ({ ...prev, programName: [] }));
                           } else {
-                            setFormData((prev) => ({
-                              ...prev,
-                              programGroups: [
-                                ...wbjeeOptions.programGroups,
-                              ],
-                            }));
+                            setFormData((prev) => ({ ...prev, programName: [...ap] }));
                           }
                         }}
                         className="mr-2 accent-[var(--primary)]"
                       />
                       <span className="text-xs sm:text-sm font-semibold">
-                        Select All ({wbjeeOptions.programGroups.length})
+                        Select All ({getAvailablePrograms().length})
                       </span>
                     </label>
                     <div className="border-t border-[var(--border)] my-1"></div>
-                    {wbjeeOptions.programGroups.map((program) => (
+                    {getAvailablePrograms().map((program) => (
                       <label
                         key={program}
                         className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer"
                       >
                         <input
                           type="checkbox"
-                          checked={formData.programGroups.includes(program)}
+                          checked={formData.programName.includes(program)}
                           onChange={() => handleProgramSelection(program)}
                           className="mr-2 accent-[var(--primary)]"
                         />
                         <span className="text-xs sm:text-sm">{program}</span>
-                        {formData.programGroups.includes(program) && (
+                        {formData.programName.includes(program) && (
                           <svg
                             className="w-4 h-4 text-green-500 flex-shrink-0 ml-auto"
                             fill="currentColor"
@@ -585,9 +854,9 @@ export default function WBJEECollegePredictor() {
                   </p>
                 )}
               </div>
-              {formData.programGroups.length > 0 && (
+              {formData.programName.length > 0 && (
                 <p className="text-xs text-[var(--muted-text)] mt-1">
-                  {formData.programGroups.length} program group(s) selected
+                  {formData.programName.length} program(s) selected
                 </p>
               )}
             </div>
@@ -599,11 +868,11 @@ export default function WBJEECollegePredictor() {
                 disabled={loading}
                 className="w-full bg-[var(--primary)] text-white font-semibold p-2.5 sm:p-3.5 text-sm sm:text-base rounded-lg shadow-md hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                {loading ? "Predicting..." : "Predict My College"}
+                {loading ? "Predicting..." : "Get Prediction"}
               </button>
             </div>
             <p className="text-center text-[10px] sm:text-xs text-[var(--muted-text)] pt-2">
-              Powered by official WBJEE counselling cutoff data
+              Powered by official counselling cutoff data
             </p>
           </form>
         </div>

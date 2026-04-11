@@ -81,11 +81,19 @@ export const predictJACChandigarh = (data: any) => {
 };
 
 // WBJEE Predictor API
+export const getWBJEEInstitutes = (exam: string, type: string) => {
+  return apiClient.get(`/api/wbjee/institutes/${exam}/${type}`);
+};
+
+export const getWBJEEBranches = (exam: string) => {
+  return apiClient.get(`/api/wbjee/branches/${exam}`);
+};
+
 export const predictWBJEE = (data: {
   exam: string;
   rank: number;
-  category: string;
-  quota: string;
+  category?: string;
+  quota?: string;
   round: string;
   institutes?: string[];
   program_groups?: string[];

@@ -297,7 +297,10 @@ export default function CounselingClient() {
                 {product.title}
               </h1>
               <p className="text-gray-600 text-lg mb-6">
-                {product.description}
+                {/* show only 2 line then show ... */}
+                {product.description.length > 200
+                  ? product.description.substring(0, 200) + "..."
+                  : product.description}
               </p>
 
               {/* Price and Validity */}
