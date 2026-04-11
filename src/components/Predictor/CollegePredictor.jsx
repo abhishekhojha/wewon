@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import GoogleAds from "../sections/GoogleAds";
+import Image from "next/image";
 import { predict, fetchPredictorBySlug } from "@/network/predictor";
 import { getPredictorBySlug } from "@/data/counsellingProducts";
 import options from "./data/options.json";
@@ -327,7 +327,19 @@ export default function CollegePredictor() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
         {/* Left Column: Steps */}
         <div className="flex flex-col justify-center space-y-3 sm:space-y-6">
-          <GoogleAds adSlot="1234567890" />
+          {product?.thumbnail && (
+            <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg mb-4 sm:mb-6">
+              <Image
+                src={product.thumbnail}
+                alt={product.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            </div>
+          )}
           <div className="p-3 sm:p-6 bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-sm">
             <h3 className="text-base sm:text-xl font-semibold text-[var(--foreground)]">
               Enter your exam details

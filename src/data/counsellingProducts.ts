@@ -57,41 +57,41 @@ export interface PredictorProduct extends CounsellingProduct {
 
 export const PREDICTOR_PRODUCTS: PredictorProduct[] =
  [
-  {
-    _id: "69521fbfae39369012122fc7",
-    title: "JEE Mains College Predictor",
-    slug: "jee-mains-predictor",
-    thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
-    description:
-      "Predict your college based on JEE Mains rank and preferences. Get accurate predictions for NITs, IIITs, and GFTIs.",
-    price: 499,
-    discountPrice: 299,
-    validityInDays: 365,
-    features: {
-      hasMentorship: false,
-      choiceFilling: {
-        isEnabled: false,
-        usageLimit: 0,
-      },
-      collegePredictor: {
-        isEnabled: true,
-        usageLimit: -1, // Unlimited
-      },
-      hasCourseContent: false,
-    },
-    totalMaterialCount: 0,
-    isActive: true,
-    // Frontend-specific fields
-    icon: "🎓",
-    category: PredictorCategory.JEE,
-    purchased: true,
-    displayFeatures: [
-      "NIT, IIIT & GFTI Predictions",
-      "Branch-wise Analysis",
-      "Previous Year Cutoffs",
-      "Personalized Recommendations",
-    ],
-  },
+  // {
+  //   _id: "69521fbfae39369012122fc7",
+  //   title: "JEE Mains College Predictor",
+  //   slug: "jee-mains-predictor",
+  //   thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
+  //   description:
+  //     "Predict your college based on JEE Mains rank and preferences. Get accurate predictions for NITs, IIITs, and GFTIs.",
+  //   price: 499,
+  //   discountPrice: 299,
+  //   validityInDays: 365,
+  //   features: {
+  //     hasMentorship: false,
+  //     choiceFilling: {
+  //       isEnabled: false,
+  //       usageLimit: 0,
+  //     },
+  //     collegePredictor: {
+  //       isEnabled: true,
+  //       usageLimit: -1, // Unlimited
+  //     },
+  //     hasCourseContent: false,
+  //   },
+  //   totalMaterialCount: 0,
+  //   isActive: true,
+  //   // Frontend-specific fields
+  //   icon: "🎓",
+  //   category: PredictorCategory.JEE,
+  //   purchased: true,
+  //   displayFeatures: [
+  //     "NIT, IIIT & GFTI Predictions",
+  //     "Branch-wise Analysis",
+  //     "Previous Year Cutoffs",
+  //     "Personalized Recommendations",
+  //   ],
+  // },
   {
     _id: "69888981c6aafde7dfa7c888", // Mock ID
     title: "JoSAA College Predictor",
