@@ -119,7 +119,6 @@ export default function MMMUTCollegePredictor() {
       
       if (orderWithFormData && orderWithFormData.mentorshipFormData) {
         const prefillData = orderWithFormData.mentorshipFormData;
-        console.log("Prefill data from order:", prefillData);
         setFormData((prev) => ({
           ...prev,
           crlRank: prefillData.crlRank ? String(prefillData.crlRank) : prev.crlRank,
