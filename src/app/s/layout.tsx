@@ -5,6 +5,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useAppSelector } from "@/store/hooks";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import NotificationPanel from "@/components/notifications/NotificationPanel";
 
 export default function WebpageLayout({
   children,
@@ -57,8 +58,11 @@ export default function WebpageLayout({
     <SidebarProvider>
       <AppSidebar />
       <main className="flex-1 w-full bg-gradient-to-br from-gray-50 to-[#073d68]/5 min-h-screen">
-        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 py-3 shadow-sm">
+        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 py-2 shadow-sm flex items-center justify-between">
           <SidebarTrigger className="hover:bg-gray-100 rounded-lg p-2 transition-colors" />
+          <div className="flex items-center gap-4">
+            <NotificationPanel />
+          </div>
         </div>
         <div className="p-4 md:p-6 lg:p-8">{children}</div>
       </main>
