@@ -66,18 +66,26 @@ const localActivePredictors: PredictorListItem[] = PREDICTOR_PRODUCTS.filter(
   createdAt: "",
 }));
 
+const localActivePredictorsBySlug = new Map(
+  localActivePredictors.map((predictor) => [predictor.slug, predictor]),
+);
+
 const mergePredictorsWithLocal = (
   apiPredictors: PredictorListItem[],
 ): PredictorListItem[] => {
-  const apiBySlug = new Map(
-    apiPredictors.map((predictor) => [predictor.slug, predictor]),
+  const mergedPredictors = new Map(
+    localActivePredictors.map((predictor) => [predictor.slug, predictor]),
   );
 
-  return localActivePredictors.map((localPredictor) => {
-    const apiPredictor = apiBySlug.get(localPredictor.slug);
-    if (!apiPredictor) return localPredictor;
+  apiPredictors.forEach((apiPredictor) => {
+    const localPredictor = localActivePredictorsBySlug.get(apiPredictor.slug);
 
-    return {
+    if (!localPredictor) {
+      mergedPredictors.set(apiPredictor.slug, apiPredictor);
+      return;
+    }
+
+    mergedPredictors.set(apiPredictor.slug, {
       ...localPredictor,
       ...apiPredictor,
       features: {
@@ -96,9 +104,12 @@ const mergePredictorsWithLocal = (
           apiPredictor.features.hasCourseContent ??
           localPredictor.features.hasCourseContent,
       },
-      isActive: true,
-    };
+    });
   });
+
+  return Array.from(mergedPredictors.values()).filter(
+    (predictor) => predictor.isActive,
+  );
 };
 
 const PredictorsGrid: React.FC = () => {

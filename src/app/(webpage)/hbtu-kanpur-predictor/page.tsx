@@ -9,7 +9,7 @@ export default function page() {
     <>
       <div className="container mx-auto mb-8 px-4">
         <MainHeading
-          top="HBTU College Predictor"
+          top="HBTU Kanpur College Predictor"
           bottom="Find Your Perfect College"
         />
       </div>

@@ -15,8 +15,8 @@ import { selectUserOrders } from "@/store/order/orderSlice";
 import PredictorPaymentModal from "./PredictorPaymentModal";
 import { hasInvalidSubCategoryGenderCombination } from "./utils/subCategoryGenderValidation";
 
-const PRODUCT_SLUG = "hbtu-predictor";
-const RETURN_URL = "/hbtu-predictor";
+const PRODUCT_SLUG = "hbtu-kanpur-predictor";
+const RETURN_URL = "/hbtu-kanpur-predictor";
 
 export default function HBTUCollegePredictor() {
   const dispatch = useAppDispatch();
@@ -401,7 +401,7 @@ export default function HBTUCollegePredictor() {
           {/* Header */}
           <div className="flex flex-col justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--primary)]">
-              HBTU COLLEGE PREDICTOR
+              HBTU KANPUR COLLEGE PREDICTOR
             </h2>
             <span className="bg-[var(--light-blue)] text-[var(--primary)] text-[10px] sm:text-xs font-semibold px-2 sm:px-4 py-1 sm:py-2 rounded-full whitespace-nowrap w-fit">
               Trusted by thousands of students
