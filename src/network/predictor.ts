@@ -80,13 +80,20 @@ export const predictJACChandigarh = (data: any) => {
   return apiClient.post("/api/jac-chandigarh/predict", data);
 };
 
-// WBJEE Predictor API
+// WBJEE Predictor APIs
+export const getWBJEEMetadata = () => {
+  return apiClient.get("/api/wbjee/metadata");
+};
+
 export const getWBJEEInstitutes = (exam: string, type: string) => {
-  return apiClient.get(`/api/wbjee/institutes/${exam}/${type}`);
+  const params = new URLSearchParams();
+  params.append("exam", exam);
+  if (type && type !== "ALL") params.append("type", type);
+  return apiClient.get(`/api/wbjee/institutes?${params.toString()}`);
 };
 
 export const getWBJEEBranches = (exam: string) => {
-  return apiClient.get(`/api/wbjee/branches/${exam}`);
+  return apiClient.get(`/api/wbjee/branches?exam=${exam}`);
 };
 
 export const predictWBJEE = (data: {
@@ -179,5 +186,3 @@ export const fetchPredictorBySlug = async (
   const response = await apiClient.get(`/api/predictor/${slug}`);
   return response.data.data;
 };
-
-

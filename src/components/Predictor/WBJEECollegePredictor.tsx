@@ -5,6 +5,7 @@ import Image from "next/image";
 import {
   predictWBJEE,
   fetchPredictorBySlug,
+  getWBJEEMetadata,
   getWBJEEInstitutes,
   getWBJEEBranches,
   PredictorListItem,
@@ -57,6 +58,19 @@ type OptionSet = typeof wbjeeOptions & {
   programGroups: Record<string, string[]>;
 };
 
+interface MetadataOption {
+  label: string;
+  value: string;
+}
+
+interface WBJEEMetadata {
+  exams: MetadataOption[];
+  categories: Record<string, MetadataOption[]>;
+  quotas: MetadataOption[];
+  rounds: MetadataOption[];
+  instituteTypes: Record<string, MetadataOption[]>;
+}
+
 export default function WBJEECollegePredictor() {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectIsAuthenticated);
@@ -83,9 +97,19 @@ export default function WBJEECollegePredictor() {
     programName: [],
   });
 
+  const [metadata, setMetadata] = useState<WBJEEMetadata>({
+    exams: wbjeeOptions.exams,
+    categories: wbjeeOptions.categories as Record<string, MetadataOption[]>,
+    quotas: wbjeeOptions.quotas,
+    rounds: wbjeeOptions.rounds,
+    instituteTypes: wbjeeOptions.instituteTypes as Record<string, MetadataOption[]>,
+  });
+  const [loadingMetadata, setLoadingMetadata] = useState(true);
+
   const [availableInstitutes, setAvailableInstitutes] = useState<string[]>([]);
   const [loadingInstitutes, setLoadingInstitutes] = useState(false);
   const [instituteSearch, setInstituteSearch] = useState("");
+  // branchesData: { [groupName]: string[] } — reconstructed from API's [{group, programs[]}] format
   const [branchesData, setBranchesData] = useState<Record<string, string[]>>({});
   const [loadingBranches, setLoadingBranches] = useState(false);
 
@@ -110,26 +134,20 @@ export default function WBJEECollegePredictor() {
   const isCategoryLocked = isJeeExam;
   const isQuotaLocked = isJeeExam || (isTFW && formData.exam === "WBJEE");
 
-  // Get categories dependent on exam type
-  const getCategories = () => {
-    const cats =
-      (wbjeeOptions.categories as Record<string, { label: string; value: string }[]>)[
-        formData.exam
-      ] || [];
+  // Get categories dependent on exam type (from API metadata, fallback to static)
+  const getCategories = (): MetadataOption[] => {
+    const cats = (metadata.categories[formData.exam] || []) as MetadataOption[];
     // For JEE exam, TFW seats are not available
     if (formData.exam === "JEE") {
       return cats.filter(
-        (c) =>
-          c.value !== "Tuition Fee Waiver" && c.value !== "TFW",
+        (c) => c.value !== "Tuition Fee Waiver" && c.value !== "TFW",
       );
     }
     return cats;
   };
 
-  const getInstituteTypes = () => {
-    return (wbjeeOptions.instituteTypes as Record<string, { label: string; value: string }[]>)[
-      formData.exam
-    ] || [];
+  const getInstituteTypes = (): MetadataOption[] => {
+    return (metadata.instituteTypes[formData.exam] || []) as MetadataOption[];
   };
 
   const getFallbackBranches = (exam: string) => {
@@ -149,23 +167,69 @@ export default function WBJEECollegePredictor() {
     return instituteMap[instituteType] || [];
   };
 
-  const getAvailablePrograms = () => {
-    if (formData.exam === "JEE") {
-      const dynamicJeePrograms = [...new Set(Object.values(branchesData).flat())];
-      if (dynamicJeePrograms.length > 0) {
-        return dynamicJeePrograms;
-      }
+  const getAvailablePrograms = (): string[] => {
+    const hasDynamicData = Object.keys(branchesData).length > 0;
 
+    if (formData.exam === "JEE") {
+      // For JEE, send individual program names — flatten all groups
+      if (hasDynamicData) {
+        return [...new Set(Object.values(branchesData).flat())];
+      }
       return ((wbjeeOptions as OptionSet).programGroups?.[formData.exam] || []) as string[];
     }
 
-    const programKeys = Object.keys(branchesData);
-    if (programKeys.length > 0) {
-      return programKeys;
+    // For WBJEE, send group names as program_groups — return group names (keys)
+    if (hasDynamicData) {
+      return Object.keys(branchesData);
     }
-
     return ((wbjeeOptions as OptionSet).programGroups?.[formData.exam] || []) as string[];
   };
+
+  // --- Fetch metadata from API ---
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      setLoadingMetadata(true);
+      try {
+        const response = await getWBJEEMetadata();
+        const apiData = response.data?.data;
+        if (apiData) {
+          // API returns: { exams: string[], categories: string[], quotas: string[], rounds: string[] }
+          // We need to convert string arrays to {label, value} objects
+          const toOptions = (arr: string[]): MetadataOption[] =>
+            arr.map((v) => ({ label: v, value: v }));
+
+          // Categories from API are a flat array; split by exam using known TFW rule
+          // The API returns one shared categories list — map to our per-exam structure
+          const allCategories: string[] = apiData.categories || [];
+          const wbjeeCategories = allCategories.filter(
+            (c: string) => !c.includes("OBC-NCL"),
+          );
+          const jeeCategories = allCategories.filter(
+            (c: string) => c !== "Tuition Fee Waiver" && c !== "TFW",
+          );
+
+          // instituteTypes not returned by /metadata — keep static fallback
+          setMetadata({
+            exams: toOptions(apiData.exams || []),
+            categories: {
+              WBJEE: toOptions(wbjeeCategories),
+              JEE: toOptions(jeeCategories),
+            },
+            quotas: toOptions(apiData.quotas || []),
+            rounds: toOptions(apiData.rounds || []),
+            // instituteTypes is not in /metadata — keep the static data
+            instituteTypes: wbjeeOptions.instituteTypes as Record<string, MetadataOption[]>,
+          });
+        }
+      } catch (error) {
+        // Silently fall back to static wbjeeOptions.json
+        console.warn("WBJEE metadata API unavailable, using static fallback.", error);
+      } finally {
+        setLoadingMetadata(false);
+      }
+    };
+    fetchMetadata();
+  }, []);
 
   // --- Prefill from mentorship ---
   useEffect(() => {
@@ -295,13 +359,27 @@ export default function WBJEECollegePredictor() {
       setLoadingInstitutes(true);
       try {
         const response = await getWBJEEInstitutes(formData.exam, formData.instituteType);
-        if (response.data && response.data.length > 0) {
-          setAvailableInstitutes(response.data);
-        } else {
-          throw new Error("No data from API");
+        // API response: { success, data: { WBJEE: { "TypeName": string[] }, JEE: {...} } }
+        const responsePayload = response.data?.data ?? response.data;
+        const examInstituteMap: Record<string, string[]> | undefined = responsePayload?.[formData.exam];
+
+        if (examInstituteMap && typeof examInstituteMap === "object") {
+          let institutes: string[];
+          if (formData.instituteType === "ALL") {
+            institutes = [...new Set(Object.values(examInstituteMap).flat())];
+          } else {
+            institutes = examInstituteMap[formData.instituteType] || [];
+          }
+          if (institutes.length > 0) {
+            setAvailableInstitutes(institutes);
+            setLoadingInstitutes(false);
+            return;
+          }
         }
+        throw new Error("No institute data from API");
       } catch (error) {
-        // Fallback to static data if API is not yet available
+        // Fallback to static data
+        console.warn("WBJEE institutes API unavailable, using static fallback.", error);
         setAvailableInstitutes(getFallbackInstitutes(formData.exam, formData.instituteType));
       } finally {
         setLoadingInstitutes(false);
@@ -314,23 +392,35 @@ export default function WBJEECollegePredictor() {
   useEffect(() => {
     const fetchBranches = async () => {
       setLoadingBranches(true);
+      // Reset programs when exam changes
+      setFormData((prev) => ({ ...prev, programName: [] }));
       try {
         const response = await getWBJEEBranches(formData.exam);
-        const data = response.data;
-        if (Array.isArray(data) && data.length > 0) {
-          setBranchesData({ Programs: data as string[] });
-        } else if (
-          typeof data === "object" &&
-          data !== null &&
-          !Array.isArray(data) &&
-          Object.keys(data).length > 0
-        ) {
-          setBranchesData(data);
-        } else {
-          throw new Error("No data from API");
+        // API response shape: { success: true, data: { WBJEE: [{group, programs[]}], JEE: [{group, programs[]}] } }
+        // or response.data.data depending on axios interceptor unwrapping
+        const responsePayload = response.data?.data ?? response.data;
+        
+        // The key in the response matches the exam name
+        const examData: { group: string; programs: string[] }[] | undefined =
+          responsePayload?.[formData.exam];
+
+        if (Array.isArray(examData) && examData.length > 0) {
+          // Convert [{group, programs[]}] → Record<group, programs[]>
+          const grouped: Record<string, string[]> = {};
+          examData.forEach(({ group, programs }) => {
+            if (group && Array.isArray(programs)) {
+              grouped[group] = programs;
+            }
+          });
+          if (Object.keys(grouped).length > 0) {
+            setBranchesData(grouped);
+            return;
+          }
         }
+        throw new Error("No valid branches data from API");
       } catch (error) {
         // Fallback to static data from wbjeeOptions.branches
+        console.warn("WBJEE branches API unavailable, using static fallback.", error);
         setBranchesData(getFallbackBranches(formData.exam));
       } finally {
         setLoadingBranches(false);
@@ -597,7 +687,7 @@ export default function WBJEECollegePredictor() {
                 Choose One Exam Through
               </label>
               <div className="flex space-x-1.5 sm:space-x-2">
-                {wbjeeOptions.exams.map((option) => (
+                {metadata.exams.map((option) => (
                   <button
                     key={option.value}
                     type="button"
@@ -715,7 +805,7 @@ export default function WBJEECollegePredictor() {
                 disabled={isQuotaLocked}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {wbjeeOptions.quotas.map((option) => (
+                {metadata.quotas.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -744,7 +834,7 @@ export default function WBJEECollegePredictor() {
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
                 <option value="">Select Round</option>
-                {wbjeeOptions.rounds.map((option) => (
+                {metadata.rounds.map((option) => (
                   <option key={option.value} value={option.value === "Round 1" ? "1" : "2"}>
                     {option.label}
                   </option>
