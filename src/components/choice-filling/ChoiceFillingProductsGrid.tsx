@@ -130,9 +130,10 @@ export default function ChoiceFillingProductsGrid({ onlyPurchased = false }: Cho
             <h3 className="text-lg font-bold text-[#0f3a67] line-clamp-1">
               {product.title}
             </h3>
-            <p className="text-sm text-gray-600 line-clamp-3 mt-2 mb-4 flex-1">
-              {product.description}
-            </p>
+            <div
+              className="line-clamp-3 overflow-hidden text-ellipsis prose max-w-none text-gray-700 leading-relaxed whitespace-pre-line"
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
 
             <div className="flex items-center justify-between gap-4">
               <div>

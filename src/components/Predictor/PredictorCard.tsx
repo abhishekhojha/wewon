@@ -54,9 +54,10 @@ const PredictorCard: React.FC<PredictorCardProps> = ({ predictor }) => {
             {predictor.title}
           </h3>
         </div>
-        <p className="text-sm text-gray-600 line-clamp-2 mb-4">
-          {predictor.description}
-        </p>
+        <div
+          className="line-clamp-3 overflow-hidden text-ellipsis prose max-w-none text-gray-700 leading-relaxed whitespace-pre-line"
+          dangerouslySetInnerHTML={{ __html: predictor.description }}
+        />
 
         {/* Features */}
         <div className="mb-4 flex-1">

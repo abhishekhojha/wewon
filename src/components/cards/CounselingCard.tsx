@@ -57,9 +57,9 @@ const CounselingCard = ({
 
         {/* Description */}
         <div
-                className="line-clamp-3 overflow-hidden text-ellipsis prose max-w-none text-gray-700 leading-relaxed whitespace-pre-line"
-                dangerouslySetInnerHTML={{ __html: description }}
-              />
+          className="line-clamp-3 overflow-hidden text-ellipsis prose max-w-none text-gray-700 leading-relaxed whitespace-pre-line"
+          dangerouslySetInnerHTML={{ __html: description }}
+        />
 
         {/* Price Section */}
         <div className="mt-4 flex items-baseline gap-2">

@@ -95,6 +95,7 @@ export default function ChoiceFillingProductDetailPage() {
         <ChoiceFillingForm
           toolKey={resolvedToolKey}
           toolLabel={toolLabel}
+          product={product}
           productId={product._id}
           productSlug={product.slug}
         />
