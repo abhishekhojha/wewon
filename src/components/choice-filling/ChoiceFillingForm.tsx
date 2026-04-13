@@ -14,10 +14,13 @@ import {
   ChoiceFillingProduct,
 } from "@/network/choice-filling";
 import { useAppSelector } from "@/store/hooks";
-import { selectIsAuthenticated } from "@/store/auth/authSlice";
+import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
+import { selectUserOrders } from "@/store/order/orderSlice";
 import { useRouter } from "next/navigation";
 import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
 import Image from "next/image";
+import { limitLeft } from "@/utils/helpers";
+
 
 type ChoiceFillingFormState = {
   name: string;
@@ -93,7 +96,22 @@ export default function ChoiceFillingForm({
   productSlug,
 }: ChoiceFillingFormProps) {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const user = useAppSelector(selectUser);
+  const userOrders = useAppSelector(selectUserOrders);
   const router = useRouter();
+
+  const isCounsellor = user?.userId?.role === "counsellor";
+  
+  const usageStatus = (isAuthenticated && !isCounsellor && userOrders?.length > 0 && productSlug)
+    ? (() => {
+        try {
+          return limitLeft(userOrders, productSlug, "choiceFilling");
+        } catch (e) {
+          return null;
+        }
+      })()
+    : null;
+
 
   const {
     prefill: orderPrefill,
@@ -462,10 +480,18 @@ export default function ChoiceFillingForm({
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--primary)]">
               {toolLabel.toUpperCase()} CHOICE FILLING
             </h2>
-            <span className="bg-[var(--light-blue)] text-[var(--primary)] text-[10px] sm:text-xs font-semibold px-2 sm:px-4 py-1 sm:py-2 rounded-full whitespace-nowrap w-fit">
-              Powered by real cutoff data
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-[var(--light-blue)] text-[var(--primary)] text-[10px] sm:text-xs font-semibold px-2 sm:px-4 py-1 sm:py-2 rounded-full whitespace-nowrap w-fit">
+                Powered by real cutoff data
+              </span>
+              {usageStatus && (
+                <span className="bg-orange-50 text-orange-700 text-[10px] sm:text-xs font-bold px-2 sm:px-4 py-1 sm:py-2 rounded-full border border-orange-200 shadow-sm">
+                  {usageStatus.limitLeft} Choice Lists Left
+                </span>
+              )}
+            </div>
           </div>
+
 
           <form className="space-y-3 sm:space-y-5" onSubmit={handleSubmit}>
             {/* Name */}

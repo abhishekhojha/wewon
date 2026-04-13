@@ -405,12 +405,14 @@ export interface OrderProduct {
     choiceFilling?: {
       isEnabled?: boolean;
       usageLimit?: number;
-      allowedChoiceFilling?: string[];
+      allowedChoiceFillers?: string[];
+      usedCount?: number;
     };
     collegePredictor?: {
       isEnabled?: boolean;
       usageLimit?: number;
       allowedPredictors?: string[];
+      usedCount?: number;
     };
     hasCourseContent?: boolean;
   };

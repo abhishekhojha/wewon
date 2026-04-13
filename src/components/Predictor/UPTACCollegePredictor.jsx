@@ -18,7 +18,9 @@ import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import PredictorPaymentModal from "./PredictorPaymentModal";
+import { limitLeft } from "@/utils/helpers";
 import { hasInvalidSubCategoryGenderCombination } from "./utils/subCategoryGenderValidation";
+
 
 const PRODUCT_SLUG = "uptac-predictor";
 const RETURN_URL = "/uptac-predictor";
@@ -68,6 +70,17 @@ export default function UPTACCollegePredictor() {
   const [product, setProduct] = useState(null);
   const [productLoading, setProductLoading] = useState(true);
   const resultsRef = useRef(null);
+
+  const usageStatus = (user && hasPurchased && !isCounsellor && userOrders?.length > 0)
+    ? (() => {
+        try {
+          return limitLeft(userOrders, PRODUCT_SLUG, "predictor");
+        } catch (e) {
+          return null;
+        }
+      })()
+    : null;
+
 
   useEffect(() => {
     if (!prefill) return;
@@ -153,6 +166,7 @@ export default function UPTACCollegePredictor() {
         const orderProductSlug = order.product?.slug;
         const allowedPredictors = order.product?.features?.collegePredictor?.allowedPredictors || [];
         const isAllowedViaPackage = allowedPredictors.some((p) => 
+           p.toLowerCase() === "all" ||
           PRODUCT_SLUG.toLowerCase().includes(p.toLowerCase())
         );
         return (orderProductSlug === PRODUCT_SLUG || isAllowedViaPackage) && order.status === "completed";
@@ -387,9 +401,21 @@ export default function UPTACCollegePredictor() {
 
         <div className="bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-6 md:p-8">
           <div className="flex flex-col justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--primary)]">UPTAC COLLEGE PREDICTOR</h2>
-            <span className="bg-[var(--light-blue)] text-[var(--primary)] text-[10px] sm:text-xs font-semibold px-2 sm:px-4 py-1 sm:py-2 rounded-full whitespace-nowrap w-fit">Trusted by thousands of students</span>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--primary)] uppercase">
+              UPTAC COLLEGE PREDICTOR
+            </h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-[var(--light-blue)] text-[var(--primary)] text-[10px] sm:text-xs font-semibold px-2 sm:px-4 py-1 sm:py-2 rounded-full whitespace-nowrap w-fit">
+                Trusted by thousands of students
+              </span>
+              {usageStatus && (
+                <span className="bg-orange-50 text-orange-700 text-[10px] sm:text-xs font-bold px-2 sm:px-4 py-1 sm:py-2 rounded-full border border-orange-200 shadow-sm">
+                  {usageStatus.limitLeft} Predictions Left
+                </span>
+              )}
+            </div>
           </div>
+
 
           <form className="space-y-3 sm:space-y-5" onSubmit={handleSubmit}>
             <div>

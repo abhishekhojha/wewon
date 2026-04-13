@@ -152,21 +152,21 @@ const matchesOrderProduct = (
           (predictor) =>
             typeof predictor === "string" &&
             predictor.trim().length > 0 &&
-            targetSlug.includes(predictor.trim().toLowerCase()),
+            (predictor.trim().toLowerCase() === "all" || targetSlug.includes(predictor.trim().toLowerCase())),
         )
       ) {
         return true;
       }
     } else if (order.product?.features?.choiceFilling?.isEnabled === true) {
       const allowedChoiceFilling =
-        order.product?.features?.choiceFilling?.allowedChoiceFilling ?? [];
+        order.product?.features?.choiceFilling?.allowedChoiceFillers ?? [];
       if (Array.isArray(allowedChoiceFilling) && allowedChoiceFilling.length > 0) {
         // If the product defines specific allowed choice-filling tools, check membership
         return allowedChoiceFilling.some(
           (tool) =>
             typeof tool === "string" &&
             tool.trim().length > 0 &&
-            targetSlug.includes(tool.trim().toLowerCase()),
+            (tool.trim().toLowerCase() === "all" || targetSlug.includes(tool.trim().toLowerCase())),
         );
       }
       // No allowedChoiceFilling list → any enabled choice-filling product matches
