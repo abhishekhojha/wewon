@@ -24,8 +24,8 @@ export default function DynamicTable({
     >
       <div className="bg-white rounded-2xl border border-[var(--border)] overflow-hidden">
         {/* Table View */}
-        <div>
-          <table className="w-full table-fixed">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[700px] md:min-w-full">
             <thead style={{ backgroundColor: "#F9FAFB" }}>
               <tr>
                 {columns.map((column, index) => (
