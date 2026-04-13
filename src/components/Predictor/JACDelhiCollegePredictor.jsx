@@ -192,7 +192,7 @@ export default function JACDelhiCollegePredictor() {
         setBranchesData(response.data || {});
       } catch (error) {
         console.error("Error fetching branches:", error);
-        toast.error("Failed to load branches");
+        toast.error(error.message || "Failed to load branches");
       } finally {
         setLoadingBranches(false);
       }
@@ -372,7 +372,7 @@ export default function JACDelhiCollegePredictor() {
       setResults(transformedResults);
     } catch (error) {
       console.error("JAC Delhi prediction error:", error);
-      toast.error("Failed to get prediction. Please try again.");
+      toast.error(error.message || "Failed to get prediction. Please try again.");
     } finally {
       setLoading(false);
     }

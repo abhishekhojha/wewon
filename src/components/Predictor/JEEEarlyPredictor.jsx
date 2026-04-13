@@ -76,7 +76,7 @@ export default function JEEEarlyPredictor() {
         setProduct(productData);
       } catch (error) {
         console.error("Error fetching product:", error);
-        toast.error("Failed to load predictor data");
+        toast.error(error.message || "Failed to load predictor data");
       } finally {
         setProductLoading(false);
       }
@@ -270,7 +270,7 @@ export default function JEEEarlyPredictor() {
       setResults(response.data);
     } catch (error) {
       console.error("Prediction error:", error);
-      toast.error("Failed to get prediction. Please try again.");
+      toast.error(error.message || "Failed to get prediction. Please try again.");
     } finally {
       setLoading(false);
     }

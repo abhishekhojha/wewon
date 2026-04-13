@@ -59,8 +59,7 @@ export default function PredictorPaymentModal({
       setAppliedCoupon(result);
       toast.success(`Coupon applied! You save ₹${result.discountAmount}`);
     } catch (error: any) {
-      const message =
-        error.response?.data?.message || error.message || "Invalid coupon code";
+      const message = error.message || "Invalid coupon code";
       setCouponError(message);
       toast.error(message);
     } finally {

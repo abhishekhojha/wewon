@@ -286,7 +286,7 @@ export default function CollegePredictor() {
       setResults(response.data);
     } catch (error) {
       console.error("Prediction error:", error);
-      toast.error("Failed to get prediction. Please try again.");
+      toast.error(error.message || "Failed to get prediction. Please try again.");
     } finally {
       setLoading(false);
     }

@@ -201,8 +201,8 @@ export default function ChoiceFillingForm({
         if (data.lockMessage && !isOrderRankLocked) {
           setRankLockMessage(data.lockMessage);
         }
-      } catch {
-        toast.error("Failed to load form data. Please refresh the page.");
+      } catch (error: any) {
+        toast.error(error?.message || "Failed to load form data. Please refresh the page.");
       } finally {
         setMetaLoading(false);
       }
@@ -398,14 +398,15 @@ export default function ChoiceFillingForm({
     } catch (error: any) {
       if (error?.response?.status === 403) {
         toast.error(
-          "You need to purchase a plan with Choice Filling access to use this tool.",
+          error.message ||
+            "You need to purchase a plan with Choice Filling access to use this tool.",
         );
       } else if (error?.response?.status === 401) {
-        toast.error("Please login to use the Choice Filling tool.");
+        toast.error(error.message || "Please login to use the Choice Filling tool.");
         router.push("/auth");
       } else {
         toast.error(
-          error?.response?.data?.message ||
+          error.message ||
             "Failed to generate choice list. Please try again.",
         );
       }

@@ -210,7 +210,7 @@ export default function UPTACCollegePredictor() {
         setBranchesData(response.data || {});
       } catch (error) {
         console.error("Error fetching branches:", error);
-        toast.error("Failed to load branches");
+        toast.error(error.message || "Failed to load branches");
       } finally {
         setLoadingBranches(false);
       }
@@ -227,7 +227,7 @@ export default function UPTACCollegePredictor() {
         setAvailableInstitutes(response.data || []);
       } catch (error) {
         console.error("Error fetching institutes:", error);
-        toast.error("Failed to load institutes");
+        toast.error(error.message || "Failed to load institutes");
         setAvailableInstitutes([]);
       } finally {
         setLoadingInstitutes(false);
@@ -342,7 +342,7 @@ export default function UPTACCollegePredictor() {
       setResults({ homestatePredictions: response.data.results || [] });
     } catch (error) {
       console.error("UPTAC prediction error:", error);
-      toast.error("Failed to get prediction. Please try again.");
+      toast.error(error.message || "Failed to get prediction. Please try again.");
     } finally {
       setLoading(false);
     }

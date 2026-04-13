@@ -160,7 +160,7 @@ export default function RazorpayPayment({
               extractPaymentSuccessData(verifyResult as Record<string, any>),
             );
           } catch (verifyError: any) {
-            toast.error("Payment verification failed");
+            toast.error(verifyError.message || "Payment verification failed");
             onFailure(verifyError.message || "Payment verification failed");
           } finally {
             setProcessing(false);

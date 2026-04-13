@@ -374,7 +374,7 @@ export default function HBTUCollegePredictor() {
       setResults(transformedResults);
     } catch (error) {
       console.error("HBTU prediction error:", error);
-      toast.error("Failed to get prediction. Please try again.");
+      toast.error(error.message || "Failed to get prediction. Please try again.");
     } finally {
       setLoading(false);
     }

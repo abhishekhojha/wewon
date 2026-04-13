@@ -130,8 +130,8 @@ export default function ChoiceFillingResults({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       toast.success("Excel file downloaded successfully!");
-    } catch {
-      toast.error("Failed to export Excel. Please try again.");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to export Excel. Please try again.");
     } finally {
       setExportingExcel(false);
     }
@@ -150,8 +150,8 @@ export default function ChoiceFillingResults({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       toast.success("PDF file downloaded successfully!");
-    } catch {
-      toast.error("Failed to export PDF. Please try again.");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to export PDF. Please try again.");
     } finally {
       setExportingPDF(false);
     }

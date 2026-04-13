@@ -335,7 +335,7 @@ export default function MMMUTCollegePredictor() {
       setResults(transformedResults);
     } catch (error) {
       console.error("MMMUT prediction error:", error);
-      toast.error("Failed to get prediction. Please try again.");
+      toast.error(error.message || "Failed to get prediction. Please try again.");
     } finally {
       setLoading(false);
     }
