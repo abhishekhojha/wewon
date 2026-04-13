@@ -94,6 +94,7 @@ export default function ChoiceFillingForm({
   const {
     prefill: orderPrefill,
     crlRankLocked: isOrderRankLocked,
+    categoryRankLocked: isOrderCategoryRankLocked,
     lockMessage: orderRankLockMessage,
   } = useMentorshipToolPrefill({
     productId,
@@ -103,6 +104,7 @@ export default function ChoiceFillingForm({
   const [metadata, setMetadata] = useState<ChoiceFillingMetadata | null>(null);
   const [metaLoading, setMetaLoading] = useState(true);
   const [rankLocked, setRankLocked] = useState(false);
+  const [categoryRankLocked, setCategoryRankLocked] = useState(false);
   const [rankLockMessage, setRankLockMessage] = useState(
     "Your rank has been set by your counsellor.",
   );
@@ -128,17 +130,25 @@ export default function ChoiceFillingForm({
   const resultsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!orderPrefill) return;
-
-    setFormData((prev) => mergePrefillIntoForm(prev, orderPrefill));
+    if (orderPrefill) {
+      setFormData((prev) => mergePrefillIntoForm(prev, orderPrefill));
+    }
 
     if (isOrderRankLocked) {
       setRankLocked(true);
     }
+    if (isOrderCategoryRankLocked) {
+      setCategoryRankLocked(true);
+    }
     if (orderRankLockMessage) {
       setRankLockMessage(orderRankLockMessage);
     }
-  }, [isOrderRankLocked, orderPrefill, orderRankLockMessage]);
+  }, [
+    isOrderCategoryRankLocked,
+    isOrderRankLocked,
+    orderPrefill,
+    orderRankLockMessage,
+  ]);
 
   // Fetch metadata on mount
   useEffect(() => {
@@ -153,7 +163,19 @@ export default function ChoiceFillingForm({
           setFormData((prev) => mergePrefillIntoForm(prev, prefill, true));
         }
 
-        setRankLocked(Boolean(data.rankLocked || isOrderRankLocked));
+        const isMetadataCrlPrefilled = typeof prefill?.crlRank === "number";
+        const isMetadataCategoryPrefilled =
+          typeof prefill?.categoryRank === "number";
+        setRankLocked(
+          Boolean(data.rankLocked || isOrderRankLocked || isMetadataCrlPrefilled),
+        );
+        setCategoryRankLocked(
+          Boolean(
+            data.rankLocked ||
+              isOrderCategoryRankLocked ||
+              isMetadataCategoryPrefilled,
+          ),
+        );
         if (data.lockMessage && !isOrderRankLocked) {
           setRankLockMessage(data.lockMessage);
         }
@@ -164,7 +186,7 @@ export default function ChoiceFillingForm({
       }
     };
     loadMetadata();
-  }, [isOrderRankLocked, toolKey]);
+  }, [isOrderCategoryRankLocked, isOrderRankLocked, toolKey]);
 
   // Auto-scroll to results
   useEffect(() => {
@@ -183,6 +205,9 @@ export default function ChoiceFillingForm({
 
     if (id === "crlRank") {
       if (rankLocked) return;
+    }
+    if (id === "categoryRank" && categoryRankLocked) {
+      return;
     }
 
     if (id === "categoryRank" || id === "crlRank") {
@@ -332,6 +357,7 @@ export default function ChoiceFillingForm({
 
       if (response.rankLocked) {
         setRankLocked(true);
+        setCategoryRankLocked(true);
       }
       if (response.lockMessage) {
         setRankLockMessage(response.lockMessage);
@@ -340,6 +366,12 @@ export default function ChoiceFillingForm({
       const prefill = response.prefill;
       if (prefill) {
         setFormData((prev) => mergePrefillIntoForm(prev, prefill));
+        if (typeof prefill.crlRank === "number") {
+          setRankLocked(true);
+        }
+        if (typeof prefill.categoryRank === "number") {
+          setCategoryRankLocked(true);
+        }
       }
     } catch (error: any) {
       if (error?.response?.status === 403) {
@@ -480,8 +512,14 @@ export default function ChoiceFillingForm({
                 onChange={handleChange}
                 placeholder="e.g. 14211"
                 required={formData.category !== "OPEN"}
+                disabled={categoryRankLocked}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
+              {categoryRankLocked && (
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
+                  Category Rank is pre-filled from your mentorship form and cannot be changed.
+                </p>
+              )}
             </div>
 
             {/* Gender */}

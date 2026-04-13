@@ -405,6 +405,7 @@ export interface OrderProduct {
     choiceFilling?: {
       isEnabled?: boolean;
       usageLimit?: number;
+      allowedChoiceFilling?: string[];
     };
     collegePredictor?: {
       isEnabled?: boolean;

@@ -133,11 +133,43 @@ const matchesOrderProduct = (
   }
 
   if (params.productSlug) {
-    const orderProductSlug = order.product?.slug;
+    const targetSlug = params.productSlug.toLowerCase();
+    const orderProductSlug = order.product?.slug?.toLowerCase();
     if (
       orderProductSlug &&
-      orderProductSlug.toLowerCase() === params.productSlug.toLowerCase()
+      orderProductSlug === targetSlug
     ) {
+      return true;
+    }
+
+    const isPredictorSlug = targetSlug.includes("predictor");
+    if (isPredictorSlug) {
+      const allowedPredictors =
+        order.product?.features?.collegePredictor?.allowedPredictors ?? [];
+      if (
+        Array.isArray(allowedPredictors) &&
+        allowedPredictors.some(
+          (predictor) =>
+            typeof predictor === "string" &&
+            predictor.trim().length > 0 &&
+            targetSlug.includes(predictor.trim().toLowerCase()),
+        )
+      ) {
+        return true;
+      }
+    } else if (order.product?.features?.choiceFilling?.isEnabled === true) {
+      const allowedChoiceFilling =
+        order.product?.features?.choiceFilling?.allowedChoiceFilling ?? [];
+      if (Array.isArray(allowedChoiceFilling) && allowedChoiceFilling.length > 0) {
+        // If the product defines specific allowed choice-filling tools, check membership
+        return allowedChoiceFilling.some(
+          (tool) =>
+            typeof tool === "string" &&
+            tool.trim().length > 0 &&
+            targetSlug.includes(tool.trim().toLowerCase()),
+        );
+      }
+      // No allowedChoiceFilling list → any enabled choice-filling product matches
       return true;
     }
   }
@@ -223,12 +255,20 @@ export const resolveMentorshipToolPrefill = (
   );
   const hasCrlRankOverride = crlRankFromOverride != null;
   const hasCategoryRankOverride = categoryRankFromOverride != null;
+  const hasCrlRankFromForm = crlRankFromForm != null;
+  const hasCategoryRankFromForm = categoryRankFromForm != null;
 
   const crlRankLocked =
-    Boolean(hasMentorshipCrlField || hasCrlRankOverride || rankOverrides.lockedByAdmin);
+    Boolean(
+      hasMentorshipCrlField ||
+        hasCrlRankOverride ||
+        hasCrlRankFromForm ||
+        rankOverrides.lockedByAdmin,
+    );
   const categoryRankLocked = Boolean(
     hasMentorshipCategoryField ||
       hasCategoryRankOverride ||
+      hasCategoryRankFromForm ||
       rankOverrides.lockedByAdmin,
   );
 

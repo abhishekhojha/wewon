@@ -426,6 +426,7 @@ export default function CollegePredictor() {
                 onChange={handleChange}
                 placeholder="2000"
                 required={formData.category !== "OPEN"}
+                disabled={categoryRankLocked}
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
