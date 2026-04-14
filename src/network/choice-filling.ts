@@ -84,6 +84,8 @@ export interface ChoiceFillingRequest {
   branchGroup?: string | string[];
   /** IIT-specific: full institute names to restrict results to */
   includedIITs?: string | string[];
+  /** UPTAC-specific: Tuition Fee Waiver eligibility */
+  hasTFW?: boolean;
 }
 
 export interface ChoiceRow {
@@ -118,6 +120,8 @@ export interface ChoiceFillingResponse {
   maxRange: number;
   totalChoices: number;
   top100Choices: ChoiceRow[];
+  /** UPTAC returns top 150 choices for quick display */
+  top150Choices?: ChoiceRow[];
   choices: ChoiceRow[];
   disclaimer: string;
   rankLocked?: boolean;

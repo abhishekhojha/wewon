@@ -33,6 +33,7 @@ type ChoiceFillingFormState = {
   instituteTypes: string[];
   branchGroups: string[];
   includedIITs: string[]; // stores shortNames; resolved to fullNames on submit (IIT only)
+  hasTFW: boolean; // UPTAC-specific: Tuition Fee Waiver eligibility
 };
 
 const mergePrefillIntoForm = (
@@ -142,6 +143,7 @@ export default function ChoiceFillingForm({
     instituteTypes: [] as string[],
     branchGroups: [] as string[],
     includedIITs: [] as string[],
+    hasTFW: false,
   });
 
   const [results, setResults] = useState<ChoiceFillingResponse | null>(null);
@@ -303,6 +305,7 @@ export default function ChoiceFillingForm({
   };
 
   const isIIT = toolKey === "iit";
+  const isUPTAC = toolKey === "uptac";
   const availableInstituteStates =
     metadata?.instituteStates || metadata?.states || metadata?.homeStates || [];
 
@@ -371,6 +374,7 @@ export default function ChoiceFillingForm({
             }),
         branchGroup:
           formData.branchGroups.length > 0 ? formData.branchGroups : undefined,
+        ...(isUPTAC && formData.hasTFW ? { hasTFW: true } : {}),
       };
 
       const response = await generateChoiceList(payload, toolKey);
@@ -752,6 +756,52 @@ export default function ChoiceFillingForm({
                   )}
                 </div>
               </>
+            )}
+
+            {/* TFW Toggle - UPTAC only */}
+            {isUPTAC && (
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
+                  Tuition Fee Waiver (TFW)
+                </label>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, hasTFW: !prev.hasTFW }))
+                  }
+                  className={`flex items-center gap-2.5 px-4 py-2.5 border rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer ${
+                    formData.hasTFW
+                      ? "bg-[var(--primary)] text-white border-[var(--primary)]"
+                      : "bg-white text-[var(--muted-text)] border-[var(--border)] hover:bg-[var(--muted-background)]"
+                  }`}
+                >
+                  <span
+                    className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                      formData.hasTFW
+                        ? "border-white bg-white/20"
+                        : "border-current"
+                    }`}
+                  >
+                    {formData.hasTFW && (
+                      <svg
+                        viewBox="0 0 12 12"
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M2 6l3 3 5-5" />
+                      </svg>
+                    )}
+                  </span>
+                  I am eligible for Fee Waiver (FW) seats
+                </button>
+                <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1">
+                  {formData.hasTFW
+                    ? "FW seats will be included with priority in your choice list."
+                    : "Enable this if you qualify for Tuition Fee Waiver to include FW seats."}
+                </p>
+              </div>
             )}
 
             {/* Branch Group - Multi Select */}

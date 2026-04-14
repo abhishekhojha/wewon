@@ -131,11 +131,11 @@ export default function ChoiceFillingProductsGrid({ onlyPurchased = false }: Cho
               {product.title}
             </h3>
             <div
-              className="line-clamp-3 overflow-hidden text-ellipsis prose max-w-none text-gray-700 leading-relaxed whitespace-pre-line"
+              className="line-clamp-2 overflow-hidden text-ellipsis prose max-w-none text-gray-700 leading-relaxed whitespace-pre-line"
               dangerouslySetInnerHTML={{ __html: product.description }}
             />
 
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-4 mt-auto pt-4">
               <div>
                 {isProductPurchased(product.slug) ? (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 font-semibold text-sm rounded-full">

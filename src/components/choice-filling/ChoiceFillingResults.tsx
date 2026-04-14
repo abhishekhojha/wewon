@@ -62,12 +62,16 @@ export default function ChoiceFillingResults({
 
   const allChoices = results.choices?.length
     ? results.choices
-    : results.top100Choices || [];
+    : results.top100Choices || results.top150Choices || [];
+  const quickDisplay = results.top100Choices?.length
+    ? results.top100Choices
+    : results.top150Choices?.length
+      ? results.top150Choices
+      : null;
+  const quickDisplayCount = quickDisplay?.length || 100;
   const displayedChoices: ChoiceRow[] = showAll
     ? allChoices
-    : (results.top100Choices?.length
-        ? results.top100Choices
-        : allChoices.slice(0, 100));
+    : (quickDisplay || allChoices.slice(0, quickDisplayCount));
 
   const hasHomeState = allChoices.some((c) => c.isHomeState);
   const hasSerialNo = allChoices.some((c) => c.serialNo != null);
@@ -406,7 +410,7 @@ export default function ChoiceFillingResults({
         </div>
 
         {/* Show More / Less */}
-        {results.choices.length > 100 && (
+        {results.choices.length > quickDisplayCount && (
           <div className="p-4 border-t border-[var(--border)] text-center">
             <button
               onClick={() => setShowAll(!showAll)}
@@ -414,7 +418,7 @@ export default function ChoiceFillingResults({
             >
               {showAll ? (
                 <>
-                  Show Top 100 Only <ChevronUp size={16} />
+                  Show Top {quickDisplayCount} Only <ChevronUp size={16} />
                 </>
               ) : (
                 <>
