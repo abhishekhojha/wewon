@@ -26,7 +26,7 @@ import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 
 const PRODUCT_SLUG = "wbjee-predictor";
 const RETURN_URL = "/wbjee-predictor";
-const JEE_LOCKED_CATEGORY = "Open";
+const JEE_LOCKED_CATEGORY = "OPEN";
 const JEE_LOCKED_QUOTA = "All India";
 
 interface WBJEEFormData {
@@ -92,7 +92,7 @@ export default function WBJEECollegePredictor() {
     exam: "WBJEE",
     crlRank: "",
     categoryRank: "",
-    category: "Open",
+    category: "OPEN",
     quota: "Home State",
     roundNumber: "",
     instituteType: "ALL",
@@ -149,7 +149,8 @@ export default function WBJEECollegePredictor() {
 
   // Determine if TFW is selected
   const isTFW =
-    formData.category === "Tuition Fee Waiver" || formData.category === "TFW";
+    formData.category?.toUpperCase() === "TUITION FEE WAIVER" || 
+    formData.category?.toUpperCase() === "TFW";
   const isJeeExam = formData.exam === "JEE";
   const isCategoryLocked = isJeeExam;
   const isQuotaLocked = isJeeExam || (isTFW && formData.exam === "WBJEE");
@@ -160,7 +161,7 @@ export default function WBJEECollegePredictor() {
     // For JEE exam, TFW seats are not available
     if (formData.exam === "JEE") {
       return cats.filter(
-        (c) => c.value !== "Tuition Fee Waiver" && c.value !== "TFW",
+        (c) => c.value?.toUpperCase() !== "TUITION FEE WAIVER" && c.value?.toUpperCase() !== "TFW",
       );
     }
     return cats;
@@ -190,17 +191,6 @@ export default function WBJEECollegePredictor() {
 
   const getAvailablePrograms = (): string[] => {
     const hasDynamicData = Object.keys(branchesData).length > 0;
-
-    if (formData.exam === "JEE") {
-      // For JEE, send individual program names — flatten all groups
-      if (hasDynamicData) {
-        return [...new Set(Object.values(branchesData).flat())];
-      }
-      return ((wbjeeOptions as OptionSet).programGroups?.[formData.exam] ||
-        []) as string[];
-    }
-
-    // For WBJEE, send group names as program_groups — return group names (keys)
     if (hasDynamicData) {
       return Object.keys(branchesData);
     }
@@ -475,7 +465,7 @@ export default function WBJEECollegePredictor() {
 
   // --- Reset category when exam changes ---
   const handleExamChange = (exam: string) => {
-    const defaultCat = "Open";
+    const defaultCat = "OPEN";
     setFormData((prev) => ({
       ...prev,
       exam,
@@ -565,13 +555,6 @@ export default function WBJEECollegePredictor() {
     setLoading(true);
     setResults(null);
     try {
-      const roundLabel =
-        formData.roundNumber === "1"
-          ? "Round 1"
-          : formData.roundNumber === "2"
-            ? "Round 2"
-            : "";
-
       const payload = {
         exam: formData.exam,
         rank: Number(formData.crlRank),
@@ -581,7 +564,7 @@ export default function WBJEECollegePredictor() {
           : isTFW
             ? "Home State"
             : formData.quota,
-        round: roundLabel,
+        round: formData.roundNumber,
         institutes:
           formData.instituteName.length > 0
             ? formData.instituteName
@@ -598,28 +581,24 @@ export default function WBJEECollegePredictor() {
       // We will assume backend still uses high/medium/low or flat results and transform properly
       const apiData = response.data?.data || response.data || {};
 
+      const mapItem = (item: any, probability?: string): PredictionItem => ({
+        institute: item.institute,
+        branch: item.program || item.branch,
+        quota: item.quota,
+        category: item.category,
+        closingRank: item.closing_rank || item.closingRank,
+        confidence: item.confidence,
+        probability: probability || item.probability || "High",
+      });
+
       let allPredictions: PredictionItem[] = [];
       if (apiData.results && Array.isArray(apiData.results)) {
-        allPredictions = apiData.results;
+        allPredictions = apiData.results.map((item: any) => mapItem(item));
       } else {
-        const mapItems = (
-          items: any[],
-          probability: string,
-        ): PredictionItem[] =>
-          (items || []).map((item: any) => ({
-            institute: item.institute,
-            branch: item.program || item.branch,
-            quota: item.quota,
-            category: item.category,
-            closingRank: item.closing_rank || item.closingRank,
-            confidence: item.confidence,
-            probability,
-          }));
-
         allPredictions = [
-          ...mapItems(apiData.high, "High"),
-          ...mapItems(apiData.medium, "Medium"),
-          ...mapItems(apiData.low, "Low"),
+          ... (apiData.high || []).map((item: any) => mapItem(item, "High")),
+          ... (apiData.medium || []).map((item: any) => mapItem(item, "Medium")),
+          ... (apiData.low || []).map((item: any) => mapItem(item, "Low")),
         ];
       }
 
@@ -888,7 +867,7 @@ export default function WBJEECollegePredictor() {
                 {metadata.rounds.map((option) => (
                   <option
                     key={option.value}
-                    value={option.value === "Round 1" ? "1" : "2"}
+                    value={option.value}
                   >
                     {option.label}
                   </option>
