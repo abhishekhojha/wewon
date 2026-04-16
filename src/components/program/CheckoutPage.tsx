@@ -100,8 +100,8 @@ export default function CheckoutPage({
   };
 
   const finalAmount = appliedCoupon
-    ? appliedCoupon.finalPrice + (appliedCoupon.finalPrice * 18) / 100
-    : productPrice + (productPrice * 18) / 100;
+    ? appliedCoupon.finalPrice
+    : productPrice;
 
   const completedMentorshipFieldsCount = mentorshipFields.reduce(
     (count, field) =>
@@ -412,7 +412,7 @@ export default function CheckoutPage({
                       <p className="text-sm text-blue-800">
                         <strong>Secure Payment:</strong> Your payment
                         information is encrypted and secure. We use Razorpay for
-                        safe transactions.
+                        safe transactions. 
                       </p>
                     </div>
 

@@ -150,6 +150,17 @@ export default function PredictorPaymentModal({
                     ₹{originalPrice.toLocaleString()}
                   </span>
                 </div>
+            
+                  <div className="flex justify-between items-center mb-2 ">
+                    <span className="text-gray-600 flex items-center gap-1">
+                      
+                      Tax (GST 18%)
+                    </span>
+                    <span className="font-semibold">
+                      ₹{(originalPrice * 0.18).toLocaleString()}
+                    </span>
+                  </div>
+        
                 {appliedCoupon && (
                   <div className="flex justify-between items-center mb-2 text-green-600">
                     <span className="flex items-center gap-1">
@@ -161,6 +172,17 @@ export default function PredictorPaymentModal({
                     </span>
                   </div>
                 )}
+               
+                  <div className="flex justify-between items-center mb-2 text-green-600">
+                    <span className="flex items-center gap-1">
+                      
+                     WeWon Discount
+                    </span>
+                    <span className="font-semibold">
+                      -₹{(originalPrice * 0.18).toLocaleString()}
+                    </span>
+                  </div>
+              
                 <div className="border-t border-gray-200 pt-2 mt-2">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold text-gray-800">

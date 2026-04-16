@@ -18,7 +18,7 @@ export default function CheckoutSummary({
   const discountAmount = appliedCoupon?.discountAmount || 0;
   const priceAfterDiscount = appliedCoupon?.finalPrice || originalPrice;
   const taxAmount = (priceAfterDiscount * taxPercentage) / 100;
-  const finalAmount = priceAfterDiscount + taxAmount;
+  const finalAmount = priceAfterDiscount;
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
@@ -31,7 +31,7 @@ export default function CheckoutSummary({
       </div>
 
       {/* Price Breakdown */}
-      <div className="space-y-3 mb-4">
+      <div className="space-y-2 mb-4">
         {/* Original Price */}
         <div className="flex justify-between items-center">
           <span className="text-gray-600">Original Price</span>
@@ -50,6 +50,8 @@ export default function CheckoutSummary({
           </div>
         )}
 
+       
+
         {/* Subtotal */}
         <div className="flex justify-between items-center pt-2 border-t border-gray-200">
           <span className="text-gray-600">Subtotal</span>
@@ -65,8 +67,14 @@ export default function CheckoutSummary({
             ₹{taxAmount.toLocaleString()}
           </span>
         </div>
+      {/* WeWon Discount */}
+      <div className="flex justify-between items-center text-green-600">
+        <span>WeWon Discount</span>
+        <span className="font-semibold">
+          - ₹{(taxAmount).toLocaleString()}
+        </span>
       </div>
-
+      </div>
       {/* Final Amount */}
       <div className="pt-4 border-t-2 border-gray-300">
         <div className="flex justify-between items-center">
