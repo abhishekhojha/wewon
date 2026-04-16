@@ -211,7 +211,11 @@ export default function JoSAAPredictor() {
       setResults(response.data);
     } catch (error) {
       console.error("JoSAA prediction error:", error);
-      toast.error(error.message || "Failed to get prediction. Please try again.");
+      if (error.response?.data?.code === "LIMIT_EXCEEDED") {
+        toast.error("Your limit has been exceeded! Please contact to your alloted mentor");
+      } else {
+        toast.error(error.message || "Failed to get prediction. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

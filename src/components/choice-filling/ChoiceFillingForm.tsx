@@ -469,7 +469,9 @@ export default function ChoiceFillingForm({
         }
       }
     } catch (error: any) {
-      if (error?.response?.status === 403) {
+      if (error.response?.data?.code === "LIMIT_EXCEEDED") {
+        toast.error("Your limit has been exceeded! Please contact to your alloted mentor");
+      } else if (error?.response?.status === 403) {
         setShowPaymentModal(true);
       } else if (error?.response?.status === 401) {
         toast.error(error.message || "Please login to use the Choice Filling tool.");
