@@ -10,6 +10,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
+import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 
 // Map API response to PredictorProduct format for PredictorCard
 const mapToPredictorProduct = (
@@ -136,20 +137,9 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false }
   }, [isAuthenticated, dispatch]);
 
   // Check if a predictor is purchased
-  // API response has order.product.slug and order.status
   const isPredictorPurchased = (predictorSlug: string): boolean => {
-    return userOrders.some((order: any) => {
-      // The API returns product as an object with slug, not just productId
-      const orderProductSlug = order.product?.slug;
-      const orderProductPackagePredictors: string[] = order.product?.features?.collegePredictor?.allowedPredictors || []; 
-      
-      // Match "UPTAC", "JAC", etc. with slugs like "uptac-predictor", "jac-delhi-predictor"
-      const isAllowedViaPackage = orderProductPackagePredictors.some((p: string) => 
-        predictorSlug.toLowerCase().includes(p.toLowerCase())
-      );
-
-      return (orderProductSlug === predictorSlug || isAllowedViaPackage) && order.status === "completed";
-    });
+    const { hasPurchased } = getPredictorPurchaseDetails(userOrders, predictorSlug);
+    return hasPurchased;
   };
 
   useEffect(() => {

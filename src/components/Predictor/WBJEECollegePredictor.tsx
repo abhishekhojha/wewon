@@ -21,6 +21,7 @@ import { fetchUserOrders } from "@/store/order/orderThunk";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import PredictorPaymentModal from "./PredictorPaymentModal";
 import { limitLeft } from "@/utils/helpers";
+import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 
 
 const PRODUCT_SLUG = "wbjee-predictor";
@@ -104,7 +105,10 @@ export default function WBJEECollegePredictor() {
     categories: wbjeeOptions.categories as Record<string, MetadataOption[]>,
     quotas: wbjeeOptions.quotas,
     rounds: wbjeeOptions.rounds,
-    instituteTypes: wbjeeOptions.instituteTypes as Record<string, MetadataOption[]>,
+    instituteTypes: wbjeeOptions.instituteTypes as Record<
+      string,
+      MetadataOption[]
+    >,
   });
   const [loadingMetadata, setLoadingMetadata] = useState(true);
 
@@ -112,7 +116,9 @@ export default function WBJEECollegePredictor() {
   const [loadingInstitutes, setLoadingInstitutes] = useState(false);
   const [instituteSearch, setInstituteSearch] = useState("");
   // branchesData: { [groupName]: string[] } — reconstructed from API's [{group, programs[]}] format
-  const [branchesData, setBranchesData] = useState<Record<string, string[]>>({});
+  const [branchesData, setBranchesData] = useState<Record<string, string[]>>(
+    {},
+  );
   const [loadingBranches, setLoadingBranches] = useState(false);
 
   const [results, setResults] = useState<PredictionResultsData | null>(null);
@@ -124,25 +130,26 @@ export default function WBJEECollegePredictor() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
   const [checkingPurchase, setCheckingPurchase] = useState(true);
-  const [product, setProduct] = useState<PredictorListItem | PredictorProduct | null>(null);
+  const [product, setProduct] = useState<
+    PredictorListItem | PredictorProduct | null
+  >(null);
   const [productLoading, setProductLoading] = useState(true);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  const usageStatus = (user && hasPurchased && !isCounsellor && userOrders?.length > 0)
-    ? (() => {
-        try {
-          return limitLeft(userOrders, PRODUCT_SLUG, "predictor");
-        } catch (e) {
-          return null;
-        }
-      })()
-    : null;
-
+  const usageStatus =
+    user && hasPurchased && !isCounsellor && userOrders?.length > 0
+      ? (() => {
+          try {
+            return limitLeft(userOrders, PRODUCT_SLUG, "predictor");
+          } catch (e) {
+            return null;
+          }
+        })()
+      : null;
 
   // Determine if TFW is selected
   const isTFW =
-    formData.category === "Tuition Fee Waiver" ||
-    formData.category === "TFW";
+    formData.category === "Tuition Fee Waiver" || formData.category === "TFW";
   const isJeeExam = formData.exam === "JEE";
   const isCategoryLocked = isJeeExam;
   const isQuotaLocked = isJeeExam || (isTFW && formData.exam === "WBJEE");
@@ -164,14 +171,15 @@ export default function WBJEECollegePredictor() {
   };
 
   const getFallbackBranches = (exam: string) => {
-    return ((wbjeeOptions as OptionSet).branches?.[exam] || {}) as Record<string, string[]>;
-  };
-
-  const getFallbackInstitutes = (exam: string, instituteType: string) => {
-    const instituteMap = ((wbjeeOptions as OptionSet).institutes?.[exam] || {}) as Record<
+    return ((wbjeeOptions as OptionSet).branches?.[exam] || {}) as Record<
       string,
       string[]
     >;
+  };
+
+  const getFallbackInstitutes = (exam: string, instituteType: string) => {
+    const instituteMap = ((wbjeeOptions as OptionSet).institutes?.[exam] ||
+      {}) as Record<string, string[]>;
 
     if (instituteType === "ALL") {
       return [...new Set(Object.values(instituteMap).flat())];
@@ -188,14 +196,16 @@ export default function WBJEECollegePredictor() {
       if (hasDynamicData) {
         return [...new Set(Object.values(branchesData).flat())];
       }
-      return ((wbjeeOptions as OptionSet).programGroups?.[formData.exam] || []) as string[];
+      return ((wbjeeOptions as OptionSet).programGroups?.[formData.exam] ||
+        []) as string[];
     }
 
     // For WBJEE, send group names as program_groups — return group names (keys)
     if (hasDynamicData) {
       return Object.keys(branchesData);
     }
-    return ((wbjeeOptions as OptionSet).programGroups?.[formData.exam] || []) as string[];
+    return ((wbjeeOptions as OptionSet).programGroups?.[formData.exam] ||
+      []) as string[];
   };
 
   // --- Fetch metadata from API ---
@@ -231,12 +241,18 @@ export default function WBJEECollegePredictor() {
             quotas: toOptions(apiData.quotas || []),
             rounds: toOptions(apiData.rounds || []),
             // instituteTypes is not in /metadata — keep the static data
-            instituteTypes: wbjeeOptions.instituteTypes as Record<string, MetadataOption[]>,
+            instituteTypes: wbjeeOptions.instituteTypes as Record<
+              string,
+              MetadataOption[]
+            >,
           });
         }
       } catch (error) {
         // Silently fall back to static wbjeeOptions.json
-        console.warn("WBJEE metadata API unavailable, using static fallback.", error);
+        console.warn(
+          "WBJEE metadata API unavailable, using static fallback.",
+          error,
+        );
       } finally {
         setLoadingMetadata(false);
       }
@@ -323,39 +339,14 @@ export default function WBJEECollegePredictor() {
     checkPurchaseStatus();
   }, [user, isCounsellor, dispatch, product]);
 
+  // Update hasPurchased when userOrders change
   useEffect(() => {
     if (userOrders.length > 0) {
-      const matchingOrders = userOrders.filter((order: any) => {
-        const orderProductSlug = order.product?.slug;
-        const allowedPredictors: string[] = order.product?.features?.collegePredictor?.allowedPredictors || [];
-        const isAllowedViaPackage = allowedPredictors.some((p: string) => 
-           p.toLowerCase() === "all" ||
-          PRODUCT_SLUG.toLowerCase().includes(p.toLowerCase())
-        );
-        return (orderProductSlug === PRODUCT_SLUG || isAllowedViaPackage) && order.status === "completed";
-      });
-      
-      setHasPurchased(matchingOrders.length > 0);
-
-      const orderWithFormData = matchingOrders.find(
-        (o: any) => o.mentorshipFormData && Object.keys(o.mentorshipFormData).length > 0
+      const { hasPurchased } = getPredictorPurchaseDetails(
+        userOrders,
+        PRODUCT_SLUG,
       );
-      
-      if (orderWithFormData && orderWithFormData.mentorshipFormData) {
-        const prefillData = orderWithFormData.mentorshipFormData;
-        console.log("Prefill data from order:", prefillData);
-        setFormData((prev: any) => {
-          const updates: any = {};
-          if ('crlRank' in prev && prefillData.crlRank) updates.crlRank = String(prefillData.crlRank);
-          if ('categoryRank' in prev && prefillData.categoryRank) updates.categoryRank = String(prefillData.categoryRank);
-          if ('category' in prev && prefillData.category) updates.category = prefillData.category;
-          if ('gender' in prev && prefillData.gender) updates.gender = prefillData.gender;
-          if ('homeState' in prev && prefillData.homeState) updates.homeState = prefillData.homeState;
-          if ('quota' in prev && prefillData.quota) updates.quota = prefillData.quota;
-          
-          return Object.keys(updates).length > 0 ? { ...prev, ...updates } : prev;
-        });
-      }
+      setHasPurchased(hasPurchased);
     }
   }, [userOrders]);
 
@@ -372,10 +363,14 @@ export default function WBJEECollegePredictor() {
       if (!formData.instituteType) return;
       setLoadingInstitutes(true);
       try {
-        const response = await getWBJEEInstitutes(formData.exam, formData.instituteType);
+        const response = await getWBJEEInstitutes(
+          formData.exam,
+          formData.instituteType,
+        );
         // API response: { success, data: { WBJEE: { "TypeName": string[] }, JEE: {...} } }
         const responsePayload = response.data?.data ?? response.data;
-        const examInstituteMap: Record<string, string[]> | undefined = responsePayload?.[formData.exam];
+        const examInstituteMap: Record<string, string[]> | undefined =
+          responsePayload?.[formData.exam];
 
         if (examInstituteMap && typeof examInstituteMap === "object") {
           let institutes: string[];
@@ -393,8 +388,13 @@ export default function WBJEECollegePredictor() {
         throw new Error("No institute data from API");
       } catch (error) {
         // Fallback to static data
-        console.warn("WBJEE institutes API unavailable, using static fallback.", error);
-        setAvailableInstitutes(getFallbackInstitutes(formData.exam, formData.instituteType));
+        console.warn(
+          "WBJEE institutes API unavailable, using static fallback.",
+          error,
+        );
+        setAvailableInstitutes(
+          getFallbackInstitutes(formData.exam, formData.instituteType),
+        );
       } finally {
         setLoadingInstitutes(false);
       }
@@ -434,7 +434,10 @@ export default function WBJEECollegePredictor() {
         throw new Error("No valid branches data from API");
       } catch (error) {
         // Fallback to static data from wbjeeOptions.branches
-        console.warn("WBJEE branches API unavailable, using static fallback.", error);
+        console.warn(
+          "WBJEE branches API unavailable, using static fallback.",
+          error,
+        );
         setBranchesData(getFallbackBranches(formData.exam));
       } finally {
         setLoadingBranches(false);
@@ -442,7 +445,6 @@ export default function WBJEECollegePredictor() {
     };
     fetchBranches();
   }, [formData.exam]);
-
 
   // --- When TFW selected, force Home State quota ---
   useEffect(() => {
@@ -486,7 +488,9 @@ export default function WBJEECollegePredictor() {
     setResults(null);
   };
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { id, value, type } = e.target;
     if (id === "crlRank" && crlRankLocked) return;
     if (id === "categoryRank" && categoryRankLocked) return;
@@ -525,20 +529,27 @@ export default function WBJEECollegePredictor() {
   };
 
   const handleSelectAllInstitutes = () => {
-    const filteredInstitutes = availableInstitutes.filter(i => 
-      i.toLowerCase().includes(instituteSearch.toLowerCase())
+    const filteredInstitutes = availableInstitutes.filter((i) =>
+      i.toLowerCase().includes(instituteSearch.toLowerCase()),
     );
-    if (formData.instituteName.length === filteredInstitutes.length && filteredInstitutes.length > 0) {
-      setFormData(prev => ({ ...prev, instituteName: [] }));
+    if (
+      formData.instituteName.length === filteredInstitutes.length &&
+      filteredInstitutes.length > 0
+    ) {
+      setFormData((prev) => ({ ...prev, instituteName: [] }));
     } else {
-      setFormData(prev => ({ ...prev, instituteName: [...filteredInstitutes] }));
+      setFormData((prev) => ({
+        ...prev,
+        instituteName: [...filteredInstitutes],
+      }));
     }
   };
 
   const handleProgramSelection = (program: string) => {
     setFormData((prev) => {
       const isSelected = prev.programName.includes(program);
-      if (program === "ALL" && !isSelected) return { ...prev, programName: [...getAvailablePrograms()] };
+      if (program === "ALL" && !isSelected)
+        return { ...prev, programName: [...getAvailablePrograms()] };
       if (program === "ALL" && isSelected) return { ...prev, programName: [] };
       return {
         ...prev,
@@ -555,18 +566,30 @@ export default function WBJEECollegePredictor() {
     setResults(null);
     try {
       const roundLabel =
-        formData.roundNumber === "1" ? "Round 1" : formData.roundNumber === "2" ? "Round 2" : "";
+        formData.roundNumber === "1"
+          ? "Round 1"
+          : formData.roundNumber === "2"
+            ? "Round 2"
+            : "";
 
       const payload = {
         exam: formData.exam,
         rank: Number(formData.crlRank),
         category: isJeeExam ? JEE_LOCKED_CATEGORY : formData.category,
-        quota: isJeeExam ? JEE_LOCKED_QUOTA : (isTFW ? "Home State" : formData.quota),
+        quota: isJeeExam
+          ? JEE_LOCKED_QUOTA
+          : isTFW
+            ? "Home State"
+            : formData.quota,
         round: roundLabel,
-        institutes: formData.instituteName.length > 0 ? formData.instituteName : undefined,
-        program_groups: formData.programName.length > 0 ? formData.programName : undefined,
+        institutes:
+          formData.instituteName.length > 0
+            ? formData.instituteName
+            : undefined,
+        program_groups:
+          formData.programName.length > 0 ? formData.programName : undefined,
       };
-      
+
       console.log("Sending WBJEE payload:", payload);
       const response = await predictWBJEE(payload);
       console.log("WBJEE prediction response:", response.data);
@@ -574,12 +597,15 @@ export default function WBJEECollegePredictor() {
       // Handle backend response gracefully depending on the new backend format vs old
       // We will assume backend still uses high/medium/low or flat results and transform properly
       const apiData = response.data?.data || response.data || {};
-      
+
       let allPredictions: PredictionItem[] = [];
       if (apiData.results && Array.isArray(apiData.results)) {
-         allPredictions = apiData.results;
+        allPredictions = apiData.results;
       } else {
-         const mapItems = (items: any[], probability: string): PredictionItem[] =>
+        const mapItems = (
+          items: any[],
+          probability: string,
+        ): PredictionItem[] =>
           (items || []).map((item: any) => ({
             institute: item.institute,
             branch: item.program || item.branch,
@@ -596,11 +622,13 @@ export default function WBJEECollegePredictor() {
           ...mapItems(apiData.low, "Low"),
         ];
       }
-      
+
       setResults({ homestatePredictions: allPredictions });
     } catch (error: any) {
       console.error("WBJEE prediction error:", error);
-      toast.error(error.message || "Failed to get prediction. Please try again.");
+      toast.error(
+        error.message || "Failed to get prediction. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -695,12 +723,13 @@ export default function WBJEECollegePredictor() {
               </span>
               {usageStatus && (
                 <span className="bg-orange-50 text-orange-700 text-[10px] sm:text-xs font-bold px-2 sm:px-4 py-1 sm:py-2 rounded-full border border-orange-200 shadow-sm">
-                  {usageStatus.limitLeft} Predictions Left
+                  {usageStatus.limitLeft === -1
+                    ? "Unlimited"
+                    : `${usageStatus.limitLeft} Predictions Left`}
                 </span>
               )}
             </div>
           </div>
-
 
           <form className="space-y-3 sm:space-y-5" onSubmit={handleSubmit}>
             {/* Exam Selector */}
@@ -752,7 +781,7 @@ export default function WBJEECollegePredictor() {
                 </p>
               )}
             </div>
-            
+
             {/* Category Rank */}
             <div>
               <label
@@ -857,13 +886,16 @@ export default function WBJEECollegePredictor() {
               >
                 <option value="">Select Round</option>
                 {metadata.rounds.map((option) => (
-                  <option key={option.value} value={option.value === "Round 1" ? "1" : "2"}>
+                  <option
+                    key={option.value}
+                    value={option.value === "Round 1" ? "1" : "2"}
+                  >
                     {option.label}
                   </option>
                 ))}
               </select>
             </div>
-            
+
             {/* Institute Type */}
             <div>
               <label
@@ -912,20 +944,39 @@ export default function WBJEECollegePredictor() {
                         <input
                           type="checkbox"
                           checked={
-                            availableInstitutes.filter(i => i.toLowerCase().includes(instituteSearch.toLowerCase())).length > 0 &&
-                            formData.instituteName.length === availableInstitutes.filter(i => i.toLowerCase().includes(instituteSearch.toLowerCase())).length
+                            availableInstitutes.filter((i) =>
+                              i
+                                .toLowerCase()
+                                .includes(instituteSearch.toLowerCase()),
+                            ).length > 0 &&
+                            formData.instituteName.length ===
+                              availableInstitutes.filter((i) =>
+                                i
+                                  .toLowerCase()
+                                  .includes(instituteSearch.toLowerCase()),
+                              ).length
                           }
                           onChange={handleSelectAllInstitutes}
                           className="mr-2 accent-[var(--primary)]"
                         />
                         <span className="text-xs sm:text-sm font-semibold">
-                          Select All ({availableInstitutes.filter(i => i.toLowerCase().includes(instituteSearch.toLowerCase())).length})
+                          Select All (
+                          {
+                            availableInstitutes.filter((i) =>
+                              i
+                                .toLowerCase()
+                                .includes(instituteSearch.toLowerCase()),
+                            ).length
+                          }
+                          )
                         </span>
                       </label>
                       <div className="border-t border-[var(--border)] my-1"></div>
                       {availableInstitutes
                         .filter((i) =>
-                          i.toLowerCase().includes(instituteSearch.toLowerCase())
+                          i
+                            .toLowerCase()
+                            .includes(instituteSearch.toLowerCase()),
                         )
                         .map((institute) => (
                           <label
@@ -934,8 +985,12 @@ export default function WBJEECollegePredictor() {
                           >
                             <input
                               type="checkbox"
-                              checked={formData.instituteName.includes(institute)}
-                              onChange={() => handleInstituteSelection(institute)}
+                              checked={formData.instituteName.includes(
+                                institute,
+                              )}
+                              onChange={() =>
+                                handleInstituteSelection(institute)
+                              }
                               className="mr-2 accent-[var(--primary)]"
                             />
                             <span className="text-xs sm:text-sm flex-1">
@@ -957,7 +1012,7 @@ export default function WBJEECollegePredictor() {
                           </label>
                         ))}
                       {availableInstitutes.filter((i) =>
-                        i.toLowerCase().includes(instituteSearch.toLowerCase())
+                        i.toLowerCase().includes(instituteSearch.toLowerCase()),
                       ).length === 0 && (
                         <p className="text-xs text-[var(--muted-text)] p-2">
                           No institutes match your search
@@ -985,19 +1040,31 @@ export default function WBJEECollegePredictor() {
               </label>
               <div className="border border-[var(--border)] rounded-lg p-2 max-h-48 overflow-y-auto bg-white">
                 {loadingBranches ? (
-                  <p className="text-xs text-[var(--muted-text)] p-2">Loading programs...</p>
+                  <p className="text-xs text-[var(--muted-text)] p-2">
+                    Loading programs...
+                  </p>
                 ) : getAvailablePrograms().length > 0 ? (
                   <>
                     <label className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={formData.programName.length === getAvailablePrograms().length && getAvailablePrograms().length > 0}
+                        checked={
+                          formData.programName.length ===
+                            getAvailablePrograms().length &&
+                          getAvailablePrograms().length > 0
+                        }
                         onChange={() => {
                           const ap = getAvailablePrograms();
                           if (formData.programName.length === ap.length) {
-                            setFormData((prev) => ({ ...prev, programName: [] }));
+                            setFormData((prev) => ({
+                              ...prev,
+                              programName: [],
+                            }));
                           } else {
-                            setFormData((prev) => ({ ...prev, programName: [...ap] }));
+                            setFormData((prev) => ({
+                              ...prev,
+                              programName: [...ap],
+                            }));
                           }
                         }}
                         className="mr-2 accent-[var(--primary)]"

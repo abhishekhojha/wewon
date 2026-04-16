@@ -1,4 +1,6 @@
 import { Order } from "@/store/types";
+import { getPredictorPurchaseDetails } from "./checkPredictorPurchase";
+import { getChoiceFillingPurchaseDetails } from "./checkChoiceFillingPurchase";
 
 export interface ToolAutoPrefillData {
   name?: string;
@@ -104,79 +106,6 @@ const pickTextValue = (
   return undefined;
 };
 
-const isMentorshipOrder = (order: Order): boolean => {
-  if (order.product?.features?.hasMentorship) return true;
-
-  const formData = order.mentorshipFormData;
-  if (formData && Object.keys(formData).length > 0) return true;
-
-  const rankOverrides = order.rankOverrides;
-  if (
-    rankOverrides &&
-    (rankOverrides.crlRank != null || rankOverrides.categoryRank != null)
-  ) {
-    return true;
-  }
-
-  return false;
-};
-
-const matchesOrderProduct = (
-  order: Order,
-  params: ResolveMentorshipToolPrefillParams,
-): boolean => {
-  if (params.productId) {
-    const orderProductId = order.product?._id || order.productId;
-    if (orderProductId && orderProductId === params.productId) {
-      return true;
-    }
-  }
-
-  if (params.productSlug) {
-    const targetSlug = params.productSlug.toLowerCase();
-    const orderProductSlug = order.product?.slug?.toLowerCase();
-    if (
-      orderProductSlug &&
-      orderProductSlug === targetSlug
-    ) {
-      return true;
-    }
-
-    const isPredictorSlug = targetSlug.includes("predictor");
-    if (isPredictorSlug) {
-      const allowedPredictors =
-        order.product?.features?.collegePredictor?.allowedPredictors ?? [];
-      if (
-        Array.isArray(allowedPredictors) &&
-        allowedPredictors.some(
-          (predictor) =>
-            typeof predictor === "string" &&
-            predictor.trim().length > 0 &&
-            (predictor.trim().toLowerCase() === "all" || targetSlug.includes(predictor.trim().toLowerCase())),
-        )
-      ) {
-        return true;
-      }
-    } else if (order.product?.features?.choiceFilling?.isEnabled === true) {
-      const allowedChoiceFilling =
-        order.product?.features?.choiceFilling?.allowedChoiceFillers ?? [];
-      if (Array.isArray(allowedChoiceFilling) && allowedChoiceFilling.length > 0) {
-        // If the product defines specific allowed choice-filling tools, check membership
-        return allowedChoiceFilling.some(
-          (tool) =>
-            typeof tool === "string" &&
-            tool.trim().length > 0 &&
-            (tool.trim().toLowerCase() === "all" || targetSlug.includes(tool.trim().toLowerCase())),
-        );
-      }
-      // No allowedChoiceFilling list → any enabled choice-filling product matches
-      return true;
-    }
-  }
-
-  return false;
-};
-
 const buildLockMessage = (
   hasRankOverride: boolean,
   hasMentorshipCrlField: boolean,
@@ -204,16 +133,46 @@ export const resolveMentorshipToolPrefill = (
   if (!params.productId && !params.productSlug) return null;
   if (!Array.isArray(orders) || orders.length === 0) return null;
 
-  const matchingOrder = [...orders]
-    .filter(isCompletedOrder)
-    .filter(isMentorshipOrder)
-    .filter((order) => matchesOrderProduct(order, params))
-    .sort((a, b) => getOrderTimestamp(b) - getOrderTimestamp(a))[0];
+  let matchingOrder: Order | undefined;
+  const isPredictor = params.productSlug?.toLowerCase().includes("predictor");
+
+  if (isPredictor && params.productSlug) {
+    // Standardize order matching using getPredictorPurchaseDetails
+    const { hasPurchased, matchingOrder: order } = getPredictorPurchaseDetails(
+      orders,
+      params.productSlug,
+    );
+    if (hasPurchased && order) {
+      matchingOrder = order;
+    }
+  } else if (params.productSlug) {
+    // Standardize order matching using getChoiceFillingPurchaseDetails
+    const { hasPurchased, matchingOrder: order } = getChoiceFillingPurchaseDetails(
+      orders,
+      params.productSlug,
+    );
+    if (hasPurchased && order) {
+      matchingOrder = order;
+    }
+  }
+
+  // Fallback for direct ID match if not found via standardized utilities
+  if (!matchingOrder && params.productId) {
+    matchingOrder = [...orders]
+      .filter(isCompletedOrder)
+      .filter((order) => {
+        const orderProductId = order.product?._id || order.productId;
+        return orderProductId === params.productId;
+      })
+      .sort((a, b) => getOrderTimestamp(b) - getOrderTimestamp(a))[0];
+  }
 
   if (!matchingOrder) return null;
 
-  const rawFormData = (matchingOrder.mentorshipFormData ??
-    {}) as Record<string, string | number | boolean | null>;
+  const rawFormData = (matchingOrder.mentorshipFormData ?? {}) as Record<
+    string,
+    string | number | boolean | null
+  >;
   const formData = toNormalizedFormData(rawFormData);
   const rankOverrides = matchingOrder.rankOverrides ?? {};
 
@@ -258,18 +217,17 @@ export const resolveMentorshipToolPrefill = (
   const hasCrlRankFromForm = crlRankFromForm != null;
   const hasCategoryRankFromForm = categoryRankFromForm != null;
 
-  const crlRankLocked =
-    Boolean(
-      hasMentorshipCrlField ||
-        hasCrlRankOverride ||
-        hasCrlRankFromForm ||
-        rankOverrides.lockedByAdmin,
-    );
+  const crlRankLocked = Boolean(
+    hasMentorshipCrlField ||
+    hasCrlRankOverride ||
+    hasCrlRankFromForm ||
+    rankOverrides.lockedByAdmin,
+  );
   const categoryRankLocked = Boolean(
     hasMentorshipCategoryField ||
-      hasCategoryRankOverride ||
-      hasCategoryRankFromForm ||
-      rankOverrides.lockedByAdmin,
+    hasCategoryRankOverride ||
+    hasCategoryRankFromForm ||
+    rankOverrides.lockedByAdmin,
   );
 
   if (!hasAnyPrefillValue(prefill) && !crlRankLocked && !categoryRankLocked) {

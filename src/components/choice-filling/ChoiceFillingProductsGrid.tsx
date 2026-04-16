@@ -12,6 +12,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated } from "@/store/auth/authSlice";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
+import { getChoiceFillingPurchaseDetails } from "@/utils/checkChoiceFillingPurchase";
 
 interface ChoiceFillingProductsGridProps {
   onlyPurchased?: boolean;
@@ -35,12 +36,8 @@ export default function ChoiceFillingProductsGrid({ onlyPurchased = false }: Cho
 
   // Check if a choice-filling product is purchased
   const isProductPurchased = (productSlug: string): boolean => {
-    return userOrders.some((order: any) => {
-      const orderProductSlug = order.product?.slug;
-      // Also check if this order has choiceFilling enabled (bundle orders)
-      const hasChoiceFillingEnabled = order.product?.features?.choiceFilling?.isEnabled === true;
-      return (orderProductSlug === productSlug || hasChoiceFillingEnabled) && order.status === "completed";
-    });
+    const { hasPurchased } = getChoiceFillingPurchaseDetails(userOrders, productSlug);
+    return hasPurchased;
   };
 
   useEffect(() => {

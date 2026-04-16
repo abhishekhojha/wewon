@@ -14,6 +14,7 @@ import { fetchUserOrders } from "@/store/order/orderThunk";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import PredictorPaymentModal from "./PredictorPaymentModal";
 import { limitLeft } from "@/utils/helpers";
+import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 
 
 const PRODUCT_SLUG = "jee-advanced-predictor";
@@ -130,37 +131,8 @@ export default function IITCollegePredictor() {
   // Update hasPurchased when userOrders change
   useEffect(() => {
     if (userOrders.length > 0) {
-      const matchingOrders = userOrders.filter((order) => {
-        const orderProductSlug = order.product?.slug;
-        const allowedPredictors = order.product?.features?.collegePredictor?.allowedPredictors || [];
-        const isAllowedViaPackage = allowedPredictors.some((p) => 
-           p.toLowerCase() === "all" ||
-          PRODUCT_SLUG.toLowerCase().includes(p.toLowerCase())
-        );
-        return (orderProductSlug === PRODUCT_SLUG || isAllowedViaPackage) && order.status === "completed";
-      });
-      
-      setHasPurchased(matchingOrders.length > 0);
-
-      const orderWithFormData = matchingOrders.find(
-        (o) => o.mentorshipFormData && Object.keys(o.mentorshipFormData).length > 0
-      );
-      
-      if (orderWithFormData && orderWithFormData.mentorshipFormData) {
-        const prefillData = orderWithFormData.mentorshipFormData;
-        console.log("Prefill data from order:", prefillData);
-        setFormData((prev) => {
-          const updates = {};
-          if ('crlRank' in prev && prefillData.crlRank) updates.crlRank = String(prefillData.crlRank);
-          if ('categoryRank' in prev && prefillData.categoryRank) updates.categoryRank = String(prefillData.categoryRank);
-          if ('category' in prev && prefillData.category) updates.category = prefillData.category;
-          if ('gender' in prev && prefillData.gender) updates.gender = prefillData.gender;
-          if ('homeState' in prev && prefillData.homeState) updates.homeState = prefillData.homeState;
-          if ('quota' in prev && prefillData.quota) updates.quota = prefillData.quota;
-          
-          return Object.keys(updates).length > 0 ? { ...prev, ...updates } : prev;
-        });
-      }
+      const { hasPurchased } = getPredictorPurchaseDetails(userOrders, PRODUCT_SLUG);
+      setHasPurchased(hasPurchased);
     }
   }, [userOrders]);
 
@@ -402,7 +374,7 @@ export default function IITCollegePredictor() {
               </span>
               {usageStatus && (
                 <span className="bg-orange-50 text-orange-700 text-[10px] sm:text-xs font-bold px-2 sm:px-4 py-1 sm:py-2 rounded-full border border-orange-200 shadow-sm">
-                  {usageStatus.limitLeft} Predictions Left
+                  {usageStatus.limitLeft === -1 ? "Unlimited" : `${usageStatus.limitLeft} Predictions Left`}
                 </span>
               )}
             </div>

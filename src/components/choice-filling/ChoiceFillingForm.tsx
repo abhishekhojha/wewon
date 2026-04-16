@@ -20,6 +20,8 @@ import { useRouter } from "next/navigation";
 import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
 import Image from "next/image";
 import { limitLeft } from "@/utils/helpers";
+import { getChoiceFillingPurchaseDetails } from "@/utils/checkChoiceFillingPurchase";
+import PredictorPaymentModal from "../Predictor/PredictorPaymentModal";
 
 
 type ChoiceFillingFormState = {
@@ -102,8 +104,12 @@ export default function ChoiceFillingForm({
   const router = useRouter();
 
   const isCounsellor = user?.userId?.role === "counsellor";
+
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [checkingPurchase, setCheckingPurchase] = useState(true);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   
-  const usageStatus = (isAuthenticated && !isCounsellor && userOrders?.length > 0 && productSlug)
+  const usageStatus = (isAuthenticated && hasPurchased && !isCounsellor && userOrders?.length > 0 && productSlug)
     ? (() => {
         try {
           return limitLeft(userOrders, productSlug, "choiceFilling");
@@ -152,6 +158,39 @@ export default function ChoiceFillingForm({
   );
   const [loading, setLoading] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
+
+  // Check purchase status when orders change
+  useEffect(() => {
+    if (userOrders.length > 0 && productSlug) {
+      const { hasPurchased: purchased } = getChoiceFillingPurchaseDetails(userOrders, productSlug);
+      setHasPurchased(purchased);
+    }
+  }, [userOrders, productSlug]);
+
+  // Initial check and free product check
+  useEffect(() => {
+    const checkStatus = () => {
+      // If product is free, it's considered purchased
+      if (product && product.price === 0 && (product.discountPrice === null || product.discountPrice === 0)) {
+        setHasPurchased(true);
+        setCheckingPurchase(false);
+        return;
+      }
+
+      // Counsellors get free access
+      if (isCounsellor) {
+        setHasPurchased(true);
+        setCheckingPurchase(false);
+        return;
+      }
+
+      setCheckingPurchase(false);
+    };
+
+    if (product) {
+      checkStatus();
+    }
+  }, [product, isCounsellor]);
 
   useEffect(() => {
     if (orderPrefill) {
@@ -318,6 +357,11 @@ export default function ChoiceFillingForm({
       return;
     }
 
+    if (!hasPurchased && product && (product.price > 0 || (product.discountPrice && product.discountPrice > 0))) {
+      setShowPaymentModal(true);
+      return;
+    }
+
     if (!formData.name.trim()) {
       toast.error("Please enter your name.");
       return;
@@ -401,10 +445,7 @@ export default function ChoiceFillingForm({
       }
     } catch (error: any) {
       if (error?.response?.status === 403) {
-        toast.error(
-          error.message ||
-            "You need to purchase a plan with Choice Filling access to use this tool.",
-        );
+        setShowPaymentModal(true);
       } else if (error?.response?.status === 401) {
         toast.error(error.message || "Please login to use the Choice Filling tool.");
         router.push("/auth");
@@ -431,7 +472,7 @@ export default function ChoiceFillingForm({
   }
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 my-6 sm:my-1+0">
+    <div className="container mx-auto px-2 sm:px-4 my-6 sm:my-10">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
         {/* Left Column: Info Steps */}
         <div className="flex flex-col justify-center space-y-3 sm:space-y-6">
@@ -491,7 +532,7 @@ export default function ChoiceFillingForm({
               </span>
               {usageStatus && (
                 <span className="bg-orange-50 text-orange-700 text-[10px] sm:text-xs font-bold px-2 sm:px-4 py-1 sm:py-2 rounded-full border border-orange-200 shadow-sm">
-                  {usageStatus.limitLeft} Choice Lists Left
+                  {usageStatus.limitLeft === -1 ? "Unlimited" : `${usageStatus.limitLeft} Choice Lists Left`}
                 </span>
               )}
             </div>
@@ -750,7 +791,7 @@ export default function ChoiceFillingForm({
                     )}
                   </div>
                   {formData.instituteTypes.length === 0 && (
-                    <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1">
+                    <p className="text-[10px] sm:text-xs text(--muted-text)] mt-1">
                       No selection = All institute types
                     </p>
                   )}
@@ -796,20 +837,15 @@ export default function ChoiceFillingForm({
                   </span>
                   I am eligible for Fee Waiver (FW) seats
                 </button>
-                <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1">
-                  {formData.hasTFW
-                    ? "FW seats will be included with priority in your choice list."
-                    : "Enable this if you qualify for Tuition Fee Waiver to include FW seats."}
-                </p>
               </div>
             )}
 
-            {/* Branch Group - Multi Select */}
+            {/* Branch Groups - Multi Select */}
             <div>
               <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
-                Branch Group (Optional – select multiple)
+                Branch Groups (Optional – select multiple)
               </label>
-              <div className="flex flex-wrap gap-1.5 sm:gap-2">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-48 overflow-y-auto pr-1">
                 {(metadata?.branchGroups || []).map((group) => (
                   <button
                     key={group}
@@ -827,38 +863,44 @@ export default function ChoiceFillingForm({
               </div>
               {formData.branchGroups.length === 0 && (
                 <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1">
-                  No selection = All branches
+                  No selection = All branches included
+                </p>
+              )}
+              {formData.branchGroups.length > 0 && (
+                <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1 font-medium">
+                  {formData.branchGroups.length} group
+                  {formData.branchGroups.length > 1 ? "s" : ""} selected
                 </p>
               )}
             </div>
 
-            {/* Submit */}
-            <div>
+            {/* Submit Button */}
+            <div className="pt-2 sm:pt-4">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[var(--primary)] text-white font-semibold p-2.5 sm:p-3.5 text-sm sm:text-base rounded-lg shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+                className="w-full bg-[var(--primary)] text-white font-bold py-3 sm:py-4 rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Loader2 size={18} className="animate-spin" />
-                    Generating Your Choice List...
-                  </span>
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Generating your list...
+                  </>
                 ) : (
                   "Generate My Choice List"
                 )}
               </button>
+              <p className="text-[10px] sm:text-xs text-center text-[var(--muted-text)] mt-3">
+                By generating, you agree to our terms of service.
+              </p>
             </div>
-
-            <p className="text-center text-[10px] sm:text-xs text-[var(--muted-text)] pt-2">
-              Powered by official cutoff data and intelligent ranking algorithms
-            </p>
           </form>
         </div>
       </div>
 
       {/* Results Section */}
-      <div ref={resultsRef}>
+      <div ref={resultsRef} className="mt-8 sm:mt-16">
+        <GoogleAds />
         {results && lastRequest && (
           <ChoiceFillingResults
             results={results}
@@ -867,6 +909,19 @@ export default function ChoiceFillingForm({
           />
         )}
       </div>
+
+      {/* Payment Modal */}
+      {product && (
+        <PredictorPaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onPaymentSuccess={() => {
+            setHasPurchased(true);
+            setShowPaymentModal(false);
+          }}
+          product={product as any}
+        />
+      )}
     </div>
   );
 }
