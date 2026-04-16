@@ -109,6 +109,8 @@ export default function ChoiceFillingResults({
           : "All"
         : undefined,
     },
+    { label: "Region", value: results.user?.region },
+    { label: "Sub-Category", value: results.user?.subCategory },
     {
       label: "Search Rank",
       value: hasValue(results.searchRank)

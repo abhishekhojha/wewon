@@ -67,6 +67,10 @@ export interface ChoiceFillingMetadata {
   branchGroups: string[];
   /** IIT-specific: list of IIT names (fullName / shortName) */
   iitList?: { fullName: string; shortName: string }[];
+  /** JAC Delhi specific */
+  subCategories?: string[];
+  regions?: string[];
+  institutes?: string[];
   rankLocked?: boolean;
   lockMessage?: string;
   prefill?: ToolAutoFillData;
@@ -86,6 +90,11 @@ export interface ChoiceFillingRequest {
   includedIITs?: string | string[];
   /** UPTAC-specific: Tuition Fee Waiver eligibility */
   hasTFW?: boolean;
+  /** JAC Delhi specific */
+  subCategory?: string;
+  region?: string;
+  instituteName?: string[];
+  programName?: string[];
 }
 
 export interface ChoiceRow {
@@ -114,6 +123,9 @@ export interface ChoiceFillingResponse {
     /** IIT-specific */
     branchGroup?: string[];
     includedIITs?: string[];
+    /** JAC Delhi specific */
+    region?: string;
+    subCategory?: string;
   };
   searchRank: number;
   minRange: number;

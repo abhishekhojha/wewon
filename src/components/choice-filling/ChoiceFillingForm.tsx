@@ -36,6 +36,9 @@ type ChoiceFillingFormState = {
   branchGroups: string[];
   includedIITs: string[]; // stores shortNames; resolved to fullNames on submit (IIT only)
   hasTFW: boolean; // UPTAC-specific: Tuition Fee Waiver eligibility
+  subCategory: string; // JAC Delhi specific
+  region: string; // JAC Delhi specific
+  includedInstitutes: string[]; // JAC Delhi specific
 };
 
 const mergePrefillIntoForm = (
@@ -150,6 +153,9 @@ export default function ChoiceFillingForm({
     branchGroups: [] as string[],
     includedIITs: [] as string[],
     hasTFW: false,
+    subCategory: "None",
+    region: "",
+    includedInstitutes: [] as string[],
   });
 
   const [results, setResults] = useState<ChoiceFillingResponse | null>(null);
@@ -345,6 +351,20 @@ export default function ChoiceFillingForm({
 
   const isIIT = toolKey === "iit";
   const isUPTAC = toolKey === "uptac";
+  const isJACDelhi = toolKey === "jac-delhi";
+
+  const handleInstituteToggle = (institute: string) => {
+    setFormData((prev) => {
+      const current = prev.includedInstitutes;
+      return {
+        ...prev,
+        includedInstitutes: current.includes(institute)
+          ? current.filter((n) => n !== institute)
+          : [...current, institute],
+      };
+    });
+  };
+
   const availableInstituteStates =
     metadata?.instituteStates || metadata?.states || metadata?.homeStates || [];
 
@@ -377,8 +397,13 @@ export default function ChoiceFillingForm({
       return;
     }
 
-    if (!formData.homeState && !isIIT) {
+    if (!formData.homeState && !isIIT && !isJACDelhi) {
       toast.error("Please select your Home State.");
+      return;
+    }
+
+    if (isJACDelhi && !formData.region) {
+      toast.error("Please select your Region.");
       return;
     }
 
@@ -394,32 +419,32 @@ export default function ChoiceFillingForm({
           : undefined,
         gender: formData.gender,
         category: formData.category,
-        ...(isIIT
-          ? {
-              // Resolve shortNames → fullNames
-              includedIITs: (() => {
-                const iitMap = new Map(
-                  (metadata?.iitList || []).map((iit) => [iit.shortName, iit.fullName]),
-                );
-                const resolved = formData.includedIITs.map((sn) => iitMap.get(sn) ?? sn);
-                return resolved.length > 0 ? resolved : undefined;
-              })(),
-            }
-          : {
-              homeState: formData.homeState,
-              includedStates:
-                formData.includedStates.length > 0
-                  ? formData.includedStates
-                  : undefined,
-              instituteType:
-                formData.instituteTypes.length > 0
-                  ? formData.instituteTypes
-                  : undefined,
-            }),
-        branchGroup:
-          formData.branchGroups.length > 0 ? formData.branchGroups : undefined,
-        ...(isUPTAC && formData.hasTFW ? { hasTFW: true } : {}),
       };
+
+      if (isJACDelhi) {
+        payload.region = formData.region;
+        payload.subCategory = formData.subCategory;
+        payload.instituteName = formData.includedInstitutes.length > 0 ? formData.includedInstitutes : ["ALL"];
+        payload.programName = formData.branchGroups.length > 0 ? formData.branchGroups : undefined;
+      } else if (isIIT) {
+        // Resolve shortNames → fullNames
+        payload.includedIITs = (() => {
+          const iitMap = new Map(
+            (metadata?.iitList || []).map((iit) => [iit.shortName, iit.fullName]),
+          );
+          const resolved = formData.includedIITs.map((sn) => iitMap.get(sn) ?? sn);
+          return resolved.length > 0 ? resolved : undefined;
+        })();
+      } else {
+        payload.homeState = formData.homeState;
+        payload.includedStates = formData.includedStates.length > 0 ? formData.includedStates : undefined;
+        payload.instituteType = formData.instituteTypes.length > 0 ? formData.instituteTypes : undefined;
+        if (isUPTAC && formData.hasTFW) {
+          payload.hasTFW = true;
+        }
+      }
+
+      payload.branchGroup = formData.branchGroups.length > 0 ? formData.branchGroups : undefined;
 
       const response = await generateChoiceList(payload, toolKey);
       setResults(response);
@@ -705,6 +730,92 @@ export default function ChoiceFillingForm({
                   </p>
                 )}
               </div>
+            ) : isJACDelhi ? (
+              <>
+                {/* Region */}
+                <div>
+                  <label
+                    htmlFor="region"
+                    className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
+                  >
+                    Select Your Region <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    id="region"
+                    value={formData.region}
+                    onChange={handleChange}
+                    className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
+                  >
+                    <option value="">Select Region</option>
+                    {(metadata?.regions || ["Delhi", "Outside Delhi"]).map((region) => (
+                      <option key={region} value={region}>
+                        {region}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Sub Category */}
+                <div>
+                  <label
+                    htmlFor="subCategory"
+                    className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
+                  >
+                    Select Sub-Category <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    id="subCategory"
+                    value={formData.subCategory}
+                    onChange={handleChange}
+                    className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
+                  >
+                    {(metadata?.subCategories || ["None", "Girl Candidate", "Single Girl Child", "Defence", "Kashmiri Migrant", "Persons with Disabilities"]).map((sub) => (
+                      <option key={sub} value={sub}>
+                        {sub}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Institutes Picker */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
+                    Include Institutes{" "}
+                    <span className="text-[var(--muted-text)] font-normal">
+                      (Optional – select specific institutes)
+                    </span>
+                  </label>
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-48 overflow-y-auto pr-1">
+                    {(metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"]).map((inst) => (
+                      <button
+                        key={inst}
+                        type="button"
+                        onClick={() => handleInstituteToggle(inst)}
+                        className={`px-3 py-1.5 border rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer ${
+                          formData.includedInstitutes.includes(inst)
+                            ? "bg-[var(--primary)] text-white border-[var(--primary)]"
+                            : "bg-white text-[var(--muted-text)] border-[var(--border)] hover:bg-[var(--muted-background)]"
+                        }`}
+                      >
+                        {inst}
+                      </button>
+                    ))}
+                  </div>
+                  {formData.includedInstitutes.length === 0 && (
+                    <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1">
+                      No selection = All institutes included
+                    </p>
+                  )}
+                  {formData.includedInstitutes.length > 0 && (
+                    <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1 font-medium">
+                      {formData.includedInstitutes.length} institute
+                      {formData.includedInstitutes.length > 1 ? "s" : ""} selected
+                    </p>
+                  )}
+                </div>
+              </>
             ) : (
               <>
                 {/* Home State */}
