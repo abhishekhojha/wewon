@@ -10,42 +10,10 @@ interface Predictor {
   sourceProduct: string;
 }
 
-// Map predictor type to a displayable name and its route
-const predictorConfig: Record<
-  string,
-  { label: string; route: string; color: string }
-> = {
-  JOSAA: {
-    label: "JoSAA / CSAB Predictor",
-    route: "/predictor",
-    color: "from-blue-500 to-indigo-600",
-  },
-  JAC_DELHI: {
-    label: "JAC Delhi Predictor",
-    route: "/predictor",
-    color: "from-purple-500 to-pink-600",
-  },
-  HBTU: {
-    label: "HBTU Predictor",
-    route: "/predictor",
-    color: "from-green-500 to-teal-600",
-  },
-  JAC_CHANDIGARH: {
-    label: "JAC Chandigarh Predictor",
-    route: "/predictor",
-    color: "from-orange-500 to-red-600",
-  },
-  MMMUT: {
-    label: "MMMUT Predictor",
-    route: "/predictor",
-    color: "from-cyan-500 to-blue-600",
-  },
-  UPTAC: {
-    label: "UPTAC Predictor",
-    route: "/predictor",
-    color: "from-amber-500 to-orange-600",
-  },
-};
+import { predictorKeyMap } from "@/data/productKeyMap";
+import { PREDICTOR_PRODUCTS, PredictorProduct } from "@/data/counsellingProducts";
+import PredictorCard from "@/components/Predictor/PredictorCard";
+import { PredictorCategory } from "@/store/types";
 
 export default function PredictorsPage() {
   const [predictors, setPredictors] = useState<Predictor[]>([]);
@@ -128,51 +96,29 @@ export default function PredictorsPage() {
 
         {/* Predictors Grid */}
         {predictors.length > 0 && (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {predictors.map((predictor, index) => {
-              const config = predictorConfig[predictor.type];
-              const label = config?.label || predictor.type;
-              const route = config?.route || "/predictor";
-              const gradient = config?.color || "from-gray-500 to-gray-700";
+              const slug = predictorKeyMap[predictor.type as keyof typeof predictorKeyMap];
+              const metadata = PREDICTOR_PRODUCTS.find((p) => p.slug === slug);
+
+              if (!metadata) return null;
+
+              const predictorProduct: PredictorProduct = {
+                ...metadata,
+                purchased: true, // Counsellors have unlimited access
+                displayFeatures: metadata.displayFeatures || [
+                  "College Predictions",
+                  "Category-wise Analysis",
+                  "State Quota Insights",
+                ],
+              };
 
               return (
-                <div
-                  key={index}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow"
-                >
-                  {/* Gradient Header */}
-                  <div
-                    className={`bg-gradient-to-r ${gradient} p-6 text-white`}
-                  >
-                    <BarChart3 className="w-10 h-10 mb-3 opacity-80" />
-                    <h3 className="text-xl font-bold">{label}</h3>
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                      <Package className="w-4 h-4" />
-                      <span>
-                        Via:{" "}
-                        <span className="font-medium text-gray-700">
-                          {predictor.sourceProduct}
-                        </span>
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 mb-5">
-                      <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                        ✓ Unlimited Access
-                      </span>
-                    </div>
-
-                    <Link
-                      href={route}
-                      className={`w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r ${gradient} text-white rounded-xl font-semibold hover:shadow-lg transition-shadow`}
-                    >
-                      Use Predictor
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
+                <div key={index} className="flex flex-col h-full">
+                  <PredictorCard predictor={predictorProduct} />
+                  <div className="mt-2 px-2 flex items-center gap-2 text-xs text-gray-400">
+                    <Package className="w-3 h-3" />
+                    <span>Via: {predictor.sourceProduct}</span>
                   </div>
                 </div>
               );

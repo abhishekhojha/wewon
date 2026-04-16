@@ -16,9 +16,13 @@ import { getChoiceFillingPurchaseDetails } from "@/utils/checkChoiceFillingPurch
 
 interface ChoiceFillingProductsGridProps {
   onlyPurchased?: boolean;
+  tools?: string[];
 }
 
-export default function ChoiceFillingProductsGrid({ onlyPurchased = false }: ChoiceFillingProductsGridProps) {
+export default function ChoiceFillingProductsGrid({
+  onlyPurchased = false,
+  tools,
+}: ChoiceFillingProductsGridProps) {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const userOrders = useAppSelector(selectUserOrders);
@@ -34,9 +38,13 @@ export default function ChoiceFillingProductsGrid({ onlyPurchased = false }: Cho
     }
   }, [isAuthenticated, dispatch]);
 
-  // Check if a choice-filling product is purchased
+  // Check if a choice-filling product is purchased or explicitly allowed via tools
   const isProductPurchased = (productSlug: string): boolean => {
-    const { hasPurchased } = getChoiceFillingPurchaseDetails(userOrders, productSlug);
+    if (tools?.includes(productSlug)) return true;
+    const { hasPurchased } = getChoiceFillingPurchaseDetails(
+      userOrders,
+      productSlug,
+    );
     return hasPurchased;
   };
 
@@ -86,17 +94,24 @@ export default function ChoiceFillingProductsGrid({ onlyPurchased = false }: Cho
     );
   }
 
-  const displayProducts = onlyPurchased
-    ? products.filter((product) => isProductPurchased(product.slug))
-    : products;
+  // Filter logic:
+  // 1. If tools are provided, only show those products.
+  // 2. Otherwise if onlyPurchased is true, show only purchased products.
+  const displayProducts = tools
+    ? products.filter((p) => tools.includes(p.slug))
+    : onlyPurchased
+      ? products.filter((product) => isProductPurchased(product.slug))
+      : products;
 
   if (displayProducts.length === 0) {
     return (
-      <div className="text-center py-16">
+      <div className="text-center py-16 w-full col-span-full">
         <p className="text-gray-500 text-lg">
-          {onlyPurchased
-            ? "You haven't purchased any choice-filling tools yet."
-            : "No choice-filling products are available right now."}
+          {tools
+            ? "No matching choice-filling tools found."
+            : onlyPurchased
+              ? "You haven't purchased any choice-filling tools yet."
+              : "No choice-filling products are available right now."}
         </p>
       </div>
     );
@@ -137,7 +152,9 @@ export default function ChoiceFillingProductsGrid({ onlyPurchased = false }: Cho
                 {isProductPurchased(product.slug) ? (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 font-semibold text-sm rounded-full">
                     <Check size={14} />
-                    Purchased
+                    {tools?.includes(product.slug)
+                      ? "Unlimited Access"
+                      : "Purchased"}
                   </span>
                 ) : product.discountPrice && product.discountPrice > 0 ? (
                   <div className="flex items-baseline gap-2">

@@ -1,125 +1,45 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, ListChecks, ArrowRight, Package } from "lucide-react";
+import { Loader2, ListChecks } from "lucide-react";
 import Link from "next/link";
 import apiClient from "@/hooks/Axios";
+import { choiceFillingKeySlugMap } from "@/data/productKeyMap";
+import ChoiceFillingProductsGrid from "@/components/choice-filling/ChoiceFillingProductsGrid";
 
-interface ChoiceFillingTool {
-  id: string;
-  type?: string;
-  sourceProduct: string;
-  slug?: string;
-  toolLabel?: string;
-  usageLimit?: number;
-}
 
-const choiceFillingConfig: Record<
-  string,
-  { label: string; color: string }
-> = {
-  JEE_MAIN: {
-    label: "JEE Main Choice Filling",
-    color: "from-blue-500 to-indigo-600",
-  },
-  IIT: {
-    label: "IIT Choice Filling",
-    color: "from-orange-500 to-red-600",
-  },
-};
+type choiceFillingKey = "JEE_MAIN" | "JAC_DELHI" | "UPTAC" | "IIT";
+
 
 const choiceFillingEndpoints = [
   "/api/counsellor/choice-fillings",
   "/api/counsellor/choice-filling",
 ];
 
-const normalizeChoiceFillingTools = (
-  body: any,
-): ChoiceFillingTool[] | null => {
-  const extracted: any[] | null = Array.isArray(body?.data)
-    ? body.data
-    : Array.isArray(body?.tools)
-      ? body.tools
-      : Array.isArray(body)
-        ? body
-        : null;
+const normalizeChoiceFillingTools = (body: any): string[] | null => {
+  const data = body.data;
+  if (!data || !Array.isArray(data)) return [];
 
-  if (extracted === null) {
-    return null;
-  }
+  const uniqueToolsSlugs = new Set<string>();
 
-  if (extracted.length === 0) {
-    return [];
-  }
-
-  const looksLikeOrderShape = extracted.some((item) => item?.product);
-
-  if (!looksLikeOrderShape) {
-    return extracted.map((tool, index) => ({
-      id: String(
-        tool?._id ||
-          tool?.id ||
-          tool?.slug ||
-          tool?.sourceProduct ||
-          `choice-filling-${index}`,
-      ),
-      type: typeof tool?.type === "string" ? tool.type : undefined,
-      sourceProduct:
-        typeof tool?.sourceProduct === "string" && tool.sourceProduct.trim()
-          ? tool.sourceProduct.trim()
-          : "Assigned Product",
-      slug: typeof tool?.slug === "string" ? tool.slug.trim() : undefined,
-      toolLabel:
-        typeof tool?.toolLabel === "string" ? tool.toolLabel : undefined,
-      usageLimit:
-        typeof tool?.usageLimit === "number" ? tool.usageLimit : undefined,
-    }));
-  }
-
-  const uniqueTools = new Map<string, ChoiceFillingTool>();
-
-  extracted.forEach((order, index) => {
-    const product = order?.product;
-    if (!product) return;
-
-    const choiceFillingFeature = product?.features?.choiceFilling;
-    if (choiceFillingFeature?.isEnabled === false) return;
-
-    const slug =
-      typeof product?.slug === "string" ? product.slug.trim() : undefined;
-    const sourceProduct =
-      typeof product?.title === "string" && product.title.trim()
-        ? product.title.trim()
-        : "Assigned Product";
-
-    const uniqueKey = String(
-      slug || product?._id || order?.orderId || `choice-filling-${index}`,
-    );
-
-    if (uniqueTools.has(uniqueKey)) return;
-
-    uniqueTools.set(uniqueKey, {
-      id: uniqueKey,
-      type:
-        typeof product?.toolKey === "string" ? product.toolKey.trim() : undefined,
-      sourceProduct,
-      slug,
-      toolLabel:
-        typeof product?.toolLabel === "string" && product.toolLabel.trim()
-          ? product.toolLabel.trim()
-          : sourceProduct,
-      usageLimit:
-        typeof choiceFillingFeature?.usageLimit === "number"
-          ? choiceFillingFeature.usageLimit
-          : undefined,
-    });
+  data.forEach((item: any) => {
+    const choiceFilling = item?.product?.features?.choiceFilling;
+    if (choiceFilling?.isEnabled && choiceFilling?.allowedChoiceFillers) {
+      choiceFilling.allowedChoiceFillers.forEach((key: choiceFillingKey) => {
+        const slug =
+          choiceFillingKeySlugMap[key as keyof typeof choiceFillingKeySlugMap];
+        if (slug) {
+          uniqueToolsSlugs.add(slug);
+        }
+      });
+    }
   });
 
-  return Array.from(uniqueTools.values());
+  return Array.from(uniqueToolsSlugs);
 };
 
 export default function ChoiceFillingPage() {
-  const [tools, setTools] = useState<ChoiceFillingTool[]>([]);
+  const [tools, setTools] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -157,8 +77,7 @@ export default function ChoiceFillingPage() {
         throw lastError;
       } catch (err: any) {
         setError(
-          err?.response?.data?.message ||
-            "Error fetching choice-filling tools",
+          err?.response?.data?.message || "Error fetching choice-filling tools",
         );
       } finally {
         setLoading(false);
@@ -225,69 +144,8 @@ export default function ChoiceFillingPage() {
         )}
 
         {tools.length > 0 && (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {tools.map((tool, index) => {
-              const typeKey = tool.type
-                ? tool.type.toUpperCase().replace(/-/g, "_")
-                : "";
-              const config =
-                choiceFillingConfig[typeKey] ??
-                choiceFillingConfig[tool.type ?? ""];
-              const label =
-                tool.toolLabel ||
-                config?.label ||
-                tool.type ||
-                "Choice Filling Tool";
-              const route =
-                tool.slug && tool.slug.trim()
-                  ? `/choice-filling/${tool.slug}`
-                  : "/choice-filling";
-              const gradient = config?.color || "from-[#073d68] to-[#1a5490]";
-              const accessText =
-                typeof tool.usageLimit === "number" && tool.usageLimit > 0
-                  ? `${tool.usageLimit} Uses Available`
-                  : "Choice Filling Enabled";
-             
-              return (
-                <div
-                  key={`${tool.id}-${index}`}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow"
-                >
-                  <div
-                    className={`bg-gradient-to-r ${gradient} p-6 text-white`}
-                  >
-                    <ListChecks className="w-10 h-10 mb-3 opacity-80" />
-                    <h3 className="text-xl font-bold">{label}</h3>
-                  </div>
-
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                      <Package className="w-4 h-4" />
-                      <span>
-                        Via:{" "}
-                        <span className="font-medium text-gray-700">
-                          {tool.sourceProduct}
-                        </span>
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 mb-5">
-                      <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                        ✓ {accessText}
-                      </span>
-                    </div>
-
-                    <Link
-                      href={route}
-                      className={`w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r ${gradient} text-white rounded-xl font-semibold hover:shadow-lg transition-shadow`}
-                    >
-                      Use Choice Filling
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
+          <div>
+            <ChoiceFillingProductsGrid  tools={tools} onlyPurchased={true} />
           </div>
         )}
       </div>
