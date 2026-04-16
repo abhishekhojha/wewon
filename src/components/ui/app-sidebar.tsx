@@ -10,6 +10,7 @@ import {
   TrendingUp,
   BarChart3,
   ListChecks,
+  Bell,
 } from "lucide-react";
 
 import {
@@ -35,12 +36,23 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { fetchUserOrders } from "@/store/order/orderThunk";
+import { useEffect } from "react";
 
 export function AppSidebar() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const { userOrders, userOrdersLoaded } = useAppSelector((state) => state.order);
+
+  useEffect(() => {
+    if (!userOrdersLoaded) {
+      dispatch(fetchUserOrders());
+    }
+  }, [userOrdersLoaded, dispatch]);
+
   const pathname = usePathname();
   const isStudent = user?.userId?.role === "student";
+  const hasOrders = userOrders && userOrders.length > 0;
 
   const items = isStudent
     ? [
@@ -64,6 +76,11 @@ export function AppSidebar() {
           url: "/s/orders",
           icon: ShoppingBag,
         },
+        ...(hasOrders ? [{
+          title: "Notifications",
+          url: "/s/notifications",
+          icon: Bell,
+        }] : []),
         {
           title: "My Profile",
           url: "/s/profile",
