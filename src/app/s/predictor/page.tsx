@@ -12,7 +12,7 @@ const PredictorsPage = () => {
             Access all the college predictors included in your purchased plans.
           </p>
         </div>
-        <PredictorsGrid onlyPurchased={true} />
+        <PredictorsGrid onlyPurchased={true} withLocal={true} />
       </div>
     </div>
   );

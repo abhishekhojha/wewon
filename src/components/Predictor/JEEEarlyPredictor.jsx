@@ -77,7 +77,7 @@ export default function JEEEarlyPredictor() {
         setProduct(productData);
       } catch (error) {
         console.error("Error fetching product:", error);
-        toast.error(error.message || "Failed to load predictor data");
+        if(error.status !== 404) toast.error(error.message || "Failed to load predictor data");
       } finally {
         setProductLoading(false);
       }

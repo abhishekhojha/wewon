@@ -1,76 +1,70 @@
-import React from 'react';
-import { BrainCog, TrendingUp, Lightbulb } from 'lucide-react'; // Icons from lucide-react
-import Heading from './heading';
-import Sections from './sections';
+import React from "react";
+import { BrainCog, TrendingUp, Lightbulb } from "lucide-react"; // Icons from lucide-react
+import Heading from "./heading";
+import Sections from "./sections";
 
 // Data array to manage the content of the feature cards
 const features = [
   {
     icon: BrainCog,
     title: "College Predictor",
-    description: "Advanced algorithms analyze your rank and predict your chances at top colleges with 99% accuracy",
+    description:
+      "Advanced algorithms analyze your rank and predict your chances at top colleges with 99% accuracy",
     buttonText: "Predict Now",
     buttonLink: "/predictor",
     // Style for the 1st and 3rd cards
-    className: "bg-white shadow-lg", 
-  },
-  {
-    icon: TrendingUp,
-    title: "JEE Main Rank Predictor",
-    description: "Detailed analysis of your rank performance across different categories and reservation quotas",
-    buttonText: "View Analysis",
-    buttonLink: "/percentile", 
-    // Style for the "featured" middle card
-    className: "bg-white shadow-lg", 
+    className: "bg-white shadow-lg",
   },
   {
     icon: Lightbulb,
-    title: "Counselling Session",
-    description: "Get personalized guidance from IIT/NIT alumni, and admission counselling expert",
-    buttonText: "Book a Session",
+    title: "Counselling Program",
+    description:
+      "Get personalized guidance from IIT/NIT alumni, and admission counselling expert",
+    buttonText: "Explore Programs",
     buttonLink: "/counseling",
     // Style for the 1st and 3rd cards
     className: "bg-white shadow-lg",
-  }
+  },
 ];
 
 const FeaturesSection = () => {
   return (
     <Sections>
       <div className="container mx-auto">
-         
         {/* Section Header */}
         <div className="text-center mx-auto">
           <Heading text="Every Need for Your Admission Journey" />
           <p className="mt-4 text-lg text-gray-500">
-            Comprehensive tools and insights to help you make the best college choices
+            Comprehensive tools and insights to help you make the best college
+            choices
           </p>
         </div>
 
         {/* Features Grid */}
-        <div className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* center the grid horizontally*/}
+        <div className="mt-16 w-full mx-auto grid grid-cols-2 gap-8">
           {features.map((feature) => (
-            <div 
+            <div
               key={feature.title}
               // Base styles + dynamic class for the background/shadow
               className={`flex flex-col items-center text-center p-8 rounded-2xl border border-gray-200 ${feature.className}`}
             >
               {/* Icon */}
-              <feature.icon 
-                className="h-12 w-12 text-[var(--accent)]" 
+              <feature.icon
+                className="h-12 w-12 text-[var(--accent)]"
                 strokeWidth={1.5} // Thinner stroke width to match image
               />
-              
+
               {/* Card Title */}
               <h3 className="mt-6 text-2xl font-bold text-[var(--primary)]">
                 {feature.title}
               </h3>
-              
+
               {/* Card Description */}
               <p className="mt-3 text-base text-gray-500 flex-grow">
                 {feature.description}
               </p>
-              
+
               {/* Button */}
               <a
                 href={feature.buttonLink}

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mail, X } from 'lucide-react' // Modern icons
+import Image from 'next/image'
 
 export default function Newsletter() {
   const [visible, setVisible] = useState(false)
@@ -63,8 +64,8 @@ export default function Newsletter() {
         </button>
 
         {/* --- Icon --- */}
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-          <Mail className="h-8 w-8" />
+        <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-full">
+          <Image src="/logo.svg" alt="Logo" width={100} height={100} />
         </div>
 
         {/* --- Content --- */}
@@ -72,18 +73,18 @@ export default function Newsletter() {
           Join We Won Academy updates
         </h2>
         <p className="mt-2 text-base text-gray-600">
-          Get curated tips, college guidance and quick access to tools like our
-          College Predictor.
+          Get curated tips, college guidance and quick access to tools like our Counselling Program.
+
         </p>
 
         {/* --- Actions --- */}
         <div className="mt-6 flex flex-col gap-3">
           <button
-            onClick={() => router.push('/predictor')}
+            onClick={() => router.push('/counseling')}
             className="inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             aria-label="Open College predictor"
           >
-            Go to College Predictor
+            Go to Counselling Program
           </button>
 
           <button

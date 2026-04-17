@@ -70,6 +70,7 @@ const localActivePredictors: PredictorListItem[] = PREDICTOR_PRODUCTS.filter(
   isActive: predictor.isActive,
   createdAt: "",
 }));
+console.log(localActivePredictors);
 
 const localActivePredictorsBySlug = new Map(
   localActivePredictors.map((predictor) => [predictor.slug, predictor]),
@@ -120,9 +121,10 @@ const mergePredictorsWithLocal = (
 interface PredictorsGridProps {
   onlyPurchased?: boolean;
   slugs?: string[];
+  withLocal?: boolean;
 }
 
-const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, slugs }) => {
+const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, slugs, withLocal = false }) => {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const userData = useAppSelector(selectUser);
@@ -154,20 +156,22 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, 
         setError(null);
         const response = await fetchAllPredictors({ limit: 50 });
         if (response.success) {
-          setPredictors(mergePredictorsWithLocal(response.data));
+          setPredictors(
+            withLocal ? mergePredictorsWithLocal(response.data) : response.data,
+          );
         } else {
           setError("Failed to load predictors");
         }
       } catch (err: any) {
         console.error("Error fetching predictors:", err);
-        setPredictors(localActivePredictors);
+        setPredictors(withLocal ? localActivePredictors : []);
       } finally {
         setLoading(false);
       }
     };
 
     loadPredictors();
-  }, []);
+  }, [withLocal]);
 
   if (loading) {
     return (
