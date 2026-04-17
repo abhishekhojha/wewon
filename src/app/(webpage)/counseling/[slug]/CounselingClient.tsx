@@ -239,6 +239,7 @@ export default function CounselingClient() {
         productName={product.title}
         productType="counseling"
         productPrice={product.discountPrice || product.price}
+        originalPrice={product.price}
         productSlug={product.slug}
         hasMentorship={product.features.hasMentorship}
         mentorshipForm={product.mentorshipForm}

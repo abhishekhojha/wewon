@@ -18,6 +18,7 @@ interface CheckoutPageProps {
   productName: string;
   productType: "counseling" | "mentorship";
   productPrice: number;
+  originalPrice: number;
   productSlug: string;
   hasMentorship?: boolean;
   mentorshipForm?: MentorshipForm;
@@ -31,6 +32,7 @@ export default function CheckoutPage({
   productName,
   productType,
   productPrice,
+  originalPrice,
   productSlug,
   hasMentorship = false,
   mentorshipForm,
@@ -442,7 +444,8 @@ export default function CheckoutPage({
             <div className="sticky top-8">
               <CheckoutSummary
                 programName={productName}
-                originalPrice={productPrice}
+                originalPrice={originalPrice}
+                discountedPrice={productPrice}
                 appliedCoupon={appliedCoupon}
                 taxPercentage={18}
               />

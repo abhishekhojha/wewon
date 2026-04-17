@@ -5,6 +5,7 @@ import { CouponValidationResponse } from "@/store/types";
 interface CheckoutSummaryProps {
   programName: string;
   originalPrice: number;
+  discountedPrice: number;
   appliedCoupon: CouponValidationResponse | null;
   taxPercentage?: number;
 }
@@ -12,12 +13,15 @@ interface CheckoutSummaryProps {
 export default function CheckoutSummary({
   programName,
   originalPrice,
+  discountedPrice,
   appliedCoupon,
   taxPercentage = 18, // Default GST 18%
 }: CheckoutSummaryProps) {
   const discountAmount = appliedCoupon?.discountAmount || 0;
-  const priceAfterDiscount = appliedCoupon?.finalPrice || originalPrice;
-  const taxAmount = (priceAfterDiscount * taxPercentage) / 100;
+  const productDiscount = originalPrice - discountedPrice;
+  const priceAfterDiscount = appliedCoupon?.finalPrice || discountedPrice;
+  
+  // Keep finalAmount as naming convention
   const finalAmount = priceAfterDiscount;
 
   return (
@@ -31,54 +35,40 @@ export default function CheckoutSummary({
       </div>
 
       {/* Price Breakdown */}
-      <div className="space-y-2 mb-4">
+      <div className="space-y-1 mb-6">
         {/* Original Price */}
         <div className="flex justify-between items-center">
-          <span className="text-gray-600">Original Price</span>
+          <span className="text-gray-600">Price</span>
           <span className="font-semibold text-gray-800">
             ₹{originalPrice.toLocaleString()}
           </span>
         </div>
 
-        {/* Discount */}
-        {appliedCoupon && (
+        {/* Product Discount */}
+        {productDiscount > 0 && (
           <div className="flex justify-between items-center text-green-600">
-            <span>Discount ({appliedCoupon.couponCode})</span>
-            <span className="font-semibold">
-              - ₹{discountAmount.toLocaleString()}
+            <span>Discount</span>
+            <span className="text-sm font-semibold">
+              - ₹{productDiscount.toLocaleString()}
             </span>
           </div>
         )}
 
-       
-
-        {/* Subtotal */}
-        <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-          <span className="text-gray-600">Subtotal</span>
-          <span className="font-semibold text-gray-800">
-            ₹{priceAfterDiscount.toLocaleString()}
-          </span>
-        </div>
-
-        {/* Tax */}
-        <div className="flex justify-between items-center">
-          <span className="text-gray-600">Tax (GST {taxPercentage}%)</span>
-          <span className="font-semibold text-gray-800">
-            ₹{taxAmount.toLocaleString()}
-          </span>
-        </div>
-      {/* WeWon Discount */}
-      <div className="flex justify-between items-center text-green-600">
-        <span>WeWon Discount</span>
-        <span className="font-semibold">
-          - ₹{(taxAmount).toLocaleString()}
-        </span>
+        {/* Coupon Discount */}
+        {appliedCoupon && (
+          <div className="flex justify-between items-center text-green-600">
+            <span>Coupon discount ({appliedCoupon.couponCode})</span>
+            <span className="text-sm font-semibold">
+              - ₹{discountAmount.toLocaleString()}
+            </span>
+          </div>
+        )}
       </div>
-      </div>
+
       {/* Final Amount */}
       <div className="pt-4 border-t-2 border-gray-300">
         <div className="flex justify-between items-center">
-          <span className="text-lg font-bold text-gray-800">Total Payable</span>
+          <span className="text-lg font-bold text-gray-800">Total</span>
           <span className="text-2xl font-bold text-[var(--accent)]">
             ₹{Math.round(finalAmount).toLocaleString()}
           </span>
