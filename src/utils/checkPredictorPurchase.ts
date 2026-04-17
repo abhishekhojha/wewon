@@ -108,12 +108,7 @@ export const getPredictorPurchaseDetails = (
       }
     }
 
-    // Also check if the product itself is the requested predictor
-    if (order.product?.slug === productSlug) {
-      grantsAccessToRequested = true;
-      allowedPredictorsSet.add(productSlug);
-    }
-
+ 
     if (grantsAccessToRequested) {
       matchingOrders.push(order);
     }
@@ -196,14 +191,6 @@ export const getAllPurchasedPredictors = (userOrders: any[]): PurchasedPredictor
       }
     }
 
-    // Also check if the product itself is a predictor
-    const productSlug = order.product?.slug;
-    if (productSlug) {
-      const key = predictorSlugKeyMap[productSlug as keyof typeof predictorSlugKeyMap];
-      if (key && !purchasedMap.has(productSlug)) {
-        purchasedMap.set(productSlug, { order, slug: productSlug, key });
-      }
-    }
   });
 
   return Array.from(purchasedMap.values());

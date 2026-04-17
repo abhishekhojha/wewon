@@ -18,8 +18,8 @@ import { limitLeft } from "@/utils/helpers";
 import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 
 
-const PRODUCT_SLUG = "hbtu-kanpur-predictor";
-const RETURN_URL = "/hbtu-kanpur-predictor";
+const PRODUCT_SLUG = "hbtu-predictor";
+const RETURN_URL = "/hbtu-predictor";
 
 export default function HBTUCollegePredictor() {
   const dispatch = useAppDispatch();
