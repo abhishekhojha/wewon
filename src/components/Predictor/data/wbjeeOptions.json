@@ -3,8 +3,7 @@
     { "label": "WBJEE", "value": "WBJEE" },
     { "label": "JEE", "value": "JEE" }
   ],
-  "categories": {
-    "WBJEE": [
+  "categories": [
       { "label": "Open", "value": "Open" },
       { "label": "OBC - A", "value": "OBC - A" },
       { "label": "OBC - B", "value": "OBC - B" },
@@ -18,20 +17,8 @@
       { "label": "SC (PwD)", "value": "SC (PwD)" },
       { "label": "ST (PwD)", "value": "ST (PwD)" },
       { "label": "EWS (PwD)", "value": "EWS (PwD)" }
-    ],
-    "JEE": [
-      { "label": "Open", "value": "Open" },
-      { "label": "OBC-NCL", "value": "OBC-NCL" },
-      { "label": "SC", "value": "SC" },
-      { "label": "ST", "value": "ST" },
-      { "label": "EWS", "value": "EWS" },
-      { "label": "Open (PwD)", "value": "Open (PwD)" },
-      { "label": "OBC-NCL (PwD)", "value": "OBC-NCL (PwD)" },
-      { "label": "SC (PwD)", "value": "SC (PwD)" },
-      { "label": "ST (PwD)", "value": "ST (PwD)" },
-      { "label": "EWS (PwD)", "value": "EWS (PwD)" }
     ]
-  },
+  ,
   "quotas": [
     { "label": "All India", "value": "All India" },
     { "label": "Home State", "value": "Home State" }

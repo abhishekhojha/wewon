@@ -85,15 +85,12 @@ export const getWBJEEMetadata = () => {
   return apiClient.get("/api/wbjee/metadata");
 };
 
-export const getWBJEEInstitutes = (exam: string, type: string) => {
-  const params = new URLSearchParams();
-  params.append("exam", exam);
-  if (type && type !== "ALL") params.append("type", type);
-  return apiClient.get(`/api/wbjee/institutes?${params.toString()}`);
+export const getWBJEEInstitutes = () => {
+  return apiClient.get(`/api/wbjee/institutes`);
 };
 
-export const getWBJEEBranches = (exam: string) => {
-  return apiClient.get(`/api/wbjee/branches?exam=${exam}`);
+export const getWBJEEBranches = () => {
+  return apiClient.get(`/api/wbjee/branches`);
 };
 
 export const predictWBJEE = (data: {
