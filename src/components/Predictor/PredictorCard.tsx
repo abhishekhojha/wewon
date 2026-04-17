@@ -14,7 +14,12 @@ interface PredictorCardProps {
 const PredictorCard: React.FC<PredictorCardProps> = ({ predictor }) => {
   const router = useRouter();
 
-  const isCombo = (predictor.features.collegePredictor.allowedPredictors?.length ?? 0) > 1;
+  const isCombo =
+    predictor.features?.collegePredictor.isEnabled &&
+    !predictor.features?.choiceFilling.isEnabled &&
+    !predictor.features?.hasMentorship &&
+    !predictor.features?.hasCourseContent &&
+    (predictor.features?.collegePredictor.allowedPredictors?.length ?? 0) > 1;
 
   const handleClick = () => {
     // Always navigate to the predictor page

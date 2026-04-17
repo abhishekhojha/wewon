@@ -33,7 +33,12 @@ export default async function Page({ params }: PageProps) {
   }
 
   // If the predictor exists and is a combo (has allowedPredictors > 1)
-  const isCombo = (predictor?.features?.collegePredictor?.allowedPredictors?.length ?? 0) > 1;
+  const isCombo =
+    predictor?.features?.collegePredictor?.isEnabled &&
+    !predictor?.features?.choiceFilling?.isEnabled &&
+    !predictor?.features?.hasMentorship &&
+    !predictor?.features?.hasCourseContent &&
+    (predictor?.features?.collegePredictor.allowedPredictors?.length ?? 0) > 1;
 
   if (!predictor || !isCombo) {
     notFound();

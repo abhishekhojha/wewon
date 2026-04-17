@@ -90,7 +90,7 @@ const ComboPredictorSelector: React.FC<ComboPredictorSelectorProps> = ({ slug })
   const allowedSlugs = comboProduct.features.collegePredictor.allowedPredictors.map(
     (key: any) => predictorKeyMap[key as keyof typeof predictorKeyMap] || key
   );
-  console.log("allowedSlugs",allowedSlugs, comboProduct.features.collegePredictor.allowedPredictors);
+  // console.log("allowedSlugs",allowedSlugs, comboProduct.features.collegePredictor.allowedPredictors);
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4">
@@ -106,9 +106,7 @@ const ComboPredictorSelector: React.FC<ComboPredictorSelectorProps> = ({ slug })
         <h1 className="text-4xl md:text-5xl font-black text-[#0f3a67] mb-6 tracking-tight">
           {comboProduct.title}
         </h1>
-        <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          {comboProduct.description}
-        </p>
+        <div className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed" dangerouslySetInnerHTML={{ __html: comboProduct.description }} />
       </motion.div>
 
       <motion.div 

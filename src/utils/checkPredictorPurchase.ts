@@ -9,7 +9,7 @@ import { Order } from "@/store/types";
  */
 export const checkPredictorPurchase = (
   predictorId: string,
-  userOrders: Order[]
+  userOrders: Order[],
 ): boolean => {
   if (!userOrders || userOrders.length === 0) {
     return false;
@@ -32,7 +32,9 @@ export const checkPredictorPurchase = (
     }
 
     // Check if the order's product matches the predictor
-    return order.product?._id === predictorId || order.productId === predictorId;
+    return (
+      order.product?._id === predictorId || order.productId === predictorId
+    );
   });
 
   return hasPurchase;
@@ -74,11 +76,15 @@ export const getPurchasedPredictorIds = (userOrders: Order[]): string[] => {
  */
 export const getPredictorPurchaseDetails = (
   userOrders: any[],
-  productSlug: string
+  productSlug: string,
 ) => {
-  console.log("userOrders", userOrders,"productSlug", productSlug)
+  // console.log("userOrders", userOrders,"productSlug", productSlug)
   if (!userOrders || userOrders.length === 0) {
-    return { hasPurchased: false, prefillData: null, allowedPredictorsList: [] };
+    return {
+      hasPurchased: false,
+      prefillData: null,
+      allowedPredictorsList: [],
+    };
   }
 
   const allowedPredictorsSet = new Set<string>();
@@ -87,9 +93,19 @@ export const getPredictorPurchaseDetails = (
   userOrders.forEach((order) => {
     if (order.status !== "completed") return;
 
-
     let grantsAccessToRequested = false;
-
+    const isCombo =
+      order.product?.features?.collegePredictor.isEnabled &&
+      !order.product?.features?.choiceFilling.isEnabled &&
+      !order.product?.features?.hasMentorship &&
+      !order.product?.features?.hasCourseContent &&
+      (order.product?.features?.collegePredictor.allowedPredictors?.length ?? 0) > 1;
+    //isCombo Predictor
+    if (isCombo) {
+      // allowedPredictorsSet.add(productSlug);
+      if (order.product?.slug === productSlug) grantsAccessToRequested = true;
+      // console.log(count,"isCombo",Array.from(allowedPredictorsSet))
+    }
     const allowedPredictors =
       order.product?.features?.collegePredictor?.allowedPredictors || [];
 
@@ -115,14 +131,15 @@ export const getPredictorPurchaseDetails = (
   });
 
   const hasPurchased = matchingOrders.length > 0;
-  console.log("hasPurchased", hasPurchased)
+  // console.log("hasPurchased", hasPurchased)
+  // console.log("matchingOrders", matchingOrders)
   // Get prefill data from the most recent matching order that has form data or rank overrides
   const latestOrderWithData = matchingOrders.sort((a, b) => {
-    const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-    const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    const timeA = a.product?.features?.hasMentorship ? 1 : 0;
+    const timeB = b.product?.features?.hasMentorship ? 1 : 0;
     return timeB - timeA;
   })[0];
-
+  // console.log("latestOrderWithData", latestOrderWithData)
   let prefillData = null;
   if (latestOrderWithData) {
     const formData = latestOrderWithData.mentorshipFormData || {};
@@ -132,7 +149,9 @@ export const getPredictorPurchaseDetails = (
     prefillData = {
       ...formData,
       ...(rankOverrides.crlRank ? { crlRank: rankOverrides.crlRank } : {}),
-      ...(rankOverrides.categoryRank ? { categoryRank: rankOverrides.categoryRank } : {}),
+      ...(rankOverrides.categoryRank
+        ? { categoryRank: rankOverrides.categoryRank }
+        : {}),
     };
 
     // If both are empty, set to null
@@ -142,8 +161,8 @@ export const getPredictorPurchaseDetails = (
   }
 
   const allowedPredictorsList = Array.from(allowedPredictorsSet);
-  console.log("prefillData", prefillData);
-  console.log("allowedPredictorsList", allowedPredictorsList);
+  // console.log("prefillData", prefillData);
+  // console.log("allowedPredictorsList", allowedPredictorsList);
 
   return {
     hasPurchased,
@@ -162,7 +181,9 @@ export interface PurchasedPredictor {
 /**
  * Get a list of all purchased predictors with their corresponding order object, slug, and key.
  */
-export const getAllPurchasedPredictors = (userOrders: any[]): PurchasedPredictor[] => {
+export const getAllPurchasedPredictors = (
+  userOrders: any[],
+): PurchasedPredictor[] => {
   if (!userOrders || userOrders.length === 0) {
     return [];
   }
@@ -171,7 +192,6 @@ export const getAllPurchasedPredictors = (userOrders: any[]): PurchasedPredictor
 
   userOrders.forEach((order) => {
     if (order.status !== "completed") return;
-
 
     const allowedPredictors =
       order.product?.features?.collegePredictor?.allowedPredictors || [];
@@ -190,7 +210,6 @@ export const getAllPurchasedPredictors = (userOrders: any[]): PurchasedPredictor
         }
       }
     }
-
   });
 
   return Array.from(purchasedMap.values());
