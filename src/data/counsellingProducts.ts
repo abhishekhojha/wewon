@@ -1,4 +1,5 @@
 import { PredictorCategory } from "@/store/types";
+import { predictorExamKey } from "./productKeyMap";
 
 // This interface matches the backend CounsellingProduct schema exactly
 export interface CounsellingProduct {
@@ -19,6 +20,7 @@ export interface CounsellingProduct {
     collegePredictor: {
       isEnabled: boolean;
       usageLimit: number;
+      allowedPredictors?: predictorExamKey[];
     };
     hasCourseContent: boolean;
   };

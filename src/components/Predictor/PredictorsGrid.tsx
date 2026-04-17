@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import PredictorCard from "./PredictorCard";
 import { fetchAllPredictors, PredictorListItem } from "@/network/predictor";
 import { PredictorCategory } from "@/store/types";
-import { PREDICTOR_PRODUCTS } from "@/data/counsellingProducts";
+import { PREDICTOR_PRODUCTS, PredictorProduct } from "@/data/counsellingProducts";
+import { predictorExamKey } from "@/data/productKeyMap";
 import { Loader2 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
@@ -16,7 +17,7 @@ import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 const mapToPredictorProduct = (
   item: PredictorListItem,
   isPurchased: boolean,
-) => ({
+): PredictorProduct => ({
   _id: item._id,
   title: item.title,
   slug: item.slug,
@@ -31,7 +32,10 @@ const mapToPredictorProduct = (
       isEnabled: false,
       usageLimit: 0,
     },
-    collegePredictor: item.features.collegePredictor,
+    collegePredictor: {
+      ...item.features.collegePredictor,
+      allowedPredictors: (item.features.collegePredictor?.allowedPredictors || []) as predictorExamKey[],
+    },
     hasCourseContent: item.features.hasCourseContent ?? false,
   },
   totalMaterialCount: 0,
@@ -115,9 +119,10 @@ const mergePredictorsWithLocal = (
 
 interface PredictorsGridProps {
   onlyPurchased?: boolean;
+  slugs?: string[];
 }
 
-const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false }) => {
+const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, slugs }) => {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const userData = useAppSelector(selectUser);
@@ -190,10 +195,16 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false }
   }
 
   // Filter to only purchased predictors if onlyPurchased is true
-  const displayPredictors = onlyPurchased
+  let displayPredictors = onlyPurchased
     ? predictors.filter((predictor) => isPredictorPurchased(predictor.slug))
     : predictors;
 
+  // Filter by slugs if provided
+  if (slugs && slugs.length > 0) {
+    displayPredictors = displayPredictors.filter((predictor) => 
+      slugs.includes(predictor.slug)
+    );
+  }
   return (
     <div className="w-full">
       {/* Predictors Grid */}

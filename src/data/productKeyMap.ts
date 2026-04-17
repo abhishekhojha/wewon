@@ -39,6 +39,7 @@ interface choiceFillingSlugKeyMap {
   "uptac": "UPTAC",
   "iit": "IIT"
 }
+export type predictorExamKey = "WBJEE" | "JEE_MAIN" | "JAC_DELHI" | "JAC_CHANDIGARH" | "UPTAC" | "MMMUT" | "HBTU" | "CSAB" | "JOSAA" | "IIT" | "EARLY_JEE";
 
 export const predictorKeyMap: keyPredictorSlugMap = {
   "WBJEE": "wbjee-predictor",
