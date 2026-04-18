@@ -5,13 +5,13 @@ import { setLoadingFalse } from "@/store/auth/authSlice";
 import { fetchUserProfile } from "@/store/auth/authThunk";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
-export default function HomePage() {
+function AuthContent() {
   const { loading, isAuthenticated } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const router = useRouter();
-    const searchParams = useSearchParams();
+  const searchParams = useSearchParams();
   const returnUrl = searchParams.get("returnUrl") || "/";
   const [initialized, setInitialized] = useState(false);
 
@@ -33,7 +33,7 @@ export default function HomePage() {
     if (isAuthenticated && initialized) {
       router.push(returnUrl);
     }
-  }, [isAuthenticated, initialized, router]);
+  }, [isAuthenticated, initialized, router, returnUrl]);
 
   if (loading) {
     return <Loader manualLoading={true} />;
@@ -50,3 +50,12 @@ export default function HomePage() {
     </main>
   );
 }
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<Loader manualLoading={true} />}>
+      <AuthContent />
+    </Suspense>
+  );
+}
+
