@@ -111,12 +111,12 @@ const PersonalizedMentorship = () => {
                   strokeWidth={1.5}
                 />
                 <h3 className="mt-4 text-lg font-semibold text-[var(--primary)]">
-                  Book a Session
+                  Book a Counselling
                 </h3>
                 <p className="my-2 text-sm text-[var(--muted-text)]">
                   Get a professional Advice from our best teachers.
                 </p>
-                <Button href="/counseling">Book a Session</Button>
+                <Button href="/counseling">Book a Counselling</Button>
               </div>
             </div>
           </div>

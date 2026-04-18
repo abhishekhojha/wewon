@@ -41,7 +41,7 @@ const YouTubeBanner = () => {
                                     <Users className="w-6 h-6 sm:w-8 sm:h-8 opacity-80" />
                                     <div className="text-left">
                                         <p className="text-2xl sm:text-3xl md:text-4xl font-bold">
-                                            280k+
+                                            300k+
                                         </p>
                                         <p className="text-xs sm:text-sm opacity-80">
                                             Subscribers on YouTube

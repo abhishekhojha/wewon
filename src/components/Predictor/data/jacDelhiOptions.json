@@ -33,40 +33,39 @@
     { "label": "Special Spot Round", "value": "Special Spot Round" }
   ],
   "institutes": [
-    { "label": "ALL", "value": "ALL" },
     {
-      "label": "Delhi Technological University - DTU",
+      "label": "Netaji Subhas University of Technology East Campus",
+      "value": "Netaji Subhas University of Technology East Campus"
+    },
+    {
+      "label": "Netaji Subhas University of Technology(Main Campus)",
+      "value": "Netaji Subhas University of Technology(Main Campus)"
+    },
+    {
+      "label": "Netaji Subhas University of Technology West Campus",
+      "value": "Netaji Subhas University of Technology West Campus"
+    },
+    {
+      "label": "Delhi Technological University",
       "value": "Delhi Technological University"
     },
     {
-      "label": "Indira Gandhi Delhi Technical University for Women - IGDTUW Delhi",
+      "label": "Indira Gandhi Delhi Technical University for Women",
       "value": "Indira Gandhi Delhi Technical University for Women"
     },
     {
-      "label": "Indraprastha Institute of Information Technology, New Delhi - IIIT-D",
-      "value": "Indraprastha Institute of Information Technology Delhi"
-    },
-    {
-      "label": "Netaji Subhas University of Technology (Main Campus) - NSUT Delhi (Main Campus)",
-      "value": "Netaji Subhas University of Technology, Delhi"
-    },
-    {
-      "label": "Netaji Subhas University of Technology (East Campus) - NSUT Delhi (East Campus)",
-      "value": "Netaji Subhas University of Technology, East Campus"
-    },
-    {
-      "label": "Netaji Subhas University of Technology (West Campus) - NSUT Delhi (West Campus)",
-      "value": "Netaji Subhas University of Technology, West Campus"
+      "label": "Indraprastha Institute of Information Technology, New Delhi",
+      "value": "Indraprastha Institute of Information Technology, New Delhi"
     }
   ],
   "specialSpotRoundInstitutes": [
     {
-      "label": "Indira Gandhi Delhi Technical University for Women - IGDTUW Delhi",
+      "label": "Indira Gandhi Delhi Technical University for Women",
       "value": "Indira Gandhi Delhi Technical University for Women"
     },
     {
-      "label": "Indraprastha Institute of Information Technology, New Delhi - IIIT-D",
-      "value": "Indraprastha Institute of Information Technology Delhi"
+      "label": "Indraprastha Institute of Information Technology, New Delhi",
+      "value": "Indraprastha Institute of Information Technology, New Delhi"
     }
   ],
   "genders": [

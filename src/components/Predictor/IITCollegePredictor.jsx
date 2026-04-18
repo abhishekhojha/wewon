@@ -1,13 +1,39 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import GoogleAds from "../sections/GoogleAds";
-import { predict } from "@/network/predictor";
+import Image from "next/image";
+import { predict, fetchPredictorBySlug } from "@/network/predictor";
+import { getPredictorBySlug } from "@/data/counsellingProducts";
 import options from "./data/options.json";
 import PredictionResults from "./PredictionResults";
 import { toast } from "sonner";
+import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
+import { fetchUserOrders } from "@/store/order/orderThunk";
+import { selectUserOrders } from "@/store/order/orderSlice";
+import PredictorPaymentModal from "./PredictorPaymentModal";
+import { limitLeft } from "@/utils/helpers";
+import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
+
+
+const PRODUCT_SLUG = "jee-advanced-predictor";
+const RETURN_URL = "/jee-advanced-predictor";
 
 export default function IITCollegePredictor() {
+  const {
+    prefill,
+    crlRankLocked,
+    categoryRankLocked,
+    lockMessage,
+  } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
+
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectIsAuthenticated);
+  const userData = useAppSelector(selectUser);
+  const userOrders = useAppSelector(selectUserOrders);
+  const isCounsellor = userData?.userId?.role === "counsellor";
+
   const [formData, setFormData] = useState({
     crlRank: "",
     categoryRank: "",
@@ -21,7 +47,114 @@ export default function IITCollegePredictor() {
 
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [rankLockMessage, setRankLockMessage] = useState(
+    "Your rank has been set by your counsellor.",
+  );
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [checkingPurchase, setCheckingPurchase] = useState(true);
+  const [product, setProduct] = useState(null);
+  const [productLoading, setProductLoading] = useState(true);
   const resultsRef = useRef(null);
+
+  const usageStatus = (user && hasPurchased && !isCounsellor && userOrders?.length > 0)
+    ? (() => {
+        try {
+          return limitLeft(userOrders, PRODUCT_SLUG, "predictor");
+        } catch (e) {
+          return null;
+        }
+      })()
+    : null;
+
+
+  // Fetch product data dynamically
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setProductLoading(true);
+        const productData = await fetchPredictorBySlug(PRODUCT_SLUG);
+        if (productData) {
+          setProduct(productData);
+        } else {
+          setProduct(getPredictorBySlug(PRODUCT_SLUG) || null);
+        }
+      } catch (error) {
+        if (error.status != 404) {
+          console.error("Error fetching product:", error);
+        }
+        const fallbackProduct = getPredictorBySlug(PRODUCT_SLUG);
+        if (fallbackProduct) {
+          setProduct(fallbackProduct);
+        }
+      } finally {
+        setProductLoading(false);
+      }
+    };
+    fetchProduct();
+  }, []);
+
+  // Check if user has purchased the product
+  useEffect(() => {
+    const checkPurchaseStatus = async () => {
+      if (product && product.price === 0 && product.discountPrice === 0) {
+        setHasPurchased(true);
+        setCheckingPurchase(false);
+        return;
+      }
+      if (user && isCounsellor) {
+        setHasPurchased(true);
+        setCheckingPurchase(false);
+        return;
+      }
+      if (!user) {
+        setHasPurchased(false);
+        setCheckingPurchase(false);
+        return;
+      }
+      const ordersAction = await dispatch(fetchUserOrders());
+      if (
+        fetchUserOrders.rejected.match(ordersAction) &&
+        !ordersAction.meta.condition
+      ) {
+        console.error(
+          "Error fetching orders:",
+          ordersAction.payload || ordersAction.error,
+        );
+      }
+      setCheckingPurchase(false);
+    };
+    checkPurchaseStatus();
+  }, [user, isCounsellor, dispatch, product]);
+
+  // Update hasPurchased when userOrders change
+  useEffect(() => {
+    if (userOrders.length > 0) {
+      const { hasPurchased } = getPredictorPurchaseDetails(userOrders, PRODUCT_SLUG);
+      setHasPurchased(hasPurchased);
+    }
+  }, [userOrders]);
+
+  useEffect(() => {
+    if (!prefill) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      crlRank:
+        typeof prefill.crlRank === "number" ? String(prefill.crlRank) : prev.crlRank,
+      categoryRank:
+        typeof prefill.categoryRank === "number"
+          ? String(prefill.categoryRank)
+          : prev.categoryRank,
+      category: prefill.category || prev.category,
+      gender: prefill.gender || prev.gender,
+    }));
+
+    if (lockMessage) {
+      setRankLockMessage(lockMessage);
+    }
+  }, [lockMessage, prefill]);
 
   // Auto-scroll to results when they become available
   useEffect(() => {
@@ -36,9 +169,16 @@ export default function IITCollegePredictor() {
   const handleChange = (e) => {
     const { id, value, type } = e.target;
 
+    if (id === "crlRank" && crlRankLocked) {
+      return;
+    }
+
+    if (id === "categoryRank" && categoryRankLocked) {
+      return;
+    }
+
     // Validate categoryRank to accept only numbers or numbers ending with 'P'
     if (id === "categoryRank") {
-      // Allow empty value (for clearing the field)
       if (value === "") {
         setFormData((prev) => ({
           ...prev,
@@ -46,15 +186,10 @@ export default function IITCollegePredictor() {
         }));
         return;
       }
-
-      // Validate format: must be a number or number ending with 'P' or 'p'
       const categoryRankPattern = /^\d+[Pp]?$/;
       if (!categoryRankPattern.test(value)) {
-        // Don't update state if format is invalid
         return;
       }
-
-      // Convert lowercase 'p' to uppercase 'P'
       const normalizedValue = value.replace(/p$/, "P");
       setFormData((prev) => ({
         ...prev,
@@ -65,7 +200,6 @@ export default function IITCollegePredictor() {
 
     // Validate number inputs to prevent negative values
     if (type === "number") {
-      // If value is empty, allow it (for clearing the field)
       if (value === "") {
         setFormData((prev) => ({
           ...prev,
@@ -73,11 +207,8 @@ export default function IITCollegePredictor() {
         }));
         return;
       }
-
-      // Convert to number and check if it's negative or zero
       const numValue = Number(value);
       if (numValue < 1) {
-        // Don't update state if value is negative or zero
         return;
       }
     }
@@ -87,7 +218,7 @@ export default function IITCollegePredictor() {
       setFormData((prev) => ({
         ...prev,
         [id]: value,
-        roundNumber: 1, // Reset to round 1 when counseling type changes
+        roundNumber: 1,
       }));
       return;
     }
@@ -105,36 +236,9 @@ export default function IITCollegePredictor() {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const fetchPredictions = async () => {
     setLoading(true);
     setResults(null);
-
-    // Validate that category rank is provided when category is not OPEN
-    if (formData.category !== "OPEN" && !formData.categoryRank) {
-      toast.error("Please enter Category Rank for the selected category");
-      setLoading(false);
-      return;
-    }
-
-    // Validate that CRL Rank is provided for OPEN category
-    if (formData.category === "OPEN" && !formData.crlRank) {
-      toast.error("Please enter CRL Rank for OPEN category");
-      setLoading(false);
-      return;
-    }
-
-    // Validate categoryRank format if provided
-    if (formData.categoryRank) {
-      const categoryRankPattern = /^\d+P?$/;
-      if (!categoryRankPattern.test(formData.categoryRank)) {
-        toast.error(
-          "Category Rank must be a number or a number ending with 'P'",
-        );
-        setLoading(false);
-        return;
-      }
-    }
 
     try {
       const payload = {
@@ -152,21 +256,86 @@ export default function IITCollegePredictor() {
       const response = await predict(payload);
       console.log("Prediction response:", response.data);
       setResults(response.data);
-      // alert("Prediction successful! Check console for results.");
     } catch (error) {
       console.error("Prediction error:", error);
-      toast.error("Failed to get prediction. Please try again.");
+      if (error.response?.data?.code === "LIMIT_EXCEEDED") {
+        toast.error("Your limit has been exceeded! Please contact to your alloted mentor");
+      } else {
+        toast.error(error.message || "Failed to get prediction. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validate that category rank is provided when category is not OPEN
+    if (formData.category !== "OPEN" && !formData.categoryRank) {
+      toast.error("Please enter Category Rank for the selected category");
+      return;
+    }
+
+    // Validate that CRL Rank is provided for OPEN category
+    if (formData.category === "OPEN" && !formData.crlRank) {
+      toast.error("Please enter CRL Rank for OPEN category");
+      return;
+    }
+
+    // Validate categoryRank format if provided
+    if (formData.categoryRank) {
+      const categoryRankPattern = /^\d+P?$/;
+      if (!categoryRankPattern.test(formData.categoryRank)) {
+        toast.error("Category Rank must be a number or a number ending with 'P'");
+        return;
+      }
+    }
+
+    // Check if user is logged in
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    // Check if user has purchased
+    if (
+      !hasPurchased &&
+      product &&
+      (product.price > 0 ||
+        (product.discountPrice && product.discountPrice > 0))
+    ) {
+      setShowPaymentModal(true);
+      return;
+    }
+
+    await fetchPredictions();
+  };
+
+  const handlePaymentSuccess = () => {
+    setHasPurchased(true);
+    setShowPaymentModal(false);
+    fetchPredictions();
   };
 
   return (
     <div className="container mx-auto px-2 sm:px-4 my-6 sm:my-10">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
         {/* Left Column: Steps */}
-        <div className="flex flex-col justify-center space-y-3 sm:space-y-6">
-          <GoogleAds adSlot="1234567890" />
+        <div className="flex flex-col space-y-3 sm:space-y-6">
+          {product?.thumbnail && (
+            <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg mb-4 sm:mb-6">
+              <Image
+                src={product.thumbnail}
+                alt={product.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            </div>
+          )}
           <div className="p-3 sm:p-6 bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-sm">
             <h3 className="text-base sm:text-xl font-semibold text-[var(--foreground)]">
               Enter your exam details
@@ -200,13 +369,21 @@ export default function IITCollegePredictor() {
         <div className="bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-6 md:p-8">
           {/* Header */}
           <div className="flex flex-col justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--primary)]">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--primary)] uppercase">
               JEE ADVANCED COLLEGE PREDICTOR
             </h2>
-            <span className="bg-[var(--light-blue)] text-[var(--primary)] text-[10px] sm:text-xs font-semibold px-2 sm:px-4 py-1 sm:py-2 rounded-full whitespace-nowrap w-fit">
-              Trusted by 50,000+ students
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-[var(--light-blue)] text-[var(--primary)] text-[10px] sm:text-xs font-semibold px-2 sm:px-4 py-1 sm:py-2 rounded-full whitespace-nowrap w-fit">
+                Trusted by 50,000+ students
+              </span>
+              {usageStatus && (
+                <span className="bg-orange-50 text-orange-700 text-[10px] sm:text-xs font-bold px-2 sm:px-4 py-1 sm:py-2 rounded-full border border-orange-200 shadow-sm">
+                  {usageStatus.limitLeft === -1 ? "Unlimited" : `${usageStatus.limitLeft} Predictions Left`}
+                </span>
+              )}
+            </div>
           </div>
+
 
           {/* Form */}
           <form className="space-y-3 sm:space-y-5" onSubmit={handleSubmit}>
@@ -225,9 +402,15 @@ export default function IITCollegePredictor() {
                 onChange={handleChange}
                 placeholder="15000"
                 min="1"
+                disabled={crlRankLocked}
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
+              {crlRankLocked && (
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
+                  {rankLockMessage}
+                </p>
+              )}
             </div>
 
             {/* Category Rank */}
@@ -246,9 +429,15 @@ export default function IITCollegePredictor() {
                 onChange={handleChange}
                 placeholder="2000 or 2000P"
                 required={formData.category !== "OPEN"}
+                disabled={categoryRankLocked}
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
+              {categoryRankLocked && (
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
+                  {rankLockMessage}
+                </p>
+              )}
             </div>
 
             {/* Gender */}
@@ -375,6 +564,58 @@ export default function IITCollegePredictor() {
           />
         )}
       </div>
+
+      {/* Payment Modal */}
+      {product && (
+        <PredictorPaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onPaymentSuccess={handlePaymentSuccess}
+          product={product}
+        />
+      )}
+
+      {/* Login Required Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 relative overflow-hidden animate-in fade-in zoom-in duration-200">
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <div className="text-center mb-6 mt-2">
+              <div className="w-16 h-16 bg-[var(--primary)]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--primary)]">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                  <polyline points="10 17 15 12 10 7"></polyline>
+                  <line x1="15" y1="12" x2="3" y2="12"></line>
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">Login Required</h2>
+              <p className="text-sm text-gray-600">
+                Please login to your account to get your personalized college predictions.
+              </p>
+            </div>
+            <a
+              href={`/auth?returnUrl=${RETURN_URL}`}
+              className="block w-full py-3 px-4 bg-[var(--primary)] text-white font-semibold rounded-xl hover:bg-[var(--accent)] transition-colors text-center"
+            >
+              Login / Sign Up
+            </a>
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="block w-full py-3 px-4 mt-3 text-gray-500 font-medium rounded-xl hover:bg-gray-50 transition-colors text-center"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

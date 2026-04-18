@@ -11,28 +11,33 @@ import {
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { createOrder, verifyPayment } from "@/store/order/orderThunk";
 import {
-  selectCurrentOrder,
   selectOrderLoading,
   selectPaymentLoading,
 } from "@/store/order/orderSlice";
 import { selectUser } from "@/store/auth/authSlice";
 
+export interface PaymentSuccessData {
+  orderId: string;
+  purchaseId?: string;
+  whatsappChannelLink?: string;
+}
+
 interface RazorpayPaymentProps {
   productId: string;
   productName: string;
-  productType: "counseling" | "mentorship";
   amount: number;
   couponCode?: string;
-  onSuccess: (orderId: string) => void;
+  mentorshipFormData?: Record<string, string | number>;
+  onSuccess: (paymentData: PaymentSuccessData) => void;
   onFailure: (error: string) => void;
 }
 
 export default function RazorpayPayment({
   productId,
   productName,
-  productType,
   amount,
   couponCode,
+  mentorshipFormData,
   onSuccess,
   onFailure,
 }: RazorpayPaymentProps) {
@@ -40,10 +45,47 @@ export default function RazorpayPayment({
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [processing, setProcessing] = useState(false);
 
-  const currentOrder = useAppSelector(selectCurrentOrder);
   const orderLoading = useAppSelector(selectOrderLoading);
   const paymentLoading = useAppSelector(selectPaymentLoading);
   const user = useAppSelector(selectUser);
+
+  const extractPaymentSuccessData = (
+    verifyResult: Record<string, any>,
+  ): PaymentSuccessData => {
+    const orderId =
+      verifyResult?._id || verifyResult?.orderId || verifyResult?.id;
+
+    if (!orderId || typeof orderId !== "string") {
+      throw new Error(
+        "Payment succeeded but order details are incomplete. Please contact support.",
+      );
+    }
+
+    const purchaseId =
+      verifyResult?.purchaseId ||
+      verifyResult?.programPurchaseId ||
+      verifyResult?.activeServiceId ||
+      verifyResult?.activePurchaseId ||
+      verifyResult?.programPurchase?._id;
+
+    const whatsappChannelLink =
+      verifyResult?.whatsappChannelLink ||
+      verifyResult?.programPurchase?.whatsappChannelLink ||
+      verifyResult?.product?.whatsappChannelLink;
+
+    return {
+      orderId,
+      purchaseId:
+        typeof purchaseId === "string" && purchaseId.trim().length > 0
+          ? purchaseId
+          : undefined,
+      whatsappChannelLink:
+        typeof whatsappChannelLink === "string" &&
+        whatsappChannelLink.trim().length > 0
+          ? whatsappChannelLink
+          : undefined,
+    };
+  };
 
   // Load Razorpay script on mount
   useEffect(() => {
@@ -75,8 +117,8 @@ export default function RazorpayPayment({
       const orderResult = await dispatch(
         createOrder({
           productId,
-          productType,
           couponCode,
+          mentorshipFormData,
         }),
       ).unwrap();
 
@@ -114,9 +156,11 @@ export default function RazorpayPayment({
             ).unwrap();
 
             toast.success("Payment successful!");
-            onSuccess(verifyResult._id);
+            onSuccess(
+              extractPaymentSuccessData(verifyResult as Record<string, any>),
+            );
           } catch (verifyError: any) {
-            toast.error("Payment verification failed");
+            toast.error(verifyError.message || "Payment verification failed");
             onFailure(verifyError.message || "Payment verification failed");
           } finally {
             setProcessing(false);

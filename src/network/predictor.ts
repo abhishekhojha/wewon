@@ -4,6 +4,33 @@ export const predict = (data: any) => {
   return apiClient.post("/api/predictor/v2", data);
 };
 
+// JoSAA Specialized Predictor API
+export const predictJosaa = (data: {
+  crlRank: number;
+  category: string;
+  gender: string;
+  homeState: string;
+  roundNumber: number;
+  categoryRank?: number;
+  instituteType?: string;
+  branchGroup?: string;
+}) => {
+  return apiClient.post("/api/predictor/josaa", data);
+};
+
+// CSAB Specialized Predictor API
+export const predictCsab = (data: {
+  crlRank: number;
+  category: string;
+  gender: string;
+  homeState: string;
+  roundNumber: number;
+  instituteType?: string;
+  branchGroup?: string;
+}) => {
+  return apiClient.post("/api/predictor/csab", data);
+};
+
 // UPTAC Predictor APIs
 export const getUPTACInstitutes = (type: string) => {
   return apiClient.get(`/api/uptac/institutes/${type}`);
@@ -51,6 +78,31 @@ export const getJACChandigarhBranches = () => {
 
 export const predictJACChandigarh = (data: any) => {
   return apiClient.post("/api/jac-chandigarh/predict", data);
+};
+
+// WBJEE Predictor APIs
+export const getWBJEEMetadata = () => {
+  return apiClient.get("/api/wbjee/metadata");
+};
+
+export const getWBJEEInstitutes = () => {
+  return apiClient.get(`/api/wbjee/institutes`);
+};
+
+export const getWBJEEBranches = () => {
+  return apiClient.get(`/api/wbjee/branches`);
+};
+
+export const predictWBJEE = (data: {
+  exam: string;
+  rank: number;
+  category?: string;
+  quota?: string;
+  round: string;
+  institutes?: string[];
+  program_groups?: string[];
+}) => {
+  return apiClient.post("/api/wbjee/predict", data);
 };
 
 // JEE Main Percentile to Rank Converter API
@@ -130,95 +182,4 @@ export const fetchPredictorBySlug = async (
 ): Promise<PredictorListItem> => {
   const response = await apiClient.get(`/api/predictor/${slug}`);
   return response.data.data;
-};
-
-// ========== Choice Filling APIs ==========
-
-export interface ChoiceFillingMetadata {
-  categories: string[];
-  homeStates: string[];
-  instituteTypes: string[];
-  branchGroups: string[];
-}
-
-export interface ChoiceFillingRequest {
-  name: string;
-  crlRank: number;
-  categoryRank?: number;
-  gender: string;
-  category: string;
-  homeState: string;
-  instituteType?: string | string[];
-  branchGroup?: string | string[];
-}
-
-export interface ChoiceRow {
-  choiceNo: number;
-  institute: string;
-  program: string;
-  quota: string;
-  seatType: string;
-  gender: string;
-  openingRank: number;
-  closingRank: number;
-  origin: string;
-  isHomeState: boolean;
-}
-
-export interface ChoiceFillingResponse {
-  user: {
-    name: string;
-    crlRank: number;
-    categoryRank?: number;
-    gender: string;
-    category: string;
-    homeState: string;
-  };
-  searchRank: number;
-  minRange: number;
-  maxRange: number;
-  totalChoices: number;
-  top100Choices: ChoiceRow[];
-  choices: ChoiceRow[];
-  disclaimer: string;
-}
-
-export const fetchChoiceFillingMetadata =
-  async (): Promise<ChoiceFillingMetadata> => {
-    const response = await apiClient.get(
-      "/api/choice-filling/jee-main/metadata",
-    );
-    return response.data;
-  };
-
-export const generateChoiceList = async (
-  data: ChoiceFillingRequest,
-): Promise<ChoiceFillingResponse> => {
-  const response = await apiClient.post(
-    "/api/choice-filling/jee-main/generate",
-    data,
-  );
-  return response.data;
-};
-
-export const exportChoiceListExcel = async (
-  data: ChoiceFillingRequest,
-): Promise<Blob> => {
-  const response = await apiClient.post(
-    "/api/choice-filling/jee-main/export/excel",
-    data,
-    { responseType: "blob" },
-  );
-  return response.data;
-};
-
-export const exportChoiceListPDF = async (
-  data: ChoiceFillingRequest,
-): Promise<Blob> => {
-  const response = await apiClient.post(
-    "/api/choice-filling/jee-main/export/pdf",
-    data,
-    { responseType: "blob" },
-  );
-  return response.data;
 };

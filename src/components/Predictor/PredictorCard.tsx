@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check,Sparkles } from "lucide-react";
 import { PredictorProduct } from "@/data/counsellingProducts";
 
 interface PredictorCardProps {
@@ -14,9 +14,17 @@ interface PredictorCardProps {
 const PredictorCard: React.FC<PredictorCardProps> = ({ predictor }) => {
   const router = useRouter();
 
+  const isCombo =
+    predictor.features?.collegePredictor.isEnabled &&
+    !predictor.features?.choiceFilling.isEnabled &&
+    !predictor.features?.hasMentorship &&
+    !predictor.features?.hasCourseContent &&
+    (predictor.features?.collegePredictor.allowedPredictors?.length ?? 0) > 1;
+
   const handleClick = () => {
     // Always navigate to the predictor page
-    // Payment will be handled inside the predictor form after submission
+    // If it's a combo, it goes to the combo selector page
+    // If it's a single tool, it goes to the tool page
     router.push(`/${predictor.slug}`);
   };
 
@@ -44,6 +52,14 @@ const PredictorCard: React.FC<PredictorCardProps> = ({ predictor }) => {
         )}
         {/* Overlay with icon and title */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+        
+        {/* Combo Badge */}
+        {isCombo && (
+          <div className="absolute top-3 left-3 bg-[#0f3a67] text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg border border-white/20 backdrop-blur-sm">
+            <Sparkles size={10} className="text-yellow-400 fill-yellow-400" />
+            Combo Pack
+          </div>
+        )}
       </div>
 
       {/* Card Body */}
@@ -54,9 +70,10 @@ const PredictorCard: React.FC<PredictorCardProps> = ({ predictor }) => {
             {predictor.title}
           </h3>
         </div>
-        <p className="text-sm text-gray-600 line-clamp-2 mb-4">
-          {predictor.description}
-        </p>
+        <div
+          className="line-clamp-3 overflow-hidden text-ellipsis prose max-w-none text-gray-700 leading-relaxed whitespace-pre-line"
+          dangerouslySetInnerHTML={{ __html: predictor.description }}
+        />
 
         {/* Features */}
         <div className="mb-4 flex-1">
@@ -105,7 +122,7 @@ const PredictorCard: React.FC<PredictorCardProps> = ({ predictor }) => {
           {/* Action Button */}
           <button
             onClick={handleClick}
-            className="py-2.5 px-5 rounded-xl font-semibold text-white transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer bg-[#0f3a67] hover:bg-[#0a2847]"
+            className={`py-2.5 px-5 rounded-xl font-semibold text-white transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer bg-[#0f3a67] hover:bg-[#0a2847]`}
           >
             Use
             <ArrowRight size={16} />

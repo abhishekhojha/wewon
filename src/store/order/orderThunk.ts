@@ -1,6 +1,32 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "@/hooks/Axios";
-import { Order, PaymentVerification } from "../types";
+import { Order, PaymentVerification, WhatsappClickResponseData } from "../types";
+import { getInvoiceFilename, downloadBlobAsFile, resolveApiErrorMessage } from "@/utils/apiHelpers";
+import type { RootState } from "../store";
+
+const USER_ORDER_CACHE_TTL_MS = 5 * 60 * 1000;
+
+const resolveCurrentUserId = (state: RootState): string | null => {
+  const fromUserId = state.auth.user?.userId?._id;
+  if (fromUserId && fromUserId.trim().length > 0) {
+    return fromUserId;
+  }
+  const fromRootUser = state.auth.user?._id;
+  if (fromRootUser && fromRootUser.trim().length > 0) {
+    return fromRootUser;
+  }
+  return null;
+};
+
+interface FetchUserOrdersArgs {
+  force?: boolean;
+}
+
+interface FetchUserOrdersResponse {
+  orders: Order[];
+  fetchedForUserId: string | null;
+  fetchedAt: number;
+}
 
 // Response type from create-order API
 export interface CreateOrderResponse {
@@ -17,15 +43,24 @@ export const createOrder = createAsyncThunk(
   async (
     orderData: {
       productId: string;
-      productType: "counseling" | "mentorship";
       couponCode?: string;
+      mentorshipFormData?: Record<string, string | number>;
     },
     { rejectWithValue },
   ) => {
     try {
+      const payload = {
+        productId: orderData.productId,
+        ...(orderData.couponCode ? { couponCode: orderData.couponCode } : {}),
+        ...(orderData.mentorshipFormData &&
+        Object.keys(orderData.mentorshipFormData).length > 0
+          ? { mentorshipFormData: orderData.mentorshipFormData }
+          : {}),
+      };
+
       const response = await apiClient.post(
         "/api/payment/create-order",
-        orderData,
+        payload,
       );
 
       if (!response.data.success) {
@@ -74,9 +109,13 @@ export const verifyPayment = createAsyncThunk(
 );
 
 // Fetch user orders
-export const fetchUserOrders = createAsyncThunk(
+export const fetchUserOrders = createAsyncThunk<
+  FetchUserOrdersResponse,
+  FetchUserOrdersArgs | undefined,
+  { state: RootState; rejectValue: string }
+>(
   "order/fetchUserOrders",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
       const response = await apiClient.get("/api/student/orders");
 
@@ -86,12 +125,52 @@ export const fetchUserOrders = createAsyncThunk(
         );
       }
 
-      return response.data.data as Order[];
+      const state = getState();
+      return {
+        orders: response.data.data as Order[],
+        fetchedForUserId: resolveCurrentUserId(state),
+        fetchedAt: Date.now(),
+      };
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch user orders",
       );
     }
+  },
+  {
+    condition: (args, { getState }) => {
+      const state = getState();
+      const forceRefresh = Boolean(args?.force);
+
+      if (!state.auth.isAuthenticated) {
+        return false;
+      }
+
+      if (forceRefresh) {
+        return true;
+      }
+
+      if (state.order.loading) {
+        return false;
+      }
+
+      const currentUserId = resolveCurrentUserId(state);
+      if (!currentUserId) {
+        return false;
+      }
+
+      const isSameUser = state.order.userOrdersForUserId === currentUserId;
+      if (!state.order.userOrdersLoaded || !isSameUser) {
+        return true;
+      }
+
+      if (!state.order.userOrdersLastFetchedAt) {
+        return true;
+      }
+
+      const age = Date.now() - state.order.userOrdersLastFetchedAt;
+      return age > USER_ORDER_CACHE_TTL_MS;
+    },
   },
 );
 
@@ -101,27 +180,55 @@ export const downloadInvoice = createAsyncThunk(
   async (orderId: string, { rejectWithValue }) => {
     try {
       const response = await apiClient.get(
-        `/api/student/orders/${orderId}/invoice`,
+        `/api/student/orders/${orderId}/receipt`,
         {
           responseType: "blob",
         },
       );
 
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `invoice-${orderId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      return { success: true };
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to download invoice",
+      const contentDisposition = response.headers[
+        "content-disposition"
+      ] as string | undefined;
+      const filename = getInvoiceFilename(
+        contentDisposition,
+        `Invoice_${orderId}.pdf`,
       );
+
+      downloadBlobAsFile(response.data as Blob, filename);
+
+      return { success: true, filename };
+    } catch (error: any) {
+      const errorMessage = await resolveApiErrorMessage(
+        error,
+        "Failed to download invoice",
+      );
+      return rejectWithValue(errorMessage);
+    }
+  },
+);
+
+// Record WhatsApp channel click for an active service
+export const markWhatsappChannelClick = createAsyncThunk(
+  "order/markWhatsappChannelClick",
+  async (purchaseId: string, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.patch(
+        `/api/student/active-services/${purchaseId}/whatsapp-click`,
+      );
+
+      if (!response.data?.success) {
+        return rejectWithValue(
+          response.data?.message || "Failed to record WhatsApp channel click",
+        );
+      }
+
+      return response.data.data as WhatsappClickResponseData;
+    } catch (error: any) {
+      const errorMessage = await resolveApiErrorMessage(
+        error,
+        "Failed to record WhatsApp channel click",
+      );
+      return rejectWithValue(errorMessage);
     }
   },
 );

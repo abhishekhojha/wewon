@@ -11,6 +11,10 @@ import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import PredictorPaymentModal from "./PredictorPaymentModal";
+import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
+import { limitLeft } from "@/utils/helpers";
+import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
+
 
 const PRODUCT_SLUG = "jee-early-predictor";
 
@@ -19,6 +23,7 @@ export default function JEEEarlyPredictor() {
   const user = useAppSelector(selectIsAuthenticated);
   const userData = useAppSelector(selectUser);
   const userOrders = useAppSelector(selectUserOrders);
+  const { prefill } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
 
   const isCounsellor = userData?.userId?.role === "counsellor";
 
@@ -41,6 +46,28 @@ export default function JEEEarlyPredictor() {
   const [productLoading, setProductLoading] = useState(true);
   const resultsRef = useRef(null);
 
+  const usageStatus = (user && hasPurchased && !isCounsellor && userOrders?.length > 0)
+    ? (() => {
+        try {
+          return limitLeft(userOrders, PRODUCT_SLUG, "predictor");
+        } catch (e) {
+          return null;
+        }
+      })()
+    : null;
+
+
+  useEffect(() => {
+    if (!prefill) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      category: prefill.category || prev.category,
+      gender: prefill.gender || prev.gender,
+      homeState: prefill.homeState || prev.homeState,
+    }));
+  }, [prefill]);
+
   // Fetch product data dynamically
   useEffect(() => {
     const fetchProduct = async () => {
@@ -50,7 +77,7 @@ export default function JEEEarlyPredictor() {
         setProduct(productData);
       } catch (error) {
         console.error("Error fetching product:", error);
-        toast.error("Failed to load predictor data");
+        if(error.status !== 404) toast.error(error.message || "Failed to load predictor data");
       } finally {
         setProductLoading(false);
       }
@@ -84,13 +111,17 @@ export default function JEEEarlyPredictor() {
       }
 
       // Only fetch orders when user is logged in
-      try {
-        await dispatch(fetchUserOrders()).unwrap();
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      } finally {
-        setCheckingPurchase(false);
+      const ordersAction = await dispatch(fetchUserOrders());
+      if (
+        fetchUserOrders.rejected.match(ordersAction) &&
+        !ordersAction.meta.condition
+      ) {
+        console.error(
+          "Error fetching orders:",
+          ordersAction.payload || ordersAction.error,
+        );
       }
+      setCheckingPurchase(false);
     };
 
     checkPurchaseStatus();
@@ -99,11 +130,8 @@ export default function JEEEarlyPredictor() {
   // Update hasPurchased when userOrders change
   useEffect(() => {
     if (userOrders.length > 0) {
-      const isPurchased = userOrders.some(
-        (order) =>
-          order.product?.slug === PRODUCT_SLUG && order.status === "completed",
-      );
-      setHasPurchased(isPurchased);
+      const { hasPurchased } = getPredictorPurchaseDetails(userOrders, PRODUCT_SLUG);
+      setHasPurchased(hasPurchased);
     }
   }, [userOrders]);
 
@@ -214,7 +242,11 @@ export default function JEEEarlyPredictor() {
       setResults(response.data);
     } catch (error) {
       console.error("Prediction error:", error);
-      toast.error("Failed to get prediction. Please try again.");
+      if (error.response?.data?.code === "LIMIT_EXCEEDED") {
+        toast.error("Your limit has been exceeded! Please contact to your alloted mentor");
+      } else {
+        toast.error(error.message || "Failed to get prediction. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -259,7 +291,7 @@ export default function JEEEarlyPredictor() {
     <div className="container mx-auto px-2 sm:px-4 my-6 sm:my-10">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
         {/* Left Column: Steps */}
-        <div className="flex flex-col justify-center space-y-3 sm:space-y-6">
+        <div className="flex flex-col space-y-3 sm:space-y-6">
           {/* Thumbnail Image - 16:9 ratio */}
           {product?.thumbnail && (
             <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg">
@@ -315,13 +347,21 @@ export default function JEEEarlyPredictor() {
         <div className="bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-6 md:p-8">
           {/* Header */}
           <div className="flex flex-col justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--primary)]">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--primary)] uppercase">
               JEE EARLY PREDICTOR
             </h2>
-            <span className="bg-[var(--light-blue)] text-[var(--primary)] text-[10px] sm:text-xs font-semibold px-2 sm:px-4 py-1 sm:py-2 rounded-full whitespace-nowrap w-fit">
-              Predict before official ranks!
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-[var(--light-blue)] text-[var(--primary)] text-[10px] sm:text-xs font-semibold px-2 sm:px-4 py-1 sm:py-2 rounded-full whitespace-nowrap w-fit">
+                Predict before official ranks!
+              </span>
+              {usageStatus && (
+                <span className="bg-orange-50 text-orange-700 text-[10px] sm:text-xs font-bold px-2 sm:px-4 py-1 sm:py-2 rounded-full border border-orange-200 shadow-sm">
+                  {usageStatus.limitLeft === -1 ? "Unlimited" : `${usageStatus.limitLeft} Predictions Left`}
+                </span>
+              )}
+            </div>
           </div>
+
 
           {/* Form */}
           <form className="space-y-3 sm:space-y-5" onSubmit={handleSubmit}>

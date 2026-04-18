@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -7,18 +7,28 @@ import {
   selectSelectedProductLoading,
   selectSelectedProductError,
 } from "@/store/counseling/counselingSlice";
+import { fetchCounselingProductBySlug } from "@/store/counseling/counselingThunk";
+import { selectIsAuthenticated } from "@/store/auth/authSlice";
+import { selectUserOrders } from "@/store/order/orderSlice";
 import {
-  fetchCounselingProductBySlug,
-  toggleLikeProduct,
-} from "@/store/counseling/counselingThunk";
-import { selectUser, selectIsAuthenticated } from "@/store/auth/authSlice";
+  fetchUserOrders,
+  downloadInvoice,
+  markWhatsappChannelClick,
+} from "@/store/order/orderThunk";
+import { toast } from "sonner";
+import { PaymentSuccessData } from "@/components/program/RazorpayPayment";
+import PaymentSuccessModal from "@/components/program/PaymentSuccessModal";
 import {
-  ArrowLeft,
   CheckCircle,
   PlayCircle,
-  Video,
   FileText,
   ExternalLink,
+  ListChecks,
+  ArrowRight,
+  BookOpen,
+  ToolCase,
+  Bell,
+  Lock,
 } from "lucide-react";
 import ShareButton from "@/components/program/ShareButton";
 import TabNavigation from "@/components/program/TabNavigation";
@@ -26,6 +36,7 @@ import ValidityBadge from "@/components/program/ValidityBadge";
 import LearningMaterialsSection from "@/components/program/LearningMaterialsSection";
 import LockedContentModal from "@/components/program/LockedContentModal";
 import CheckoutPage from "@/components/program/CheckoutPage";
+import Link from "next/link";
 
 export default function CounselingClient() {
   const params = useParams();
@@ -36,13 +47,54 @@ export default function CounselingClient() {
   const product = useAppSelector(selectSelectedProduct);
   const loading = useAppSelector(selectSelectedProductLoading);
   const error = useAppSelector(selectSelectedProductError);
-  const user = useAppSelector(selectUser);
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const userOrders = useAppSelector(selectUserOrders);
 
   const [activeTab, setActiveTab] = useState<string>("Overview");
   const [showLockedModal, setShowLockedModal] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [isPurchased, setIsPurchased] = useState(false); // TODO: Check from backend
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [completedOrderId, setCompletedOrderId] = useState<string>("");
+  const [completedPurchaseId, setCompletedPurchaseId] = useState<string>("");
+
+  const handlePaymentSuccess = async (paymentData: PaymentSuccessData) => {
+    setCompletedOrderId(paymentData.orderId);
+    if (paymentData.purchaseId) {
+      setCompletedPurchaseId(paymentData.purchaseId);
+    }
+    setShowCheckout(false);
+    setShowSuccessModal(true);
+    dispatch(fetchUserOrders());
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!completedOrderId) {
+      toast.error("Failed to download Invoice.");
+      return;
+    }
+    try {
+      await dispatch(downloadInvoice(completedOrderId)).unwrap();
+      toast.success("Invoice downloaded successfully.");
+    } catch (error) {
+      toast.error(
+        typeof error === "string" ? error : "Failed to download Invoice.",
+      );
+    }
+  };
+
+  const handleWhatsappClick = async () => {
+    if (completedPurchaseId) {
+      try {
+        await dispatch(markWhatsappChannelClick(completedPurchaseId)).unwrap();
+      } catch (error) {
+        console.error("Failed to mark WhatsApp click", error);
+      }
+    }
+  };
+
+  const handleViewProgram = () => {
+    setShowSuccessModal(false);
+  };
 
   useEffect(() => {
     if (slug) {
@@ -50,15 +102,92 @@ export default function CounselingClient() {
     }
   }, [slug, dispatch]);
 
-  const handleLike = async () => {
-    if (product) {
-      await dispatch(toggleLikeProduct(product._id));
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    dispatch(fetchUserOrders());
+  }, [dispatch, isAuthenticated]);
+
+  const isPurchased = useMemo(() => {
+    if (!product) return false;
+
+    const productWithPurchaseFlag = product as typeof product & {
+      isPurchased?: boolean;
+      purchased?: boolean;
+      hasPurchased?: boolean;
+    };
+
+    if (
+      productWithPurchaseFlag.isPurchased ||
+      productWithPurchaseFlag.purchased ||
+      productWithPurchaseFlag.hasPurchased
+    ) {
+      return true;
     }
-  };
+
+    if (!isAuthenticated) {
+      return false;
+    }
+
+    return userOrders.some((order) => {
+      const isCompleted =
+        order.status === "completed" || order.paymentStatus === "completed";
+      if (!isCompleted) return false;
+
+      const matchesProductById =
+        order.productId === product._id || order.product?._id === product._id;
+      const matchesProductBySlug = order.product?.slug === product.slug;
+
+      return matchesProductById || matchesProductBySlug;
+    });
+  }, [isAuthenticated, product, userOrders]);
+
+  const landingPageMaterials = useMemo(() => {
+    if (!product) return [];
+
+    const highlights = product.content.landingPageHighlights;
+    const materials: Array<{
+      id: string;
+      title: string;
+      type: "video" | "pdf" | "link";
+      url?: string;
+    }> = [];
+
+    if (highlights.introVideo?.url) {
+      materials.push({
+        id: "intro-video",
+        title: highlights.introVideo.title || "How We Work",
+        type: "video",
+        url: highlights.introVideo.url,
+      });
+    }
+
+    if (highlights.coursePdf?.url) {
+      materials.push({
+        id: "course-pdf",
+        title: highlights.coursePdf.title || "Program Structure.pdf",
+        type: "pdf",
+        url: highlights.coursePdf.url,
+      });
+    }
+
+    if (highlights.fullDescriptionVideo?.url) {
+      materials.push({
+        id: "full-description-video",
+        title:
+          highlights.fullDescriptionVideo.title || "Complete Program Overview",
+        type: "video",
+        url: highlights.fullDescriptionVideo.url,
+      });
+    }
+
+    return materials;
+  }, [product]);
 
   const handleBuyNow = () => {
     if (!isAuthenticated) {
-      router.push("/auth");
+      router.push(
+        `/auth?returnUrl=${encodeURIComponent(`/counseling/${slug}`)}`,
+      );
       return;
     }
     setShowCheckout(true);
@@ -71,6 +200,17 @@ export default function CounselingClient() {
   const handleLockedModalBuyNow = () => {
     setShowLockedModal(false);
     handleBuyNow();
+  };
+
+  const handleContentResourceClick = (resourceUrl?: string) => {
+    if (!isPurchased) {
+      handleLockedContentClick();
+      return;
+    }
+
+    if (resourceUrl) {
+      window.open(resourceUrl, "_blank", "noopener,noreferrer");
+    }
   };
 
   // Loading state
@@ -116,8 +256,13 @@ export default function CounselingClient() {
         productName={product.title}
         productType="counseling"
         productPrice={product.discountPrice || product.price}
+        originalPrice={product.price}
         productSlug={product.slug}
+        hasMentorship={product.features.hasMentorship}
+        mentorshipForm={product.mentorshipForm}
+        whatsappLink={product.whatsappChannelLink}
         onBack={() => setShowCheckout(false)}
+        onPaymentSuccess={handlePaymentSuccess}
       />
     );
   }
@@ -169,9 +314,10 @@ export default function CounselingClient() {
               <h1 className="text-3xl md:text-4xl font-bold text-[var(--primary)] mb-4">
                 {product.title}
               </h1>
-              <p className="text-gray-600 text-lg mb-6">
-                {product.description}
-              </p>
+              <div
+                className="line-clamp-3 overflow-hidden text-ellipsis prose max-w-none text-gray-700 leading-relaxed whitespace-pre-line"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
 
               {/* Price and Validity */}
               <div className="flex flex-wrap items-center gap-4 mb-6">
@@ -189,12 +335,12 @@ export default function CounselingClient() {
               </div>
 
               {/* Material Count */}
-              <div className="flex items-center gap-2 text-gray-600 mb-6">
+              {/* <div className="flex items-center gap-2 text-gray-600 mb-6">
                 <FileText size={20} />
                 <span>
                   {product.totalMaterialCount} learning materials included
                 </span>
-              </div>
+              </div> */}
 
               {/* Buy Button */}
               {!isPurchased && (
@@ -208,9 +354,7 @@ export default function CounselingClient() {
 
               {isPurchased && (
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-green-700 font-semibold">
-                    ✓ You have access to this program
-                  </p>
+                  <p className="text-green-700 font-semibold">Purchased</p>
                 </div>
               )}
             </div>
@@ -221,9 +365,10 @@ export default function CounselingClient() {
             <h2 className="text-2xl font-bold text-[var(--primary)] mb-4">
               About This Course
             </h2>
-            <p className="text-gray-700 leading-relaxed">
-              {product.description}
-            </p>
+            <div
+              className="prose max-w-none text-gray-700 leading-relaxed whitespace-pre-line"
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
           </div>
 
           {/* Features Section */}
@@ -231,37 +376,35 @@ export default function CounselingClient() {
             <h2 className="text-2xl font-bold text-[var(--primary)] mb-6">
               What You'll Get
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex w-full flex-row items-start flex-wrap md:flex-nowrap justify-between gap-4 md:gap-2">
               {product.features.choiceFilling.isEnabled && (
-                <div className="flex items-start gap-3">
+                <div className="flex w-full md:flex-1 items-start gap-2">
                   <CheckCircle
                     className="text-green-500 flex-shrink-0 mt-1"
                     size={24}
                   />
                   <div>
-                    <h3 className="font-semibold text-lg">
+                    <h3 className="font-semibold text-lg md:text-base">
                       Choice Filling Tool
                     </h3>
-                    <p className="text-gray-600">
-                      {product.features.choiceFilling.usageLimit === -1
-                        ? "Unlimited usage"
-                        : `${product.features.choiceFilling.usageLimit} uses available`}
+                    <p className="text-gray-600 md:text-sm">
+                      Personlised Choice Filling at your rank 
                     </p>
                   </div>
                 </div>
               )}
 
               {product.features.collegePredictor.isEnabled && (
-                <div className="flex items-start gap-3">
+                <div className="flex w-full md:flex-1 items-start gap-2">
                   <CheckCircle
                     className="text-green-500 flex-shrink-0 mt-1"
                     size={24}
                   />
                   <div>
-                    <h3 className="font-semibold text-lg">College Predictor</h3>
-                    <p className="text-gray-600">
+                    <h3 className="font-semibold text-lg md:text-base">College Predictor</h3>
+                    <p className="text-gray-600 md:text-sm">
                       {product.features.collegePredictor.usageLimit === -1
-                        ? "Unlimited usage"
+                        ? "Unilimited Usage"
                         : `${product.features.collegePredictor.usageLimit} uses available`}
                     </p>
                   </div>
@@ -269,34 +412,177 @@ export default function CounselingClient() {
               )}
 
               {product.features.hasMentorship && (
-                <div className="flex items-start gap-3">
+                <div className="flex w-full md:flex-1 items-start gap-2">
                   <CheckCircle
                     className="text-green-500 flex-shrink-0 mt-1"
                     size={24}
                   />
                   <div>
-                    <h3 className="font-semibold text-lg">Mentorship</h3>
-                    <p className="text-gray-600">
+                    <h3 className="font-semibold text-lg md:text-base">Mentorship</h3>
+                    <p className="text-gray-600 md:text-sm">
                       One-on-one guidance from experts
                     </p>
                   </div>
                 </div>
               )}
-
-              {product.features.hasCourseContent && (
-                <div className="flex items-start gap-3">
+                 
+                <div className="flex w-full md:flex-1 items-start gap-2">
                   <CheckCircle
                     className="text-green-500 flex-shrink-0 mt-1"
                     size={24}
                   />
                   <div>
-                    <h3 className="font-semibold text-lg">Course Content</h3>
-                    <p className="text-gray-600">
+                    <h3 className="font-semibold text-lg md:text-base">Call & Chat Support</h3>
+                    <p className="text-gray-600 md:text-sm">
+                      Unlimited Call & Chat Support
+                    </p>
+                  </div>
+                </div>
+
+                 
+                <div className="flex w-full md:flex-1 items-start gap-2">
+                  <CheckCircle
+                    className="text-green-500 flex-shrink-0 mt-1"
+                    size={24}
+                  />
+                  <div>
+                    <h3 className="font-semibold text-lg md:text-base">Support</h3>
+                    <p className="text-gray-600 md:text-sm">
+                      Support till end of  Counselling
+                    </p>
+                  </div>
+                </div>
+
+              {product.features.hasCourseContent && (
+                <div className="flex w-full md:flex-1 items-start gap-2">
+                  <CheckCircle
+                    className="text-green-500 flex-shrink-0 mt-1"
+                    size={24}
+                  />
+                  <div>
+                    <h3 className="font-semibold text-lg md:text-base">Course Content</h3>
+                    <p className="text-gray-600 md:text-sm">
                       Comprehensive study materials
                     </p>
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+          {/* Tools */}
+          <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-12">
+            <h2 className="text-2xl font-bold text-[var(--primary)] mb-6 flex items-center gap-2">
+              <ToolCase className="w-7 h-7" />
+              Tools
+            </h2>
+            <div className="grid gap-6 sm:grid-cols-3 lg:grid-cols-3">
+              {/* College Predictor */}
+              <div
+                onClick={() =>
+                  !isPurchased
+                    ? handleLockedContentClick()
+                    : router.push("/s/predictor")
+                }
+                className="group relative h-full cursor-pointer overflow-hidden rounded-2xl shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <div className="bg-[#073d68] p-6 h-full flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <BookOpen className="w-8 h-8 text-white" />
+                    </div>
+                    {isPurchased ? (
+                      <ArrowRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
+                    ) : (
+                      <Lock className="w-6 h-6 text-white/70" />
+                    )}
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    College Predictor
+                  </h3>
+                  <p className="text-blue-100 text-sm">
+                    Find colleges based on your rank and preferences
+                  </p>
+                </div>
+                {!isPurchased && (
+                  <div className="absolute inset-0 bg-black/90 backdrop-blur-[1px] flex items-center justify-center">
+                    <div className="bg-white/90 p-2 rounded-full shadow-lg group-hover:translate-y-0 transition-transform">
+                      <Lock className="w-5 h-5 text-[var(--primary)]" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Choice Filling */}
+              <div
+                onClick={() =>
+                  !isPurchased
+                    ? handleLockedContentClick()
+                    : router.push("/s/choice-filling")
+                }
+                className="group relative h-full cursor-pointer overflow-hidden rounded-2xl shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <div className="bg-orange-500 p-6 h-full flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <ListChecks className="w-8 h-8 text-white" />
+                    </div>
+                    {isPurchased ? (
+                      <ArrowRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
+                    ) : (
+                      <Lock className="w-6 h-6 text-white/70" />
+                    )}
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2"> 
+                    Choice Filling
+                  </h3>
+                  <p className="text-orange-100 text-sm">
+                    Browse products and generate your personalized choice list
+                  </p>
+                </div>
+                {!isPurchased && (
+                  <div className="absolute inset-0 bg-black/90 backdrop-blur-[1px] flex items-center justify-center">
+                    <div className="bg-white/90 p-2 rounded-full shadow-lg group-hover:translate-y-0 transition-transform">
+                      <Lock className="w-5 h-5 text-[var(--primary)]" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Notification */}
+              <div
+                onClick={() =>
+                  !isPurchased
+                    ? handleLockedContentClick()
+                    : router.push("/s/notifications")
+                }
+                className="group relative h-full cursor-pointer overflow-hidden rounded-2xl shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <div className="bg-blue-500 p-6 h-full flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <Bell className="w-8 h-8 text-white" />
+                    </div>
+                    {isPurchased ? (
+                      <ArrowRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
+                    ) : (
+                      <Lock className="w-6 h-6 text-white/70" />
+                    )}
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    Notification
+                  </h3>
+                  <p className="text-blue-100 text-sm">
+                    Get latest updates and notifications
+                  </p>
+                </div>
+                {!isPurchased && (
+                  <div className="absolute inset-0 bg-black/90 backdrop-blur-[1px] flex items-center justify-center">
+                    <div className="bg-white/90 p-2 rounded-full shadow-lg group-hover:translate-y-0 transition-transform">
+                      <Lock className="w-5 h-5 text-[var(--primary)]" />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -366,7 +652,6 @@ export default function CounselingClient() {
                         />
                       );
                     }
-
                     // For direct video files (mp4, webm, etc.)
                     return (
                       <video
@@ -388,6 +673,10 @@ export default function CounselingClient() {
             totalMaterialCount={product.totalMaterialCount}
             isPurchased={isPurchased}
             onLockedClick={handleLockedContentClick}
+            materials={landingPageMaterials}
+            onMaterialClick={(material) =>
+              handleContentResourceClick(material.url)
+            }
           />
         </>
       )}
@@ -415,9 +704,8 @@ export default function CounselingClient() {
                           <button
                             key={resource._id}
                             onClick={() =>
-                              !isPurchased && handleLockedContentClick()
+                              handleContentResourceClick(resource.url)
                             }
-                            disabled={isPurchased}
                             className="w-full flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-left"
                           >
                             {resource.type === "video" && (
@@ -469,6 +757,16 @@ export default function CounselingClient() {
         onClose={() => setShowLockedModal(false)}
         onBuyNow={handleLockedModalBuyNow}
         productTitle={product.title}
+      />
+
+      <PaymentSuccessModal
+        isOpen={showSuccessModal}
+        whatsappLink={product.whatsappChannelLink || ""}
+        orderId={completedOrderId}
+        onClose={() => setShowSuccessModal(false)}
+        onDownloadInvoice={handleDownloadInvoice}
+        onViewProgram={handleViewProgram}
+        onWhatsappClick={handleWhatsappClick}
       />
     </div>
   );

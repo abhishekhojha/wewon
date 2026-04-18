@@ -1,0 +1,376 @@
+{
+  "exams": [
+    { "label": "WBJEE", "value": "WBJEE" },
+    { "label": "JEE", "value": "JEE" }
+  ],
+  "categories": [
+      { "label": "Open", "value": "Open" },
+      { "label": "OBC - A", "value": "OBC - A" },
+      { "label": "OBC - B", "value": "OBC - B" },
+      { "label": "SC", "value": "SC" },
+      { "label": "ST", "value": "ST" },
+      { "label": "EWS", "value": "EWS" },
+      { "label": "Tuition Fee Waiver", "value": "Tuition Fee Waiver" },
+      { "label": "Open (PwD)", "value": "Open (PwD)" },
+      { "label": "OBC - A (PwD)", "value": "OBC - A (PwD)" },
+      { "label": "OBC - B (PwD)", "value": "OBC - B (PwD)" },
+      { "label": "SC (PwD)", "value": "SC (PwD)" },
+      { "label": "ST (PwD)", "value": "ST (PwD)" },
+      { "label": "EWS (PwD)", "value": "EWS (PwD)" }
+    ]
+  ,
+  "quotas": [
+    { "label": "All India", "value": "All India" },
+    { "label": "Home State", "value": "Home State" }
+  ],
+  "rounds": [
+    { "label": "Round 1", "value": "Round 1" },
+    { "label": "Round 2", "value": "Round 2" }
+  ],
+  "instituteTypes": {
+    "WBJEE": [
+      { "label": "All", "value": "ALL" },
+      { "label": "Government Colleges", "value": "Government Colleges" },
+      {
+        "label": "Private Engineering Colleges",
+        "value": "Private Engineering Colleges"
+      },
+      { "label": "Private Universities", "value": "Private Universities" }
+    ],
+    "JEE": [
+      { "label": "All", "value": "ALL" },
+      { "label": "Government Colleges", "value": "Government Colleges" },
+      {
+        "label": "Private Engineering Colleges",
+        "value": "Private Engineering Colleges"
+      },
+      { "label": "Private Universities", "value": "Private Universities" }
+    ]
+  },
+  "programGroups": {
+    "WBJEE": [
+      "Computer Science & IT with Specilization Group",
+      "AI / Data / Emerging Technology Group",
+      "Electrical Engineering Group",
+      "Electronics Engineering Group",
+      "Mechanical / Production Engineering Group",
+      "Civil / Infrastructure Engineering Group",
+      "Chemical Engineering Group",
+      "Materials Engineering Group",
+      "Textile / Industrial Engineering Group",
+      "Agriculture / Food / Bio Engineering Group"
+    ],
+    "JEE": [
+      "Computer Science & IT with Specilization Group",
+      "AI / Data Engineering Group",
+      "Electrical Engineering Group",
+      "Electronics Engineering Group",
+      "Mechanical Engineering Group",
+      "Civil Engineering Group",
+      "Chemical Engineering Group",
+      "Materials / Semiconductor Engineering Group",
+      "Bio / Agriculture / Food Engineering Group",
+      "Advanced Tech Engineering Group"
+    ]
+  },
+  "institutes": {
+    "WBJEE": {
+      "Government Colleges": [
+        "Jadavpur University",
+        "University Of Calcutta",
+        "University Of Kalyani",
+        "Maulana Abul Kalam Azad University of Technology, West Bengal",
+        "Aliah University",
+        "Kazi Nazrul University, Asansol",
+        "West Bengal University of Animal & Fishery Sciences",
+        "Kalyani Government Engineering College, Kalyani, Nadia",
+        "Jalpaiguri Government Engineering College, Jalpaiguri",
+        "Government College of Engineering and Leather Technology, Kolkata",
+        "Govt. College of Engineering & Ceramic Technology, Kolkata",
+        "Govt. College of Engineering & Textile Technology, Serampore",
+        "Govt. College of Engg. & Textile Technology, Berhampore",
+        "Cooch Behar Government Engineering College, Cooch Behar",
+        "Alipurduar Government Engineering and Management College",
+        "Ramkrishna Mahato Government Engineering College, Purulia",
+        "Ghani Khan Choudhury Institute of Engineering & Technology, Malda",
+        "University Institute of Technology, Burdwan University",
+        "Faculty of Technology, Uttar Banga Krishi Viswavidyalaya"
+      ],
+      "Private Engineering Colleges": [
+        "Heritage Institute of Technology, Kolkata",
+        "Haldia Institute of Technology, Haldia",
+        "Netaji Subhas Engineering College, Kolkata",
+        "Narula Institute of Technology, Kolkata",
+        "Academy of Technology, Hooghly",
+        "Global Institute of Management and Technology, Nadia",
+        "RCC Institute of Information Technology, Kolkata",
+        "Bankura Unnayani Institute of Engineering, Bankura",
+        "B.P. Poddar Institute of Management & Technology, Kolkata",
+        "St. Thomas College of Engineering & Technology, Kolkata",
+        "Meghnad Saha Institute of Technology, Kolkata",
+        "MCKV Institute of Engineering, Howrah",
+        "Guru Nanak Institute of Technology, Kolkata",
+        "Calcutta Institute of Technology, Howrah",
+        "Techno Main Salt Lake",
+        "Techno International New Town",
+        "Dr. B. C. Roy Engineering College, Durgapur",
+        "Hooghly Engineering & Technology College",
+        "JIS College of Engineering, Kalyani",
+        "Institute of Science and Technology, Paschim Medinipur",
+        "Future Institute of Engineering & Management, Kolkata",
+        "Asansol Engineering College",
+        "College of Engineering and Management, Kolaghat",
+        "Bengal College of Engineering & Technology, Durgapur",
+        "Techno Institute of Engineering and Management",
+        "IMPS College of Engineering & Technology",
+        "Dr. Sudhir Chandra Sur Institute of Technology",
+        "NSHM Knowledge Campus, Durgapur",
+        "Techno Bengal Institute of Technology",
+        "Regent Education and Research Foundation",
+        "Swami Vivekananda Institute of Science & Technology",
+        "Siliguri Institute of Technology",
+        "Ideal Institute of Engineering, Kalyani",
+        "Abacus Institute of Engineering & Management",
+        "Budge Budge Institute of Technology",
+        "Durgapur Institute of Advanced Technology & Management",
+        "Supreme Knowledge Foundation Group of Institutions",
+        "Seacom Engineering College",
+        "Dream Institute of Technology",
+        "Sanaka Education Trust Group of Institutions",
+        "Bengal Institute of Technology & Management",
+        "Mallabhum Institute of Technology",
+        "Birbhum Institute of Engineering & Technology",
+        "Camellia School of Engineering & Technology",
+        "Darjeeling Hill Institute of Technology and Management",
+        "Hemnalini Memorial College of Engineering",
+        "Elitte College of Engineering",
+        "Camellia Institute of Engineering and Technology",
+        "Camellia Institute of Technology & Management",
+        "Dumkal Institute of Engineering & Technology",
+        "JLD Engineering and Management College",
+        "Gargi Memorial Institute of Technology",
+        "Murshidabad College of Engineering & Technology",
+        "Om Dayal Group of Institutions",
+        "Camellia Institute of Technology, Madhyamgram",
+        "Greater Kolkata College of Engineering & Management",
+        "Techno International Batanagar",
+        "Future Institute of Technology",
+        "Global Institute of Management and Technology"
+      ],
+      "Private Universities": [
+        "Seacom Skills University",
+        "Brainware University",
+        "Swami Vivekananda University",
+        "Sister Nivedita University",
+        "Techno India University",
+        "Adamas University",
+        "JIS University",
+        "The Neotia University"
+      ]
+    },
+    "JEE": {
+      "Government Colleges": [
+        "Ghani Khan Choudhury Institute of Engineering & Technology, Malda",
+        "Bankura Unnayani Institute of Engineering, Bankura",
+        "Hooghly Engineering & Technology College, Hooghly",
+        "Institute of Science and Technology, Paschim Medinipur"
+      ],
+      "Private Engineering Colleges": [
+        "Techno Main Salt Lake, Sector-V, Salt Lake",
+        "Haldia Institute of Technology, Haldia",
+        "Academy of Technology, Adisaptagram",
+        "Heritage Institute of Technology, Kolkata",
+        "MCKV Institute of Engineering, Howrah",
+        "Swami Vivekananda Institute of Science & Technology, Sonarpur",
+        "Netaji Subhas Engineering College, Kolkata",
+        "Calcutta Institute of Technology, Uluberia",
+        "Murshidabad College of Engineering & Technology",
+        "Narula Institute of Technology, Kolkata",
+        "Techno International New Town",
+        "Ideal Institute of Engineering, Kalyani",
+        "St. Thomas College of Engineering & Technology",
+        "RCC Institute of Information Technology, Kolkata",
+        "Dr. Sudhir Chandra Sur Institute of Technology and Sports Complex",
+        "Bengal College of Engineering & Technology, Durgapur",
+        "B.P. Poddar Institute of Management & Technology",
+        "Birbhum Institute of Engineering & Technology",
+        "Future Institute of Technology",
+        "Dr. B. C. Roy Engineering College, Durgapur",
+        "Meghnad Saha Institute of Technology",
+        "Asansol Engineering College",
+        "Budge Budge Institute of Technology",
+        "Future Institute of Engineering & Management",
+        "Guru Nanak Institute of Technology",
+        "Bengal Institute of Technology & Management",
+        "JIS College of Engineering, Kalyani",
+        "Techno Institute of Engineering and Management",
+        "Regent Education and Research Foundation",
+        "Gargi Memorial Institute of Technology",
+        "Abacus Institute of Engineering & Management",
+        "Durgapur Institute of Advanced Technology & Management",
+        "Siliguri Institute of Technology",
+        "Om Dayal Group of Institutions",
+        "Techno International Batanagar",
+        "College of Engineering and Management, Kolaghat",
+        "Dumkal Institute of Engineering & Technology",
+        "Techno Bengal Institute of Technology",
+        "Seacom Engineering College",
+        "Sanaka Education Trusts Group of Institutions",
+        "Darjeeling Hill Institute of Technology and Management",
+        "Camellia Institute of Technology & Management",
+        "Dream Institute of Technology"
+      ],
+      "Private Universities": [
+        "Techno India University, Salt Lake",
+        "Sister Nivedita University, New Town",
+        "Adamas University, Barasat",
+        "Swami Vivekananda University",
+        "Seacom Skills University, Bolpur"
+      ]
+    }
+  },
+  "branches": {
+    "WBJEE": {
+      "Computer Science & IT with Specilization Group": [
+        "Computer Science & Engineering",
+        "Information Technology",
+        "Computer Science & Technology",
+        "Computer Science and Information Technology",
+        "Computer Science and Business System",
+        "Computer Science and Design",
+        "Computer Science & Engineering (Artificial Intelligence)",
+        "Computer Science & Engineering (Artificial Intelligence and Machine Learning)",
+        "Computer Science & Engineering (Cyber Security)",
+        "Computer Science & Engineering (Data Science)",
+        "Computer Science & Engineering (Internet of Things)",
+        "Computer Science & Engineering (Internet of Things and Cyber Security Including Block Chain Technology)",
+        "Computer Science & Engineering (Robotics and Artificial Intelligence)",
+        "Computer Science and Applied Mathematics"
+      ],
+      "AI / Data / Emerging Technology Group": [
+        "Artificial Intelligence (AI)",
+        "Artificial Intelligence and Machine Learning",
+        "Artificial Intelligence and Data Science",
+        "Data Science",
+        "Cloud Computing",
+        "Robotics & Artificial Intelligence",
+        "Virtual Reality (AR/VR)",
+        "5G"
+      ],
+      "Electrical Engineering Group": [
+        "Electrical Engineering",
+        "Electrical & Electronics Engineering",
+        "Electrical & Computer Engineering",
+        "Power Engineering"
+      ],
+      "Electronics Engineering Group": [
+        "Electronics & Communication Engineering",
+        "Electronics & Tele-Communication Engineering",
+        "Electronics Engineering (VLSI Design and Technology)",
+        "Electronics & Computer Science",
+        "Electronics and Instrumentation Engineering",
+        "Applied Electronics and Instrumentation Engineering",
+        "Instrumentation Engineering",
+        "Instrumentation & Electronics",
+        "Semiconductor Technology"
+      ],
+      "Mechanical / Production Engineering Group": [
+        "Mechanical Engineering",
+        "Production Engineering",
+        "Automobile Engineering",
+        "Mechatronics Engineering"
+      ],
+      "Civil / Infrastructure Engineering Group": [
+        "Civil Engineering",
+        "Civil and Environmental Engineering",
+        "Construction Engineering",
+        "Architectural Engineering"
+      ],
+      "Chemical Engineering Group": [
+        "Chemical Engineering",
+        "Chemical Technology",
+        "Mining Engineering"
+      ],
+      "Materials Engineering Group": [
+        "Metallurgical Engineering",
+        "Metallurgical and Materials Engineering",
+        "Polymer Science & Technology",
+        "Ceramic Engineering and Technology",
+        "Optics & Optoelectronics"
+      ],
+      "Textile / Industrial Engineering Group": [
+        "Textile Technology",
+        "Jute & Fibre Technology",
+        "Leather Technology",
+        "Apparel & Production Management",
+        "Printing Engineering"
+      ],
+      "Agriculture / Food / Bio Engineering Group": [
+        "Agricultural Engineering",
+        "Food Technology",
+        "Food Technology and Bio-Chemical Engineering",
+        "Dairy Technology",
+        "Biotechnology",
+        "Biomedical Engineering"
+      ]
+    },
+    "JEE": {
+      "Computer Science & IT with Specilization Group": [
+        "Computer Science & Engineering",
+        "Computer Science & Engineering (Artificial Intelligence)",
+        "Computer Science & Engineering (Artificial Intelligence And Machine Learning)",
+        "Computer Science & Engineering (Cyber Security)",
+        "Computer Science & Engineering (Data Science)",
+        "Computer Science & Engineering (Internet Of Things)",
+        "Computer Science & Engineering (Internet Of Things And Cyber Security Including Block Chain Technology)",
+        "Computer Science & Technology",
+        "Computer Science And Information Technology",
+        "Computer Science And Business System",
+        "Computer Science And Design",
+        "Computer Science And Applied Mathematics",
+        "Information Technology"
+      ],
+      "AI / Data Engineering Group": [
+        "Artificial Intelligence And Machine Learning",
+        "Artificial Intelligence And Data Science",
+        "Artificial Intelligence (AI) And Data Science"
+      ],
+      "Electrical Engineering Group": [
+        "Electrical Engineering",
+        "Electrical & Electronics Engineering",
+        "Electrical & Computer Engineering"
+      ],
+      "Electronics Engineering Group": [
+        "Electronics & Communication Engineering",
+        "Electronics & Computer Science",
+        "Electronics Engineering (VLSI Design And Technology)",
+        "Electronics And Instrumentation Engineering",
+        "Applied Electronics And Instrumentation Engineering"
+      ],
+      "Mechanical Engineering Group": [
+        "Mechanical Engineering",
+        "Automobile Engineering",
+        "Mechatronics Engineering"
+      ],
+      "Civil Engineering Group": [
+        "Civil Engineering",
+        "Civil And Environmental Engineering"
+      ],
+      "Chemical Engineering Group": ["Chemical Engineering"],
+      "Materials / Semiconductor Engineering Group": [
+        "Semiconductor Technology"
+      ],
+      "Bio / Agriculture / Food Engineering Group": [
+        "Biotechnology",
+        "Biomedical Engineering",
+        "Agricultural Engineering",
+        "Food Technology"
+      ],
+      "Advanced Tech Engineering Group": [
+        "Robotics & Artificial Intelligence",
+        "Cloud Computing",
+        "Data Science"
+      ]
+    }
+  }
+}

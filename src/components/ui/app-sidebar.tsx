@@ -9,6 +9,8 @@ import {
   GraduationCap,
   TrendingUp,
   BarChart3,
+  ListChecks,
+  Bell,
 } from "lucide-react";
 
 import {
@@ -34,12 +36,23 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { fetchUserOrders } from "@/store/order/orderThunk";
+import { useEffect } from "react";
 
 export function AppSidebar() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const { userOrders, userOrdersLoaded } = useAppSelector((state) => state.order);
+
+  useEffect(() => {
+    if (!userOrdersLoaded) {
+      dispatch(fetchUserOrders());
+    }
+  }, [userOrdersLoaded, dispatch]);
+
   const pathname = usePathname();
   const isStudent = user?.userId?.role === "student";
+  const hasOrders = userOrders && userOrders.length > 0;
 
   const items = isStudent
     ? [
@@ -50,14 +63,24 @@ export function AppSidebar() {
         },
         {
           title: "College Predictor",
-          url: "/predictor",
+          url: "/s/predictor",
           icon: TrendingUp,
+        },
+        {
+          title: "Choice Filling",
+          url: "/s/choice-filling",
+          icon: ListChecks,
         },
         {
           title: "My Orders",
           url: "/s/orders",
           icon: ShoppingBag,
         },
+        ...(hasOrders ? [{
+          title: "Notifications",
+          url: "/s/notifications",
+          icon: Bell,
+        }] : []),
         {
           title: "My Profile",
           url: "/s/profile",
@@ -79,6 +102,11 @@ export function AppSidebar() {
           title: "Predictors",
           url: "/c/predictors",
           icon: BarChart3,
+        },
+        {
+          title: "Choice Filling",
+          url: "/c/choice-filling",
+          icon: ListChecks,
         },
         {
           title: "My Profile",

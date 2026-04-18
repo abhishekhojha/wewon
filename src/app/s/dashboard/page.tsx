@@ -3,6 +3,7 @@
 import { useAppSelector } from "@/store/hooks";
 import {
   BookOpen,
+  ListChecks,
   Heart,
   TrendingUp,
   Target,
@@ -14,13 +15,36 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { fetchAllChoiceFillingProducts } from "@/network/choice-filling";
 
 export default function Page() {
   const { user } = useAppSelector((state) => state.auth);
   const [mounted, setMounted] = useState(false);
+  const [choiceFillingCount, setChoiceFillingCount] = useState(0);
+  const [choiceFillingLoading, setChoiceFillingLoading] = useState(true);
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const loadChoiceFillingProducts = async () => {
+      try {
+        setChoiceFillingLoading(true);
+        const response = await fetchAllChoiceFillingProducts({ limit: 50 });
+        if (response?.success) {
+          setChoiceFillingCount(response.data?.length || 0);
+        } else {
+          setChoiceFillingCount(0);
+        }
+      } catch {
+        setChoiceFillingCount(0);
+      } finally {
+        setChoiceFillingLoading(false);
+      }
+    };
+
+    loadChoiceFillingProducts();
   }, []);
 
   // Calculate profile completion percentage
@@ -65,7 +89,7 @@ export default function Page() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
           {/* Profile Completion */}
           <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
             <div className="flex items-center justify-between mb-4">
@@ -135,6 +159,30 @@ export default function Page() {
                   } recorded`}
             </p>
           </div>
+
+          {/* Choice Filling Plans */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-orange-500 rounded-xl">
+                <ListChecks className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-3xl font-bold text-orange-600">
+                {choiceFillingLoading ? "..." : choiceFillingCount}
+              </span>
+            </div>
+            <h3 className="text-sm font-semibold text-gray-600 mb-2">
+              Choice Filling Plans
+            </h3>
+            <p className="text-xs text-gray-500">
+              {choiceFillingLoading
+                ? "Loading available plans..."
+                : choiceFillingCount > 0
+                  ? `${choiceFillingCount} choice-filling product${
+                      choiceFillingCount > 1 ? "s" : ""
+                    } available`
+                  : "No choice-filling products available right now"}
+            </p>
+          </div>
         </div>
 
         {/* Quick Actions */}
@@ -143,7 +191,7 @@ export default function Page() {
             <Target className="w-6 h-6 text-[#073d68]" />
             Quick Actions
           </h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {/* College Predictor */}
             <Link href="/predictor">
               <div className="group bg-[#073d68] rounded-2xl shadow-lg p-6 cursor-pointer">
@@ -158,6 +206,24 @@ export default function Page() {
                 </h3>
                 <p className="text-blue-100 text-sm">
                   Find colleges based on your rank and preferences
+                </p>
+              </div>
+            </Link>
+
+            {/* Choice Filling */}
+            <Link href="/choice-filling">
+              <div className="group bg-orange-500 rounded-2xl shadow-lg p-6 cursor-pointer">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-white/20 rounded-xl">
+                    <ListChecks className="w-8 h-8 text-white" />
+                  </div>
+                  <ArrowRight className="w-6 h-6 text-white/70" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  Choice Filling
+                </h3>
+                <p className="text-orange-100 text-sm">
+                  Browse products and generate your personalized choice list
                 </p>
               </div>
             </Link>

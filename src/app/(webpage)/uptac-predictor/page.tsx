@@ -1,5 +1,6 @@
 import React from "react";
 import UPTACCollegePredictor from "@/components/Predictor/UPTACCollegePredictor";
+import TrustSection from "@/components/common/TrustSection";
 import MainHeading from "@/components/sections/MainHeading";
 import Recommended from "@/components/sections/Recommended";
 
@@ -25,6 +26,9 @@ export default function page() {
         {/* <div className="mb-16">
           <Recommended />
         </div> */}
+      </div>
+      <div className="container mx-auto mt-10 mb-16 px-4">
+        <TrustSection />
       </div>
     </>
   );

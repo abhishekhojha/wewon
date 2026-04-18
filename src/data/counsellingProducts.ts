@@ -1,4 +1,5 @@
 import { PredictorCategory } from "@/store/types";
+import { predictorExamKey } from "./productKeyMap";
 
 // This interface matches the backend CounsellingProduct schema exactly
 export interface CounsellingProduct {
@@ -19,6 +20,7 @@ export interface CounsellingProduct {
     collegePredictor: {
       isEnabled: boolean;
       usageLimit: number;
+      allowedPredictors?: predictorExamKey[];
     };
     hasCourseContent: boolean;
   };
@@ -55,14 +57,50 @@ export interface PredictorProduct extends CounsellingProduct {
   displayFeatures: string[]; // Frontend display features list
 }
 
-export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
+export const PREDICTOR_PRODUCTS: PredictorProduct[] =
+ [
+  // {
+  //   _id: "69521fbfae39369012122fc7",
+  //   title: "JEE Mains College Predictor",
+  //   slug: "jee-mains-predictor",
+  //   thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
+  //   description:
+  //     "Predict your college based on JEE Mains rank and preferences. Get accurate predictions for NITs, IIITs, and GFTIs.",
+  //   price: 499,
+  //   discountPrice: 299,
+  //   validityInDays: 365,
+  //   features: {
+  //     hasMentorship: false,
+  //     choiceFilling: {
+  //       isEnabled: false,
+  //       usageLimit: 0,
+  //     },
+  //     collegePredictor: {
+  //       isEnabled: true,
+  //       usageLimit: -1, // Unlimited
+  //     },
+  //     hasCourseContent: false,
+  //   },
+  //   totalMaterialCount: 0,
+  //   isActive: true,
+  //   // Frontend-specific fields
+  //   icon: "🎓",
+  //   category: PredictorCategory.JEE,
+  //   purchased: true,
+  //   displayFeatures: [
+  //     "NIT, IIIT & GFTI Predictions",
+  //     "Branch-wise Analysis",
+  //     "Previous Year Cutoffs",
+  //     "Personalized Recommendations",
+  //   ],
+  // },
   {
-    _id: "69521fbfae39369012122fc7",
-    title: "JEE Mains College Predictor",
-    slug: "jee-mains-predictor",
+    _id: "69888981c6aafde7dfa7c888", // Mock ID
+    title: "JoSAA College Predictor",
+    slug: "josaa-predictor",
     thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
     description:
-      "Predict your college based on JEE Mains rank and preferences. Get accurate predictions for NITs, IIITs, and GFTIs.",
+      "Predict your chances of getting into IITs, NITs, IIITs, and GFTIs based on your JEE rank for JoSAA Rounds 1-6.",
     price: 499,
     discountPrice: 299,
     validityInDays: 365,
@@ -74,24 +112,58 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
       },
       collegePredictor: {
         isEnabled: true,
-        usageLimit: -1, // Unlimited
+        usageLimit: -1,
       },
       hasCourseContent: false,
     },
     totalMaterialCount: 0,
-    isActive: false,
-    // Frontend-specific fields
+    isActive: true,
     icon: "🎓",
     category: PredictorCategory.JEE,
-    purchased: true,
+    purchased: false,
     displayFeatures: [
-      "NIT, IIIT & GFTI Predictions",
-      "Branch-wise Analysis",
-      "Previous Year Cutoffs",
-      "Personalized Recommendations",
+      "IIT, NIT, IIIT & GFTI",
+      "Rounds 1-6 Predictions",
+      "Category-wise Analysis",
+      "Detailed Seat Info",
     ],
   },
   {
+    _id: "69888981c6aafde7dfa7c999", // Mock ID
+    title: "CSAB College Predictor",
+    slug: "csab-predictor",
+    thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
+    description:
+      "Predict your chances for NITs, IIITs, and GFTIs for CSAB Special Rounds 1 & 2.",
+    price: 399,
+    discountPrice: 249,
+    validityInDays: 365,
+    features: {
+      hasMentorship: false,
+      choiceFilling: {
+        isEnabled: false,
+        usageLimit: 0,
+      },
+      collegePredictor: {
+        isEnabled: true,
+        usageLimit: -1,
+      },
+      hasCourseContent: false,
+    },
+    totalMaterialCount: 0,
+    isActive: true,
+    icon: "🎯",
+    category: PredictorCategory.JEE,
+    purchased: false,
+    displayFeatures: [
+      "Special Rounds 1 & 2",
+      "NIT, IIIT & GFTI Only",
+      "Vacancy Based Predictions",
+      "Home State Quota",
+    ],
+  },
+  {
+    _id: "69888981c6aafde7dfa7c201",
     title: "JEE Advanced College Predictor",
     slug: "jee-advanced-predictor",
     thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
@@ -113,7 +185,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
       hasCourseContent: false,
     },
     totalMaterialCount: 0,
-    isActive: false,
+    isActive: true,
     // Frontend-specific fields
     icon: "🏆",
     category: PredictorCategory.JEE,
@@ -183,7 +255,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
       hasCourseContent: false,
     },
     totalMaterialCount: 0,
-    isActive: false,
+    isActive: true,
     // Frontend-specific fields
     icon: "🎯",
     category: PredictorCategory.STATE,
@@ -196,6 +268,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
     ],
   },
   {
+    _id: "69888981c6aafde7dfa7c202",
     title: "MMMUT College Predictor",
     slug: "mmmut-predictor",
     thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
@@ -217,7 +290,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
       hasCourseContent: false,
     },
     totalMaterialCount: 0,
-    isActive: false,
+    isActive: true,
     // Frontend-specific fields
     icon: "🎓",
     category: PredictorCategory.STATE,
@@ -230,6 +303,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
     ],
   },
   {
+    _id: "69888981c6aafde7dfa7c203",
     title: "HBTU College Predictor",
     slug: "hbtu-predictor",
     thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
@@ -255,7 +329,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
     // Frontend-specific fields
     icon: "🎓",
     category: PredictorCategory.STATE,
-    purchased: true,
+    purchased: false,
     displayFeatures: [
       "HBTU College Predictions",
       "B.TECH & BS-MS Programs",
@@ -264,6 +338,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
     ],
   },
   {
+    _id: "69888981c6aafde7dfa7c204",
     title: "JAC Delhi College Predictor",
     slug: "jac-delhi-predictor",
     thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
@@ -285,7 +360,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
       hasCourseContent: false,
     },
     totalMaterialCount: 0,
-    isActive: false,
+    isActive: true,
     // Frontend-specific fields
     icon: "🏛️",
     category: PredictorCategory.STATE,
@@ -298,6 +373,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
     ],
   },
   {
+    _id: "69888981c6aafde7dfa7c205",
     title: "JAC Chandigarh College Predictor",
     slug: "jac-chandigarh-predictor",
     thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
@@ -319,7 +395,7 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
       hasCourseContent: false,
     },
     totalMaterialCount: 0,
-    isActive: false,
+    isActive: true,
     // Frontend-specific fields
     icon: "🎓",
     category: PredictorCategory.STATE,
@@ -331,13 +407,47 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] = [
       "Round-wise Cutoffs",
     ],
   },
+  {
+    _id: "69888981c6aafde7dfa7c206",
+    title: "WBJEE College Predictor",
+    slug: "wbjee-predictor",
+    thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
+    description:
+      "Predict colleges for WBJEE & JEE counseling across West Bengal. Get predictions for Jadavpur University, IIEST Shibpur, and more based on your rank.",
+    price: 399,
+    discountPrice: 249,
+    validityInDays: 365,
+    features: {
+      hasMentorship: false,
+      choiceFilling: {
+        isEnabled: false,
+        usageLimit: 0,
+      },
+      collegePredictor: {
+        isEnabled: true,
+        usageLimit: -1, // Unlimited
+      },
+      hasCourseContent: false,
+    },
+    totalMaterialCount: 0,
+    isActive: true,
+    // Frontend-specific fields
+    icon: "🎓",
+    category: PredictorCategory.STATE,
+    purchased: false,
+    displayFeatures: [
+      "West Bengal Engineering Colleges",
+      "WBJEE & JEE Rank Support",
+      "Category & TFW Predictions",
+      "Round-wise Cutoffs",
+    ],
+  },
   // Placeholder for future predictors (15 more to be added)
   // Examples:
   // - NEET UG Predictor
   // - NEET PG Predictor
   // - MHT CET Predictor
   // - KCET Predictor
-  // - WBJEE Predictor
   // - TS EAMCET Predictor
   // - AP EAMCET Predictor
   // - COMEDK Predictor

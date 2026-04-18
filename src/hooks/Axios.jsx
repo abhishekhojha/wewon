@@ -27,18 +27,18 @@ apiClient.interceptors.request.use(
   },
 );
 
-// Response interceptor for error handling
-// apiClient.interceptors.response.use(
-//   (response) => response,
-//   (error) => {
-//     if (error.response?.status === 401) {
-//       // Token expired or invalid
-//       localStorage.removeItem('authToken');
-//       localStorage.removeItem('user');
-//       window.location.href = '/auth';
-//     }
-//     return Promise.reject(error);
-//   }
-// );
+// Response interceptor – normalise error.message from backend payload
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Extract backend-provided message and attach it to error.message
+    // so every catch block gets a meaningful string automatically.
+    const backendMessage = error?.response?.data?.message;
+    if (typeof backendMessage === "string" && backendMessage) {
+      error.message = backendMessage;
+    }
+    return Promise.reject(error);
+  },
+);
 
 export default apiClient;

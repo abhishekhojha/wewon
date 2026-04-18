@@ -155,6 +155,18 @@ export default function RegisterFormStep1({
           Send OTP via
         </label>
         <div className="flex bg-gray-100/80 rounded-xl p-1 gap-1">
+         <button
+            type="button"
+            onClick={() => setVerificationMethod("phone")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+              verificationMethod === "phone"
+                ? "bg-white shadow-sm text-[var(--primary)]"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <Phone className="h-4 w-4" />
+            Phone
+          </button>
           <button
             type="button"
             onClick={() => setVerificationMethod("email")}
@@ -167,22 +179,11 @@ export default function RegisterFormStep1({
             <Mail className="h-4 w-4" />
             Email
           </button>
-          <button
-            type="button"
-            onClick={() => setVerificationMethod("phone")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-              verificationMethod === "phone"
-                ? "bg-white shadow-sm text-[var(--primary)]"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            <Phone className="h-4 w-4" />
-            Phone
-          </button>
+         
         </div>
         <p className="text-xs text-[var(--muted-text)] mt-1.5">
           Your 6-digit OTP will be sent to your
-          {verificationMethod === "email" ? "email" : "phone number (please pick up call)"}
+          {verificationMethod === "email" ? " email" : " phone number via SMS"}
         </p>
       </div>
 

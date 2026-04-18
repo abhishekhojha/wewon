@@ -45,11 +45,11 @@ export default function LikeButton({
       toast.success(
         newLiked ? "Added to favorites!" : "Removed from favorites"
       );
-    } catch (error) {
+    } catch (error: any) {
       // Revert on error
       setLiked(!newLiked);
       setLikeCount((prev) => (newLiked ? prev - 1 : prev + 1));
-      toast.error("Failed to update. Please try again.");
+      toast.error(error?.message || "Failed to update. Please try again.");
     } finally {
       setLoading(false);
       setTimeout(() => setIsAnimating(false), 600);

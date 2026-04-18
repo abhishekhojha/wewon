@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchUserOrders } from "@/store/order/orderThunk";
+import { downloadInvoice, fetchUserOrders } from "@/store/order/orderThunk";
 import {
   ShoppingBag,
   Calendar,
@@ -13,8 +13,11 @@ import {
   XCircle,
   Tag,
   IndianRupee,
+  Download,
+  Loader2,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface PopulatedProduct {
   _id: string;
@@ -51,10 +54,29 @@ interface OrderWithPopulated {
 export default function OrdersPage() {
   const dispatch = useAppDispatch();
   const { userOrders, loading, error } = useAppSelector((state) => state.order);
+  const [downloadingOrderId, setDownloadingOrderId] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     dispatch(fetchUserOrders());
   }, [dispatch]);
+
+  const handleDownloadInvoice = async (orderId: string) => {
+    setDownloadingOrderId(orderId);
+    try {
+      await dispatch(downloadInvoice(orderId)).unwrap();
+      toast.success("Invoice downloaded successfully.");
+    } catch (downloadError) {
+      toast.error(
+        typeof downloadError === "string"
+          ? downloadError
+          : "Failed to download invoice.",
+      );
+    } finally {
+      setDownloadingOrderId(null);
+    }
+  };
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -318,6 +340,25 @@ export default function OrdersPage() {
                         </div>
                       )}
                     </div>
+
+                    {order.status === "completed" && (
+                      <div className="mt-6 pt-4 border-t border-gray-100">
+                        <button
+                          onClick={() => handleDownloadInvoice(order._id)}
+                          disabled={downloadingOrderId === order._id}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-[#073d68] text-white rounded-lg font-semibold hover:bg-[#073d68]/90 transition-colors disabled:opacity-70"
+                        >
+                          {downloadingOrderId === order._id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Download className="w-4 h-4" />
+                          )}
+                          {downloadingOrderId === order._id
+                            ? "Downloading..."
+                            : "Download Invoice"}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

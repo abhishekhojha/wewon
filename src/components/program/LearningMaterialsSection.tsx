@@ -1,70 +1,85 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   FileText,
-  Video,
   PlayCircle,
   Lock,
   ChevronDown,
   ChevronUp,
-  Wrench,
+  ExternalLink,
 } from "lucide-react";
 
 interface LearningMaterial {
   id: string;
   title: string;
-  type: "video" | "pdf" | "tool";
-  icon: React.ReactNode;
+  type: "video" | "pdf" | "link";
+  url?: string;
 }
 
 interface LearningMaterialsSectionProps {
   totalMaterialCount: number;
   isPurchased: boolean;
   onLockedClick: () => void;
-  onMaterialClick?: (materialId: string) => void;
+  materials?: LearningMaterial[];
+  onMaterialClick?: (material: LearningMaterial) => void;
 }
 
 export default function LearningMaterialsSection({
   totalMaterialCount,
   isPurchased,
   onLockedClick,
+  materials,
   onMaterialClick,
 }: LearningMaterialsSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Preview materials (always visible)
-  const previewMaterials: LearningMaterial[] = [
-    {
-      id: "intro-video",
-      title: "How We Work - Introduction Video",
-      type: "video",
-      icon: <PlayCircle size={24} className="text-[var(--accent)]" />,
-    },
-    {
-      id: "course-pdf",
-      title: "Course Overview PDF",
-      type: "pdf",
-      icon: <FileText size={24} className="text-[var(--accent)]" />,
-    },
-    {
-      id: "full-description",
-      title: "Full Program Description Video",
-      type: "video",
-      icon: <Video size={24} className="text-[var(--accent)]" />,
-    },
-    {
-      id: "choice-filling-tool",
-      title: "Choice Filling Tool (3 uses available)",
-      type: "tool",
-      icon: <Wrench size={24} className="text-[var(--accent)]" />,
-    },
-  ];
+  useEffect(() => {
+    if (isPurchased) {
+      setIsExpanded(true);
+    }
+  }, [isPurchased]);
 
-  const handleMaterialClick = (materialId: string) => {
+  const previewMaterials = useMemo<LearningMaterial[]>(() => {
+    if (materials && materials.length > 0) {
+      return materials;
+    }
+
+    return [
+      {
+        id: "intro-video",
+        title: "How We Work - Introduction Video",
+        type: "video",
+      },
+      {
+        id: "course-pdf",
+        title: "Course Overview PDF",
+        type: "pdf",
+      },
+      {
+        id: "full-description",
+        title: "Full Program Description Video",
+        type: "video",
+      },
+    ];
+  }, [materials]);
+
+  const getMaterialIcon = (type: LearningMaterial["type"]) => {
+    if (type === "video") {
+      return <PlayCircle size={24} className="text-[var(--accent)]" />;
+    }
+
+    if (type === "pdf") {
+      return <FileText size={24} className="text-[var(--accent)]" />;
+    }
+
+    return <ExternalLink size={24} className="text-[var(--accent)]" />;
+  };
+
+  const handleMaterialClick = (material: LearningMaterial) => {
     if (!isPurchased) {
       onLockedClick();
     } else if (onMaterialClick) {
-      onMaterialClick(materialId);
+      onMaterialClick(material);
     }
   };
 
@@ -101,11 +116,11 @@ export default function LearningMaterialsSection({
           {previewMaterials.map((material) => (
             <button
               key={material.id}
-              onClick={() => handleMaterialClick(material.id)}
-              className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200 group"
+              onClick={() => handleMaterialClick(material)}
+              className="w-full cursor-pointer flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200 group"
             >
               {/* Icon */}
-              <div className="flex-shrink-0">{material.icon}</div>
+              <div className="flex-shrink-0">{getMaterialIcon(material.type)}</div>
 
               {/* Title */}
               <div className="flex-1 text-left">
@@ -120,13 +135,20 @@ export default function LearningMaterialsSection({
                   <Lock size={20} className="text-gray-400" />
                 </div>
               )}
+
+              {isPurchased && (
+                <div className="flex-shrink-0 text-sm font-medium text-[var(--accent)]">
+                  Open
+                </div>
+              )}
             </button>
           ))}
 
           {/* Additional Materials Indicator */}
-          {totalMaterialCount > 4 && (
+          {totalMaterialCount > previewMaterials.length && (
             <div className="text-center py-4 text-gray-600">
-              + {totalMaterialCount - 4} more materials available after purchase
+              + {totalMaterialCount - previewMaterials.length} more materials
+              available after purchase
             </div>
           )}
         </div>

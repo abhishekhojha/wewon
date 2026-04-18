@@ -6,7 +6,9 @@ import { X, Tag, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { validateCoupon, CouponValidationResponse } from "@/network/coupon";
-import RazorpayPayment from "@/components/program/RazorpayPayment";
+import RazorpayPayment, {
+  PaymentSuccessData,
+} from "@/components/program/RazorpayPayment";
 import { PredictorProduct } from "@/data/counsellingProducts";
 import { useAppSelector } from "@/store/hooks";
 import { selectUser } from "@/store/auth/authSlice";
@@ -31,8 +33,10 @@ export default function PredictorPaymentModal({
     useState<CouponValidationResponse | null>(null);
   const [couponError, setCouponError] = useState("");
 
-  const originalPrice = product.discountPrice || product.price;
-  const finalPrice = appliedCoupon ? appliedCoupon.finalPrice : originalPrice;
+  const basePrice = product.price;
+  const sellingPrice = product.discountPrice || product.price;
+  const productDiscount = basePrice - sellingPrice;
+  const finalPrice = appliedCoupon ? appliedCoupon.finalPrice : sellingPrice;
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
@@ -55,10 +59,9 @@ export default function PredictorPaymentModal({
         product._id,
       );
       setAppliedCoupon(result);
-      toast.success(`Coupon applied! You save ₹${result.discountAmount}`);
+      toast.success(`Coupon applied! You save ₹${result.discountAmount.toLocaleString()}`);
     } catch (error: any) {
-      const message =
-        error.response?.data?.message || error.message || "Invalid coupon code";
+      const message = error.message || "Invalid coupon code";
       setCouponError(message);
       toast.error(message);
     } finally {
@@ -72,7 +75,7 @@ export default function PredictorPaymentModal({
     setCouponError("");
   };
 
-  const handlePaymentSuccess = (orderId: string) => {
+  const handlePaymentSuccess = (_paymentData: PaymentSuccessData) => {
     toast.success("Payment successful! You can now access predictions.");
     onPaymentSuccess();
     onClose();
@@ -85,7 +88,7 @@ export default function PredictorPaymentModal({
   if (!isOpen) return null;
 
   // If product is free, don't show payment modal
-  if (originalPrice === 0) {
+  if (sellingPrice === 0) {
     onPaymentSuccess();
     onClose();
     return null;
@@ -135,38 +138,52 @@ export default function PredictorPaymentModal({
                   {product.title}
                 </h2>
                 <p className="text-sm text-gray-500">
-                  Complete payment to unlock predictions
+                  Complete purchase to unlock predictions
                 </p>
               </div>
 
               {/* Price Section */}
-              <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Original Price</span>
-                  <span
-                    className={`font-semibold ${appliedCoupon ? "line-through text-gray-400" : "text-gray-800"}`}
-                  >
-                    ₹{originalPrice.toLocaleString()}
-                  </span>
-                </div>
-                {appliedCoupon && (
-                  <div className="flex justify-between items-center mb-2 text-green-600">
-                    <span className="flex items-center gap-1">
-                      <Tag size={14} />
-                      Coupon Discount
-                    </span>
-                    <span className="font-semibold">
-                      -₹{appliedCoupon.discountAmount}
+              <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                <div className="space-y-1 mb-4">
+                  {/* Price */}
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-600">Price</span>
+                    <span className={`font-semibold text-gray-800`}>
+                      ₹{basePrice.toLocaleString()}
                     </span>
                   </div>
-                )}
-                <div className="border-t border-gray-200 pt-2 mt-2">
+
+                  {/* Product Discount */}
+                  {productDiscount > 0 && (
+                    <div className="flex justify-between items-center text-sm text-green-600">
+                      <span>Discount</span>
+                      <span className="font-semibold">
+                        - ₹{productDiscount.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Coupon Discount */}
+                  {appliedCoupon && (
+                    <div className="flex justify-between items-center text-sm text-green-600">
+                      <span className="flex items-center gap-1">
+                        <Tag size={12} />
+                        Coupon discount ({appliedCoupon.couponCode})
+                      </span>
+                      <span className="font-semibold">
+                        - ₹{appliedCoupon.discountAmount.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold text-gray-800">
                       Total
                     </span>
                     <span className="text-2xl font-bold text-[var(--accent)]">
-                      ₹{finalPrice.toLocaleString()}
+                      ₹{Math.round(finalPrice).toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -229,7 +246,6 @@ export default function PredictorPaymentModal({
                 <RazorpayPayment
                   productId={product._id || ""}
                   productName={product.title}
-                  productType="counseling"
                   amount={finalPrice}
                   couponCode={appliedCoupon?.couponCode}
                   onSuccess={handlePaymentSuccess}

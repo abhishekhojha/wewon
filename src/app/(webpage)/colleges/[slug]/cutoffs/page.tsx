@@ -55,12 +55,15 @@ export async function generateMetadata({
   };
 }
 
+import { Suspense } from "react";
 import NoCopyWrapper from "@/components/common/NoCopyWrapper";
 
 export default function Page() {
   return (
     <NoCopyWrapper>
-      <CutoffClient />
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+        <CutoffClient />
+      </Suspense>
     </NoCopyWrapper>
   );
 }

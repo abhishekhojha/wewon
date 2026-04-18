@@ -135,13 +135,45 @@ export const PREDICTORS: Predictor[] = [
     ],
     totalMaterialCount: 0,
   },
+  {
+    title: "WBJEE College Predictor",
+    slug: "wbjee-predictor",
+    description:
+      "Predict colleges for WBJEE & JEE counseling across West Bengal. Get predictions for Jadavpur University, IIEST Shibpur, and more based on your rank.",
+    route: "/wbjee-predictor",
+    price: 399,
+    discountPrice: 249,
+    validityInDays: 365,
+    icon: "🎓",
+    category: PredictorCategory.STATE,
+    isActive: true,
+    purchased: false,
+    features: {
+      hasMentorship: false,
+      choiceFilling: {
+        isEnabled: false,
+        usageLimit: 0,
+      },
+      collegePredictor: {
+        isEnabled: true,
+        usageLimit: -1, // Unlimited
+      },
+      hasCourseContent: false,
+    },
+    displayFeatures: [
+      "West Bengal Engineering Colleges",
+      "WBJEE & JEE Rank Support",
+      "Category & TFW Predictions",
+      "Round-wise Cutoffs",
+    ],
+    totalMaterialCount: 0,
+  },
   // Placeholder for future predictors (15 more to be added)
   // Examples:
   // - NEET UG Predictor
   // - NEET PG Predictor
   // - MHT CET Predictor
   // - KCET Predictor
-  // - WBJEE Predictor
   // - TS EAMCET Predictor
   // - AP EAMCET Predictor
   // - COMEDK Predictor

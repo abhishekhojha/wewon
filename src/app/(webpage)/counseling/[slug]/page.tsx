@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import CounselingClient from "./CounselingClient";
+import TrustSection from "@/components/common/TrustSection";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -11,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     process.env.NEXT_PUBLIC_API_URL || "https://wewon-backend.vercel.app/";
 
   try {
-    const response = await fetch(`${apiUrl}api/counseling/slug/${slug}`, {
+    const response = await fetch(`${apiUrl}api/admin/products/slug/${slug}`, {
       next: { revalidate: 3600 },
     });
 
@@ -52,5 +53,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default function Page() {
-  return <CounselingClient />;
+  return (
+    <>
+      <CounselingClient />
+      <div className="container mx-auto mt-10 mb-16 px-4">
+        <TrustSection />
+      </div>
+    </>
+  );
 }

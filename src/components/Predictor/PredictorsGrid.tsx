@@ -4,17 +4,20 @@ import React, { useState, useEffect } from "react";
 import PredictorCard from "./PredictorCard";
 import { fetchAllPredictors, PredictorListItem } from "@/network/predictor";
 import { PredictorCategory } from "@/store/types";
+import { PREDICTOR_PRODUCTS, PredictorProduct } from "@/data/counsellingProducts";
+import { predictorExamKey } from "@/data/productKeyMap";
 import { Loader2 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
+import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 
 // Map API response to PredictorProduct format for PredictorCard
 const mapToPredictorProduct = (
   item: PredictorListItem,
   isPurchased: boolean,
-) => ({
+): PredictorProduct => ({
   _id: item._id,
   title: item.title,
   slug: item.slug,
@@ -29,7 +32,10 @@ const mapToPredictorProduct = (
       isEnabled: false,
       usageLimit: 0,
     },
-    collegePredictor: item.features.collegePredictor,
+    collegePredictor: {
+      ...item.features.collegePredictor,
+      allowedPredictors: (item.features.collegePredictor?.allowedPredictors || []) as predictorExamKey[],
+    },
     hasCourseContent: item.features.hasCourseContent ?? false,
   },
   totalMaterialCount: 0,
@@ -45,7 +51,80 @@ const mapToPredictorProduct = (
   ],
 });
 
-const PredictorsGrid: React.FC = () => {
+const localActivePredictors: PredictorListItem[] = PREDICTOR_PRODUCTS.filter(
+  (predictor) => predictor.isActive,
+).map((predictor) => ({
+  _id: predictor._id || predictor.slug,
+  title: predictor.title,
+  slug: predictor.slug,
+  description: predictor.description,
+  thumbnail: predictor.thumbnail,
+  price: predictor.price,
+  discountPrice: predictor.discountPrice,
+  features: {
+    collegePredictor: predictor.features.collegePredictor,
+    hasMentorship: predictor.features.hasMentorship,
+    choiceFilling: predictor.features.choiceFilling,
+    hasCourseContent: predictor.features.hasCourseContent,
+  },
+  isActive: predictor.isActive,
+  createdAt: "",
+}));
+console.log(localActivePredictors);
+
+const localActivePredictorsBySlug = new Map(
+  localActivePredictors.map((predictor) => [predictor.slug, predictor]),
+);
+
+const mergePredictorsWithLocal = (
+  apiPredictors: PredictorListItem[],
+): PredictorListItem[] => {
+  const mergedPredictors = new Map(
+    localActivePredictors.map((predictor) => [predictor.slug, predictor]),
+  );
+
+  apiPredictors.forEach((apiPredictor) => {
+    const localPredictor = localActivePredictorsBySlug.get(apiPredictor.slug);
+
+    if (!localPredictor) {
+      mergedPredictors.set(apiPredictor.slug, apiPredictor);
+      return;
+    }
+
+    mergedPredictors.set(apiPredictor.slug, {
+      ...localPredictor,
+      ...apiPredictor,
+      features: {
+        ...localPredictor.features,
+        ...apiPredictor.features,
+        collegePredictor:
+          apiPredictor.features.collegePredictor ??
+          localPredictor.features.collegePredictor,
+        choiceFilling:
+          apiPredictor.features.choiceFilling ??
+          localPredictor.features.choiceFilling,
+        hasMentorship:
+          apiPredictor.features.hasMentorship ??
+          localPredictor.features.hasMentorship,
+        hasCourseContent:
+          apiPredictor.features.hasCourseContent ??
+          localPredictor.features.hasCourseContent,
+      },
+    });
+  });
+
+  return Array.from(mergedPredictors.values()).filter(
+    (predictor) => predictor.isActive,
+  );
+};
+
+interface PredictorsGridProps {
+  onlyPurchased?: boolean;
+  slugs?: string[];
+  withLocal?: boolean;
+}
+
+const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, slugs, withLocal = false }) => {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const userData = useAppSelector(selectUser);
@@ -65,13 +144,9 @@ const PredictorsGrid: React.FC = () => {
   }, [isAuthenticated, dispatch]);
 
   // Check if a predictor is purchased
-  // API response has order.product.slug and order.status
   const isPredictorPurchased = (predictorSlug: string): boolean => {
-    return userOrders.some((order: any) => {
-      // The API returns product as an object with slug, not just productId
-      const orderProductSlug = order.product?.slug;
-      return orderProductSlug === predictorSlug && order.status === "completed";
-    });
+    const { hasPurchased } = getPredictorPurchaseDetails(userOrders, predictorSlug);
+    return hasPurchased;
   };
 
   useEffect(() => {
@@ -81,20 +156,22 @@ const PredictorsGrid: React.FC = () => {
         setError(null);
         const response = await fetchAllPredictors({ limit: 50 });
         if (response.success) {
-          setPredictors(response.data);
+          setPredictors(
+            withLocal ? mergePredictorsWithLocal(response.data) : response.data,
+          );
         } else {
           setError("Failed to load predictors");
         }
       } catch (err: any) {
         console.error("Error fetching predictors:", err);
-        setError(err.message || "Failed to load predictors");
+        setPredictors(withLocal ? localActivePredictors : []);
       } finally {
         setLoading(false);
       }
     };
 
     loadPredictors();
-  }, []);
+  }, [withLocal]);
 
   if (loading) {
     return (
@@ -121,14 +198,17 @@ const PredictorsGrid: React.FC = () => {
     );
   }
 
-  // Only show predictors that exist in the user's orders
-  // const displayPredictors = isAuthenticated
-  //   ? predictors.filter((predictor) =>
-  //       userOrders.some((order: any) => order.product?.slug === predictor.slug),
-  //     )
-  //   : [];
-  const displayPredictors = predictors;
+  // Filter to only purchased predictors if onlyPurchased is true
+  let displayPredictors = onlyPurchased
+    ? predictors.filter((predictor) => isPredictorPurchased(predictor.slug))
+    : predictors;
 
+  // Filter by slugs if provided
+  if (slugs && slugs.length > 0) {
+    displayPredictors = displayPredictors.filter((predictor) => 
+      slugs.includes(predictor.slug)
+    );
+  }
   return (
     <div className="w-full">
       {/* Predictors Grid */}
@@ -139,7 +219,7 @@ const PredictorsGrid: React.FC = () => {
               key={predictor._id}
               predictor={mapToPredictorProduct(
                 predictor,
-                isCounsellor || isPredictorPurchased(predictor.slug),
+                isPredictorPurchased(predictor.slug),
               )}
             />
           ))}
