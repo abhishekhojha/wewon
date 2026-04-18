@@ -70,11 +70,10 @@ export default function Newsletter() {
 
         {/* --- Content --- */}
         <h2 className="mt-5 text-2xl font-semibold text-gray-900">
-          Join We Won Academy updates
+          Secure Your Dream College Now!
         </h2>
         <p className="mt-2 text-base text-gray-600">
-          Get curated tips, college guidance and quick access to tools like our Counselling Program.
-
+          Get expert counselling, personalized guidance, and the best college options.
         </p>
 
         {/* --- Actions --- */}
