@@ -55,7 +55,7 @@ const FeaturesSection = () => {
               />
 
               {/* Card Title */}
-              <h3 className="mt-6 text-2xl font-bold text-[var(--primary)]">
+              <h3 className="mt-6 text-xl md:text-2xl font-bold text-[var(--primary)]">
                 {feature.title}
               </h3>
 

@@ -53,44 +53,46 @@ export default function CallToAction() {
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-[var(--accent)]/5 rounded-full -ml-16 -mb-16 blur-2xl pointer-events-none"></div>
 
         {/* Content Section */}
-        <div className="relative px-6 py-6 md:py-8 text-center max-w-2xl mx-auto">
+        <div className="relative px-5 py-8 md:py-10 text-center max-w-2xl mx-auto">
           <div className="flex flex-col items-center">
-            <span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white/60 ring-1 ring-white/10 backdrop-blur-sm">
+            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white/60 ring-1 ring-white/10 backdrop-blur-sm">
               Insider Access
             </span>
             <Heading
               text="Your Game Plan for a Top Rank"
               centered
-              className="!text-white !text-xl md:!text-2xl leading-tight mb-2"
+              className="!text-white !text-xl md:!text-2xl lg:!text-3xl leading-snug mb-3"
             />
-            <p className="text-white/50 text-xs md:text-sm max-w-lg mx-auto font-medium">
-              Join We Won Academy's circle. Exclusive 2026 cutoff guides in your inbox.
+            <p className="text-white/50 text-xs md:text-sm max-w-md mx-auto font-medium leading-relaxed">
+              Join We Won Academy's circle. Exclusive 2026 cutoff guides delivered straight to your inbox.
             </p>
           </div>
 
-          {/* Minimalist Form Section */}
-          <div className="relative mx-auto mt-6 max-w-md">
-            <div className="group relative flex items-center p-1 bg-white/[0.03] backdrop-blur-sm rounded-xl border border-white/10 focus-within:border-[var(--accent)]/50 transition-all duration-300">
-              <div className="pl-3 text-white/30">
-                <Mail size={16} />
+          {/* Minimalist Form Section: Responsive Stack */}
+          <div className="relative mx-auto mt-8 max-w-md">
+            <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-2 p-1.5 bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/10 focus-within:border-[var(--accent)]/50 transition-all duration-300">
+              <div className="w-full flex items-center flex-1">
+                <div className="pl-3 text-white/30 hidden sm:block">
+                  <Mail size={16} />
+                </div>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-transparent border-none outline-none px-3 py-3 text-white placeholder:text-white/20 text-sm appearance-none text-center sm:text-left"
+                />
               </div>
-              <input
-                type="email"
-                placeholder="Enter email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 bg-transparent border-none outline-none px-2 py-2 text-white placeholder:text-white/20 text-xs md:text-sm appearance-none"
-              />
               <button
                 onClick={handleClick}
                 disabled={loading}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 font-bold text-[var(--primary)] text-xs transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer whitespace-nowrap"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-6 py-3 font-bold text-[var(--primary)] text-sm transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer whitespace-nowrap shadow-lg shadow-[var(--accent)]/20"
               >
                 {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   <>
-                    <span>Join</span>
+                    <span>Join Now</span>
                     <Send size={14} />
                   </>
                 )}

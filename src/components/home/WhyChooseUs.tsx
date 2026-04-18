@@ -62,7 +62,7 @@ export default function WhyChooseUs() {
             <Heading
               text="Why Choose We Won Academy?"
               centered
-              className="!text-3xl md:!text-4xl"
+              className="!text-2xl md:!text-4xl"
             />
           </div>
         </div>
