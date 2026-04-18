@@ -90,7 +90,7 @@ export default function CouponInput({
             </div>
           )}
           {error && !loading && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <div onClick={handleRemove} className="absolute cursor-pointer right-3 top-1/2 -translate-y-1/2">
               <X size={20} className="text-red-500" />
             </div>
           )}
