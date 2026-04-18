@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 type OTPFormProps = {
   onSubmit?: (otp: string) => void;
@@ -20,7 +20,18 @@ export default function OTPForm({
   verificationMethod = "email",
 }: OTPFormProps) {
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
+  const [timer, setTimer] = useState(30);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
 
   const handleChange = (index: number, value: string) => {
     // Only allow a single digit (0-9)
@@ -102,7 +113,7 @@ export default function OTPForm({
         </p>
       </div>
 
-      <div className="flex justify-center gap-3">
+      <div className="flex justify-center gap-2 sm:gap-3">
         {otp.map((digit, index) => (
           <input
             key={index}
@@ -116,7 +127,7 @@ export default function OTPForm({
             onChange={(e) => handleChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
             onPaste={handlePaste}
-            className="w-12 h-14 text-center text-2xl font-semibold border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
+            className="w-10 h-12 sm:w-12 sm:h-14 text-center text-xl sm:text-2xl font-semibold border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
             required
             aria-label={`OTP digit ${index + 1}`}
           />
@@ -136,16 +147,22 @@ export default function OTPForm({
       <div className="text-center">
         <button
           type="button"
-          className="text-sm text-[var(--primary)] hover:underline transition"
+          className="text-sm text-[var(--primary)] hover:underline transition disabled:opacity-50 disabled:no-underline"
           onClick={async () => {
+            if (timer > 0) return;
             setOtp(["", "", "", "", "", ""]);
             // focus first
             inputRefs.current[0]?.focus();
             if (onResend) await onResend();
+            setTimer(30);
           }}
-          disabled={!!resendLoading}
+          disabled={!!resendLoading || timer > 0}
         >
-          {resendLoading ? "Resending..." : "Didn't receive code? Resend"}
+          {resendLoading
+            ? "Resending..."
+            : timer > 0
+              ? `Resend OTP in ${timer}s`
+              : "Didn't receive code? Resend"}
         </button>
       </div>
     </form>

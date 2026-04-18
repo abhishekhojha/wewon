@@ -1,7 +1,7 @@
 "use client";
 
 import { Eye, EyeOff, Loader2, KeyRound, ArrowLeft } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface ResetPasswordFormProps {
   email: string;
@@ -26,7 +26,18 @@ export default function ResetPasswordForm({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [timer, setTimer] = useState(30);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
@@ -117,7 +128,7 @@ export default function ResetPasswordForm({
           <label className="block text-sm font-medium text-[var(--foreground)] mb-3">
             Enter OTP
           </label>
-          <div
+             <div
             className="flex justify-center lg:justify-start gap-2"
             onPaste={handlePaste}
           >
@@ -133,18 +144,26 @@ export default function ResetPasswordForm({
                 value={digit}
                 onChange={(e) => handleOtpChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-12 h-12 text-center text-xl font-bold border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
+                className="w-10 h-10 sm:w-12 sm:h-12 text-center text-lg sm:text-xl font-bold border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               />
             ))}
           </div>
           <div className="mt-3 text-center lg:text-left">
             <button
               type="button"
-              onClick={onResendOTP}
-              disabled={resendLoading}
-              className="text-sm text-[var(--primary)] hover:underline disabled:opacity-50"
+              onClick={async () => {
+                if (timer > 0) return;
+                await onResendOTP();
+                setTimer(30);
+              }}
+              disabled={resendLoading || timer > 0}
+              className="text-sm text-[var(--primary)] hover:underline disabled:opacity-50 disabled:no-underline"
             >
-              {resendLoading ? "Resending..." : "Didn't receive OTP? Resend"}
+              {resendLoading
+                ? "Resending..."
+                : timer > 0
+                  ? `Resend OTP in ${timer}s`
+                  : "Didn't receive OTP? Resend"}
             </button>
           </div>
         </div>
