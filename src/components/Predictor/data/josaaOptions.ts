@@ -10,7 +10,6 @@ export const josaaRounds = [
 ];
 
 export const josaaInstituteTypes = [
-  { label: "IIT", value: "IIT" },
   { label: "NIT", value: "NIT" },
   { label: "IIIT", value: "IIIT" },
   { label: "GFTI", value: "GFTI" },

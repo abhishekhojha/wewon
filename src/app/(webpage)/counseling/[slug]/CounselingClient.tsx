@@ -376,9 +376,9 @@ export default function CounselingClient() {
             <h2 className="text-2xl font-bold text-[var(--primary)] mb-6">
               What You'll Get
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex w-full flex-row items-start justify-between">
               {product.features.choiceFilling.isEnabled && (
-                <div className="flex items-start gap-3">
+                <div className="flex w-full items-start gap-3">
                   <CheckCircle
                     className="text-green-500 flex-shrink-0 mt-1"
                     size={24}
@@ -388,16 +388,14 @@ export default function CounselingClient() {
                       Choice Filling Tool
                     </h3>
                     <p className="text-gray-600">
-                      {product.features.choiceFilling.usageLimit === -1
-                        ? "Unlimited usage"
-                        : `${product.features.choiceFilling.usageLimit} uses available`}
+                      Personlised Choice Filling at your rank 
                     </p>
                   </div>
                 </div>
               )}
 
               {product.features.collegePredictor.isEnabled && (
-                <div className="flex items-start gap-3">
+                <div className="flex w-full items-start gap-3">
                   <CheckCircle
                     className="text-green-500 flex-shrink-0 mt-1"
                     size={24}
@@ -406,7 +404,7 @@ export default function CounselingClient() {
                     <h3 className="font-semibold text-lg">College Predictor</h3>
                     <p className="text-gray-600">
                       {product.features.collegePredictor.usageLimit === -1
-                        ? "Unlimited usage"
+                        ? "Unilimited Usage"
                         : `${product.features.collegePredictor.usageLimit} uses available`}
                     </p>
                   </div>
@@ -414,7 +412,7 @@ export default function CounselingClient() {
               )}
 
               {product.features.hasMentorship && (
-                <div className="flex items-start gap-3">
+                <div className="flex w-full items-start gap-3">
                   <CheckCircle
                     className="text-green-500 flex-shrink-0 mt-1"
                     size={24}
@@ -427,9 +425,36 @@ export default function CounselingClient() {
                   </div>
                 </div>
               )}
+                 
+                <div className="flex w-full items-start gap-3">
+                  <CheckCircle
+                    className="text-green-500 flex-shrink-0 mt-1"
+                    size={24}
+                  />
+                  <div>
+                    <h3 className="font-semibold text-lg">Call & Chat Support</h3>
+                    <p className="text-gray-600">
+                      Unlimited Call & Chat Support
+                    </p>
+                  </div>
+                </div>
+
+                 
+                <div className="flex w-full items-start gap-3">
+                  <CheckCircle
+                    className="text-green-500 flex-shrink-0 mt-1"
+                    size={24}
+                  />
+                  <div>
+                    <h3 className="font-semibold text-lg">Support</h3>
+                    <p className="text-gray-600">
+                      Support till end of  Counselling
+                    </p>
+                  </div>
+                </div>
 
               {product.features.hasCourseContent && (
-                <div className="flex items-start gap-3">
+                <div className="flex w-full items-start gap-3">
                   <CheckCircle
                     className="text-green-500 flex-shrink-0 mt-1"
                     size={24}

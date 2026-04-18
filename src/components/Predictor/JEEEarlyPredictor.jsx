@@ -291,7 +291,7 @@ export default function JEEEarlyPredictor() {
     <div className="container mx-auto px-2 sm:px-4 my-6 sm:my-10">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
         {/* Left Column: Steps */}
-        <div className="flex flex-col sticky top-20 self-start space-y-3 sm:space-y-6">
+        <div className="flex flex-col space-y-3 sm:space-y-6">
           {/* Thumbnail Image - 16:9 ratio */}
           {product?.thumbnail && (
             <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg">
