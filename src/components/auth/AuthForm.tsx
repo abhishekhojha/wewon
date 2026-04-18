@@ -36,7 +36,7 @@ export default function AuthForm() {
   const [phone, setPhone] = useState("");
   const [verificationMethod, setVerificationMethod] = useState<
     "email" | "phone"
-  >("email");
+  >("phone");
 
   // Login form state (parent-managed)
   const [loginEmail, setLoginEmail] = useState("");
@@ -56,6 +56,7 @@ export default function AuthForm() {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [resetResendLoading, setResetResendLoading] = useState(false);
+
 
   // Step 1: send register request (server sends OTP)
   const handleNextStep = async () => {
@@ -132,6 +133,7 @@ export default function AuthForm() {
       toast.success(res?.data?.message || "Verification successful");
       setRegisterStep(1);
       setActiveTab("login");
+      
       router.push(returnUrl);
     } catch (err: any) {
       toast.error(
@@ -156,6 +158,7 @@ export default function AuthForm() {
       if (token) {
         await dispatch(fetchUserProfile()).unwrap();
       }
+      console.log("login - ",returnUrl);
       router.push(returnUrl);
     } catch (err: any) {
       toast.error(

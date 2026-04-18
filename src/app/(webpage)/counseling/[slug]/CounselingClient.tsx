@@ -10,7 +10,11 @@ import {
 import { fetchCounselingProductBySlug } from "@/store/counseling/counselingThunk";
 import { selectIsAuthenticated } from "@/store/auth/authSlice";
 import { selectUserOrders } from "@/store/order/orderSlice";
-import { fetchUserOrders, downloadInvoice, markWhatsappChannelClick } from "@/store/order/orderThunk";
+import {
+  fetchUserOrders,
+  downloadInvoice,
+  markWhatsappChannelClick,
+} from "@/store/order/orderThunk";
 import { toast } from "sonner";
 import { PaymentSuccessData } from "@/components/program/RazorpayPayment";
 import PaymentSuccessModal from "@/components/program/PaymentSuccessModal";
@@ -19,6 +23,12 @@ import {
   PlayCircle,
   FileText,
   ExternalLink,
+  ListChecks,
+  ArrowRight,
+  BookOpen,
+  ToolCase,
+  Bell,
+  Lock,
 } from "lucide-react";
 import ShareButton from "@/components/program/ShareButton";
 import TabNavigation from "@/components/program/TabNavigation";
@@ -26,6 +36,7 @@ import ValidityBadge from "@/components/program/ValidityBadge";
 import LearningMaterialsSection from "@/components/program/LearningMaterialsSection";
 import LockedContentModal from "@/components/program/LockedContentModal";
 import CheckoutPage from "@/components/program/CheckoutPage";
+import Link from "next/link";
 
 export default function CounselingClient() {
   const params = useParams();
@@ -58,8 +69,8 @@ export default function CounselingClient() {
 
   const handleDownloadInvoice = async () => {
     if (!completedOrderId) {
-      toast.error("Failed to download Invoice.")
-      return
+      toast.error("Failed to download Invoice.");
+      return;
     }
     try {
       await dispatch(downloadInvoice(completedOrderId)).unwrap();
@@ -173,6 +184,12 @@ export default function CounselingClient() {
   }, [product]);
 
   const handleBuyNow = () => {
+    if (!isAuthenticated) {
+      router.push(
+        `/auth?returnUrl=${encodeURIComponent(`/counseling/${slug}`)}`,
+      );
+      return;
+    }
     setShowCheckout(true);
   };
 
@@ -318,12 +335,12 @@ export default function CounselingClient() {
               </div>
 
               {/* Material Count */}
-              <div className="flex items-center gap-2 text-gray-600 mb-6">
+              {/* <div className="flex items-center gap-2 text-gray-600 mb-6">
                 <FileText size={20} />
                 <span>
                   {product.totalMaterialCount} learning materials included
                 </span>
-              </div>
+              </div> */}
 
               {/* Buy Button */}
               {!isPurchased && (
@@ -425,6 +442,122 @@ export default function CounselingClient() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+          {/* Tools */}
+          <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-12">
+            <h2 className="text-2xl font-bold text-[var(--primary)] mb-6 flex items-center gap-2">
+              <ToolCase className="w-7 h-7" />
+              Tools
+            </h2>
+            <div className="grid gap-6 sm:grid-cols-3 lg:grid-cols-3">
+              {/* College Predictor */}
+              <div
+                onClick={() =>
+                  !isPurchased
+                    ? handleLockedContentClick()
+                    : router.push("/s/predictor")
+                }
+                className="group relative h-full cursor-pointer overflow-hidden rounded-2xl shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <div className="bg-[#073d68] p-6 h-full flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <BookOpen className="w-8 h-8 text-white" />
+                    </div>
+                    {isPurchased ? (
+                      <ArrowRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
+                    ) : (
+                      <Lock className="w-6 h-6 text-white/70" />
+                    )}
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    College Predictor
+                  </h3>
+                  <p className="text-blue-100 text-sm">
+                    Find colleges based on your rank and preferences
+                  </p>
+                </div>
+                {!isPurchased && (
+                  <div className="absolute inset-0 bg-black/90 backdrop-blur-[1px] flex items-center justify-center">
+                    <div className="bg-white/90 p-2 rounded-full shadow-lg group-hover:translate-y-0 transition-transform">
+                      <Lock className="w-5 h-5 text-[var(--primary)]" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Choice Filling */}
+              <div
+                onClick={() =>
+                  !isPurchased
+                    ? handleLockedContentClick()
+                    : router.push("/s/choice-filling")
+                }
+                className="group relative h-full cursor-pointer overflow-hidden rounded-2xl shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <div className="bg-orange-500 p-6 h-full flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <ListChecks className="w-8 h-8 text-white" />
+                    </div>
+                    {isPurchased ? (
+                      <ArrowRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
+                    ) : (
+                      <Lock className="w-6 h-6 text-white/70" />
+                    )}
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2"> 
+                    Choice Filling
+                  </h3>
+                  <p className="text-orange-100 text-sm">
+                    Browse products and generate your personalized choice list
+                  </p>
+                </div>
+                {!isPurchased && (
+                  <div className="absolute inset-0 bg-black/90 backdrop-blur-[1px] flex items-center justify-center">
+                    <div className="bg-white/90 p-2 rounded-full shadow-lg group-hover:translate-y-0 transition-transform">
+                      <Lock className="w-5 h-5 text-[var(--primary)]" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Notification */}
+              <div
+                onClick={() =>
+                  !isPurchased
+                    ? handleLockedContentClick()
+                    : router.push("/s/notifications")
+                }
+                className="group relative h-full cursor-pointer overflow-hidden rounded-2xl shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <div className="bg-blue-500 p-6 h-full flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <Bell className="w-8 h-8 text-white" />
+                    </div>
+                    {isPurchased ? (
+                      <ArrowRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
+                    ) : (
+                      <Lock className="w-6 h-6 text-white/70" />
+                    )}
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    Notification
+                  </h3>
+                  <p className="text-blue-100 text-sm">
+                    Get latest updates and notifications
+                  </p>
+                </div>
+                {!isPurchased && (
+                  <div className="absolute inset-0 bg-black/90 backdrop-blur-[1px] flex items-center justify-center">
+                    <div className="bg-white/90 p-2 rounded-full shadow-lg group-hover:translate-y-0 transition-transform">
+                      <Lock className="w-5 h-5 text-[var(--primary)]" />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -545,7 +678,9 @@ export default function CounselingClient() {
                         {section.resources.map((resource) => (
                           <button
                             key={resource._id}
-                            onClick={() => handleContentResourceClick(resource.url)}
+                            onClick={() =>
+                              handleContentResourceClick(resource.url)
+                            }
                             className="w-full flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-left"
                           >
                             {resource.type === "video" && (

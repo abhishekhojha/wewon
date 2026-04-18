@@ -4,13 +4,15 @@ import Loader from "@/components/loader/Loader";
 import { setLoadingFalse } from "@/store/auth/authSlice";
 import { fetchUserProfile } from "@/store/auth/authThunk";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function HomePage() {
   const { loading, isAuthenticated } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const router = useRouter();
+    const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl") || "/";
   const [initialized, setInitialized] = useState(false);
 
   // Initialize auth state on mount
@@ -29,7 +31,7 @@ export default function HomePage() {
   // Redirect if authenticated
   useEffect(() => {
     if (isAuthenticated && initialized) {
-      router.push("/");
+      router.push(returnUrl);
     }
   }, [isAuthenticated, initialized, router]);
 
