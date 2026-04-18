@@ -124,7 +124,7 @@ const PredictorCard: React.FC<PredictorCardProps> = ({ predictor }) => {
             onClick={handleClick}
             className={`py-2.5 px-5 rounded-xl font-semibold text-white transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer bg-[#0f3a67] hover:bg-[#0a2847]`}
           >
-            {isCombo ? "Use Pack" : "Use"}
+            Use
             <ArrowRight size={16} />
           </button>
         </div>
