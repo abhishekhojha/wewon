@@ -359,7 +359,7 @@ export default function JoSAAPredictor() {
             </h2>
             <div className="flex flex-wrap items-center gap-2">
               <span className="bg-[var(--light-blue)] text-[var(--primary)] text-[10px] sm:text-xs font-semibold px-2 sm:px-4 py-1 sm:py-2 rounded-full whitespace-nowrap w-fit">
-                IIT · NIT · IIIT · GFTI
+                NIT · IIIT · GFTI
               </span>
               {usageStatus && (
                 <span className="bg-orange-50 text-orange-700 text-[10px] sm:text-xs font-bold px-2 sm:px-4 py-1 sm:py-2 rounded-full border border-orange-200 shadow-sm">

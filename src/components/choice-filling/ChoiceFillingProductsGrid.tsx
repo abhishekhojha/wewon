@@ -110,7 +110,7 @@ export default function ChoiceFillingProductsGrid({
           {tools
             ? "No matching choice-filling tools found."
             : onlyPurchased
-              ? "You haven't purchased any choice-filling tools yet."
+              ? "You haven’t purchased any choice-filling tools yet. If you’ve already purchased the counselling program, your choice-filling tool will be activated shortly."
               : "No choice-filling products are available right now."}
         </p>
       </div>

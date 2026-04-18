@@ -376,18 +376,18 @@ export default function CounselingClient() {
             <h2 className="text-2xl font-bold text-[var(--primary)] mb-6">
               What You'll Get
             </h2>
-            <div className="flex w-full flex-row items-start justify-between">
+            <div className="flex w-full flex-row items-start flex-wrap md:flex-nowrap justify-between gap-4 md:gap-2">
               {product.features.choiceFilling.isEnabled && (
-                <div className="flex w-full items-start gap-3">
+                <div className="flex w-full md:flex-1 items-start gap-2">
                   <CheckCircle
                     className="text-green-500 flex-shrink-0 mt-1"
                     size={24}
                   />
                   <div>
-                    <h3 className="font-semibold text-lg">
+                    <h3 className="font-semibold text-lg md:text-base">
                       Choice Filling Tool
                     </h3>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 md:text-sm">
                       Personlised Choice Filling at your rank 
                     </p>
                   </div>
@@ -395,14 +395,14 @@ export default function CounselingClient() {
               )}
 
               {product.features.collegePredictor.isEnabled && (
-                <div className="flex w-full items-start gap-3">
+                <div className="flex w-full md:flex-1 items-start gap-2">
                   <CheckCircle
                     className="text-green-500 flex-shrink-0 mt-1"
                     size={24}
                   />
                   <div>
-                    <h3 className="font-semibold text-lg">College Predictor</h3>
-                    <p className="text-gray-600">
+                    <h3 className="font-semibold text-lg md:text-base">College Predictor</h3>
+                    <p className="text-gray-600 md:text-sm">
                       {product.features.collegePredictor.usageLimit === -1
                         ? "Unilimited Usage"
                         : `${product.features.collegePredictor.usageLimit} uses available`}
@@ -412,56 +412,56 @@ export default function CounselingClient() {
               )}
 
               {product.features.hasMentorship && (
-                <div className="flex w-full items-start gap-3">
+                <div className="flex w-full md:flex-1 items-start gap-2">
                   <CheckCircle
                     className="text-green-500 flex-shrink-0 mt-1"
                     size={24}
                   />
                   <div>
-                    <h3 className="font-semibold text-lg">Mentorship</h3>
-                    <p className="text-gray-600">
+                    <h3 className="font-semibold text-lg md:text-base">Mentorship</h3>
+                    <p className="text-gray-600 md:text-sm">
                       One-on-one guidance from experts
                     </p>
                   </div>
                 </div>
               )}
                  
-                <div className="flex w-full items-start gap-3">
+                <div className="flex w-full md:flex-1 items-start gap-2">
                   <CheckCircle
                     className="text-green-500 flex-shrink-0 mt-1"
                     size={24}
                   />
                   <div>
-                    <h3 className="font-semibold text-lg">Call & Chat Support</h3>
-                    <p className="text-gray-600">
+                    <h3 className="font-semibold text-lg md:text-base">Call & Chat Support</h3>
+                    <p className="text-gray-600 md:text-sm">
                       Unlimited Call & Chat Support
                     </p>
                   </div>
                 </div>
 
                  
-                <div className="flex w-full items-start gap-3">
+                <div className="flex w-full md:flex-1 items-start gap-2">
                   <CheckCircle
                     className="text-green-500 flex-shrink-0 mt-1"
                     size={24}
                   />
                   <div>
-                    <h3 className="font-semibold text-lg">Support</h3>
-                    <p className="text-gray-600">
+                    <h3 className="font-semibold text-lg md:text-base">Support</h3>
+                    <p className="text-gray-600 md:text-sm">
                       Support till end of  Counselling
                     </p>
                   </div>
                 </div>
 
               {product.features.hasCourseContent && (
-                <div className="flex w-full items-start gap-3">
+                <div className="flex w-full md:flex-1 items-start gap-2">
                   <CheckCircle
                     className="text-green-500 flex-shrink-0 mt-1"
                     size={24}
                   />
                   <div>
-                    <h3 className="font-semibold text-lg">Course Content</h3>
-                    <p className="text-gray-600">
+                    <h3 className="font-semibold text-lg md:text-base">Course Content</h3>
+                    <p className="text-gray-600 md:text-sm">
                       Comprehensive study materials
                     </p>
                   </div>
