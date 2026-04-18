@@ -12,6 +12,8 @@ import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
 import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
+import { useRouter } from "next/navigation";
+import { selectIsAuthenticated } from "@/store/auth/authSlice";
 
 interface ComboPredictorSelectorProps {
   slug: string;
@@ -19,7 +21,9 @@ interface ComboPredictorSelectorProps {
 
 const ComboPredictorSelector: React.FC<ComboPredictorSelectorProps> = ({ slug }) => {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const userOrders = useAppSelector(selectUserOrders);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const [comboProduct, setComboProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +47,15 @@ const ComboPredictorSelector: React.FC<ComboPredictorSelectorProps> = ({ slug })
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBuyNow = () => {
+    if (!isAuthenticated) {
+    router.push(
+        `/auth?returnUrl=${encodeURIComponent(`/${slug}`)}`,
+      );
+    }
+    setIsPaymentModalOpen(true);
   };
 
   useEffect(() => {
@@ -158,7 +171,7 @@ const ComboPredictorSelector: React.FC<ComboPredictorSelectorProps> = ({ slug })
                 </p>
                 <div className="flex flex-col gap-3 w-full">
                   <button 
-                    onClick={() => setIsPaymentModalOpen(true)}
+                    onClick={() => handleBuyNow()}
                     className="flex items-center justify-center gap-2 w-full py-4 bg-[#0f3a67] text-white rounded-2xl font-bold text-lg hover:bg-[#0a2847] transition-all shadow-xl shadow-[#0f3a67]/20 active:scale-95"
                   >
                     <ShoppingCart size={20} />
