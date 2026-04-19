@@ -160,16 +160,16 @@ const SearchBar = ({
             onKeyDown={handleKeyDown}
             onFocus={() => results.length > 0 && setShowDropdown(true)}
             placeholder={placeholder}
-            className="w-full h-16 pl-14 pr-28 text-lg text-gray-800 placeholder-gray-400 bg-transparent rounded-2xl focus:outline-none"
+            className="w-full h-12 md:h-16 pl-12 md:pl-14 pr-12 md:pr-28 text-sm md:text-lg text-gray-800 placeholder-gray-400 bg-transparent rounded-2xl focus:outline-none"
             autoComplete="off"
           />
           <button
             type="submit"
             aria-label="Search"
-            className="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-3 bg-[var(--primary)] rounded-xl flex items-center justify-center gap-2 text-white font-medium transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[var(--primary)]/30 cursor-pointer"
+            className="absolute right-1.5 md:right-3 top-1/2 -translate-y-1/2 w-9 h-9 md:w-auto md:px-6 md:py-3 bg-[var(--primary)] rounded-xl flex items-center justify-center gap-2 text-white font-medium transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[var(--primary)]/30 cursor-pointer"
           >
-            <Search className="h-5 w-5" />
-            <span className="hidden sm:inline">Search</span>
+            <Search className="h-4 w-4 md:h-5 md:w-5" />
+            <span className="hidden md:inline">Search</span>
           </button>
         </div>
       </form>

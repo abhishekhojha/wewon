@@ -1,5 +1,6 @@
 import NewsSection from "@/components/home/FeaturedNews";
 import FeatureCounselling from "@/components/home/FeatureCounselling";
+import FeaturePredictor from "@/components/home/FeaturePredictor";
 import FeaturedVideos from "@/components/home/FeaturedVideos";
 import FeaturesSection from "@/components/home/FeaturesSection";
 import HowItWorks from "@/components/home/HowItWorks";
@@ -12,6 +13,7 @@ import CallToAction from "@/components/sections/CallToAction";
 import HeroSection from "@/components/sections/HeroSection";
 import Newsletter from "@/components/Newsletter";
 import Recommended from "@/components/sections/Recommended";
+import WhyChooseUs from "@/components/home/WhyChooseUs";
 import PopupAd from "@/components/ads/PopupAd";
 import Script from "next/script";
 
@@ -133,8 +135,13 @@ export default function Home() {
       </div>
       <CollegesSlider />
       <div className="container mx-auto">
+        <FeatureCounselling />
+        <FeaturePredictor />
+      </div>
+      <div className="container mx-auto">
         <FeaturesSection />
-        <HowItWorks />
+        <WhyChooseUs />
+        {/* <HowItWorks /> */}
       </div>
       <div className="overflow-hidden">
         <div className="container mx-auto">
@@ -142,16 +149,11 @@ export default function Home() {
         </div>
       </div>
       <YouTubeBanner />
-      {/* <div className="container mx-auto">
-        <FeaturedVideos />
-      </div> */}
-      <div className="container mx-auto px-4">
-        {/* <TopColleges /> */}
-        <Recommended />
-      </div>
-      <div className="container mx-auto">{/* <FeatureCounselling /> */}</div>
       <div className="bg-[var(--muted-background)]">
         <NewsSection />
+      </div>
+      <div className="container mx-auto px-4 mt-8">
+        <Recommended />
       </div>
       <div className="container mx-auto">
         <StudentStoryTestimonial />

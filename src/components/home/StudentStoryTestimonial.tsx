@@ -72,60 +72,79 @@ export default function TestimonialSlider() {
   return (
     <Sections>
       <div className="">
-        <Heading text="Student Stories" centered={true} />
+        <Heading text="Student Success Stories" centered={true} />
 
-        {/* Use a relative container to position the navigation buttons */}
-        <div className="relative mt-12">
+        {/* Relative container for the slide and navigation */}
+        <div className="relative mt-8 md:mt-12">
           <Swiper
             modules={[Navigation]}
             navigation={{
-              prevEl: ".student-swiper-button-prev", // Custom class for prev button
-              nextEl: ".student-swiper-button-next", // Custom class for next button
+              prevEl: ".student-swiper-button-prev",
+              nextEl: ".student-swiper-button-next",
             }}
             loop={true}
-            className="rounded-2xl overflow-hidden"
+            autoHeight={false}
+            className="pb-16 md:pb-0"
           >
             {testimonials.map((story) => (
-              <SwiperSlide key={story.name}>
-                <div className="flex flex-col md:flex-row gap-4">
-                  {/* Left Side: Testimonial Content */}
-                  <div className="w-full bg-[var(--primary)] text-white p-8 md:p-16 flex flex-col justify-center items-center text-center rounded-2xl">
-                    <p className="text-sm font-semibold text-[var(--accent)] tracking-wider uppercase">
-                      {story.name}
-                      <span className="text-white"> • {story.affiliation}</span>
-                    </p>
-                    <blockquote className="mt-6 text-xl md:text-xl font-medium">
-                      “{story.quote}”
-                    </blockquote>
+              <SwiperSlide key={story.name} className="py-2 h-auto">
+                <div className="flex flex-col md:flex-row gap-5 md:gap-8 items-stretch h-full">
+                  {/* Image Card */}
+                  <div className="w-full md:w-[40%] flex-shrink-0 relative group">
+                    <div className="relative aspect-[3/2] overflow-hidden rounded-3xl">
+                      <img
+                        src={story.imageUrl}
+                        alt={`Testimonial from ${story.name}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                    </div>
                   </div>
 
-                  {/* Right Side: Image */}
-                  <div className="w-full rounded-2xl">
-                    <img
-                      src={story.imageUrl}
-                      alt={`Testimonial from ${story.name}`}
-                      className="w-full rounded-2xl h-full object-cover min-h-[300px] md:min-h-0"
-                    />
+                  {/* Testimonial Card - Enforce Consistent Height */}
+                  <div className="w-full md:flex-1 bg-gradient-to-br from-[var(--primary)] to-[#0a2e52] text-white p-6 md:p-10 rounded-3xl shadow-xl flex flex-col justify-center relative overflow-hidden border border-white/5 min-h-[280px] sm:min-h-[320px] md:min-h-0">
+                    {/* Decorative Background Icon */}
+                    <div className="absolute -right-6 -top-6 text-white/5 select-none hidden md:block">
+                      <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H16.017C15.4647 8 15.017 8.44772 15.017 9V12C15.017 12.5523 14.5693 13 14.017 13H12.017C11.4647 13 11.017 12.5523 11.017 12V5C11.017 4.44772 11.4647 4 12.017 4H19.017C21.2261 4 23.017 5.79086 23.017 8V15C23.017 18.866 19.883 22 16.017 22H14.017V21ZM5.017 21L5.017 18C5.017 16.8954 5.91243 16 7.017 16H10.017C10.5693 16 11.017 15.5523 11.017 15V9C11.017 8.44772 10.5693 8 10.017 8H7.017C6.46472 8 6.017 8.44772 6.017 9V12C6.017 12.5523 5.5693 13 5.017 13H3.017C2.46472 13 2.017 12.5523 2.017 12V5C2.017 4.44772 2.46472 4 3.017 4H10.017C12.2261 4 14.017 5.79086 14.017 8V15C14.017 18.866 10.883 22 7.017 22H5.017V21Z" />
+                      </svg>
+                    </div>
+
+                    <div className="relative z-10 flex flex-col justify-between h-full">
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="w-6 h-1 bg-[var(--accent)] rounded-full"></span>
+                          <p className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-widest">Story</p>
+                        </div>
+                        <blockquote className="text-sm sm:text-base md:text-lg lg:text-xl font-medium leading-relaxed italic text-white/90">
+                          "{story.quote}"
+                        </blockquote>
+                      </div>
+
+                      <div className="mt-6 pt-5 border-t border-white/10">
+                        <h4 className="text-base font-bold tracking-tight">{story.name}</h4>
+                        <p className="text-xs text-white/50 font-medium">{story.affiliation}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </SwiperSlide>
             ))}
           </Swiper>
 
-          {/* --- Custom Navigation Arrows --- */}
-          {/* These are positioned absolutely on top of the Swiper container */}
-          <div className="absolute bottom-10 z-10 w-full md:w-1/2 left-1/2 md:left-0 md:translate-x-0 -translate-x-1/2 flex justify-center items-center space-x-3">
+          {/* --- Navigation Buttons --- */}
+          <div className="absolute bottom-0 md:bottom-12 right-0 left-0 md:left-auto md:right-12 z-20 flex justify-center md:justify-end items-center space-x-4">
             <button
               aria-label="Previous testimonial"
-              className="student-swiper-button-prev border border-slate-500 text-white rounded-full h-10 w-10 flex items-center justify-center transition-colors hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+              className="student-swiper-button-prev border border-white/10 text-white rounded-2xl h-12 w-12 flex items-center justify-center transition-all bg-[var(--primary)] md:bg-white/5 md:backdrop-blur-md hover:bg-[var(--accent)] hover:text-[var(--primary)] hover:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] group shadow-xl"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={20} className="group-active:-translate-x-1 transition-transform" />
             </button>
             <button
               aria-label="Next testimonial"
-              className="student-swiper-button-next border border-slate-500 text-white rounded-full h-10 w-10 flex items-center justify-center transition-colors hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+              className="student-swiper-button-next border border-white/10 text-white rounded-2xl h-12 w-12 flex items-center justify-center transition-all bg-[var(--primary)] md:bg-white/5 md:backdrop-blur-md hover:bg-[var(--accent)] hover:text-[var(--primary)] hover:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] group shadow-xl"
             >
-              <ArrowRight size={20} />
+              <ArrowRight size={20} className="group-active:translate-x-1 transition-transform" />
             </button>
           </div>
         </div>

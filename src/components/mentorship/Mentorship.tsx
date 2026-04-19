@@ -33,7 +33,7 @@ const mentorshipData = [
     id: 3,
     title: "MBA Entrance Exam Mentorship",
     description:
-      "Mentorship from IIM and top B-school alumni for CAT, XAT, GMAT — get personal strategy sessions, mock analysis, and interview prep.",
+      "Mentorship from IIM and top B-school mentors for CAT, XAT, GMAT — get personal strategy sessions, mock analysis, and interview prep.",
     imageUrl:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1974&auto=format&fit=crop",
     originalPrice: 3499,

@@ -19,7 +19,7 @@ const features = [
     icon: Lightbulb,
     title: "Counselling Program",
     description:
-      "Get personalized guidance from IIT/NIT alumni, and admission counselling expert",
+      "Get personalized guidance from IIT/NIT mentor, and admission counselling expert",
     buttonText: "Explore Programs",
     buttonLink: "/counseling",
     // Style for the 1st and 3rd cards
@@ -33,16 +33,15 @@ const FeaturesSection = () => {
       <div className="container mx-auto">
         {/* Section Header */}
         <div className="text-center mx-auto">
-          <Heading text="Every Need for Your Admission Journey" />
+          <Heading text="Get the Best College Based on Your Rank" />
           <p className="mt-4 text-lg text-gray-500">
-            Comprehensive tools and insights to help you make the best college
-            choices
+            Advanced Tools and Expert Insights for Smarter College Decisions.
           </p>
         </div>
 
         {/* Features Grid */}
         {/* center the grid horizontally*/}
-        <div className="mt-16 w-full mx-auto grid grid-cols-2 gap-8">
+        <div className="mt-16 w-full mx-auto grid md:grid-cols-2 gap-8">
           {features.map((feature) => (
             <div
               key={feature.title}
@@ -56,7 +55,7 @@ const FeaturesSection = () => {
               />
 
               {/* Card Title */}
-              <h3 className="mt-6 text-2xl font-bold text-[var(--primary)]">
+              <h3 className="mt-6 text-xl md:text-2xl font-bold text-[var(--primary)]">
                 {feature.title}
               </h3>
 
