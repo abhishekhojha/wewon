@@ -2,7 +2,7 @@
 interface keyPredictorSlugMap {
   "WBJEE": "wbjee-predictor",
   "JEE_MAIN": "jee-mains-predictor",
-  "JEE_ADVANCE": "jee-advance-predictor",
+  "JEE_ADVANCE": "jee-advanced-predictor",
   "JAC_DELHI": "jac-delhi-predictor",
   "JAC_CHANDIGARH": "jac-chandigarh-predictor",
   "UPTAC": "uptac-predictor",
@@ -23,7 +23,7 @@ interface choiceFillingKeySlugMap {
 interface predictorSlugKeyMap {
   "wbjee-predictor": "WBJEE",
   "jee-mains-predictor": "JEE_MAIN",
-  "jee-advance-predictor": "JEE_ADVANCE",
+  "jee-advanced-predictor": "JEE_ADVANCE",
   "jac-delhi-predictor": "JAC_DELHI",
   "jac-chandigarh-predictor": "JAC_CHANDIGARH",
   "uptac-predictor": "UPTAC",
@@ -46,7 +46,7 @@ export type predictorExamKey = "WBJEE" | "JEE_MAIN" | "JAC_DELHI" | "JAC_CHANDIG
 export const predictorKeyMap: keyPredictorSlugMap = {
   "WBJEE": "wbjee-predictor",
   "JEE_MAIN": "jee-mains-predictor",
-  "JEE_ADVANCE": "jee-advance-predictor",
+  "JEE_ADVANCE": "jee-advanced-predictor",
   "JAC_DELHI": "jac-delhi-predictor",
   "JAC_CHANDIGARH": "jac-chandigarh-predictor",
   "UPTAC": "uptac-predictor",
@@ -61,7 +61,7 @@ export const predictorKeyMap: keyPredictorSlugMap = {
 export const predictorSlugKeyMap: predictorSlugKeyMap = {
   "wbjee-predictor": "WBJEE",
   "jee-mains-predictor": "JEE_MAIN",
-  "jee-advance-predictor": "JEE_ADVANCE",
+  "jee-advanced-predictor": "JEE_ADVANCE",
   "jac-delhi-predictor": "JAC_DELHI",
   "jac-chandigarh-predictor": "JAC_CHANDIGARH",
   "uptac-predictor": "UPTAC",

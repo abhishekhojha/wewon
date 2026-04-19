@@ -151,7 +151,13 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Menu Toggle */}
-        <div className="xl:hidden flex items-center">
+        <div className="xl:hidden flex items-center gap-3">
+          <Link
+            href="/counseling"
+            className="bg-[var(--accent)] text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-sm hover:scale-105 transition-all"
+          >
+            Counselling 
+          </Link>
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="text-[var(--primary)] focus:outline-none"
@@ -175,12 +181,21 @@ const Navbar = () => {
                   height={60}
                   className="h-12 w-auto object-contain"
                 />
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="text-[var(--primary)] focus:outline-none"
-                >
-                  <X size={32} />
-                </button>
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/counseling"
+                    className="bg-[var(--accent)] text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-sm hover:scale-105 transition-all"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Counselling →
+                  </Link>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="text-[var(--primary)] focus:outline-none"
+                  >
+                    <X size={32} />
+                  </button>
+                </div>
               </div>
             </div>
 
