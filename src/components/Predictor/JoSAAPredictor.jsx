@@ -46,12 +46,9 @@ export default function JoSAAPredictor() {
     gender: "Male",
     homeState: "",
     roundNumber: 6,
-    instituteType: [],
-    branchGroup: [],
+    instituteType: "",
+    branchGroup: "",
   });
-
-  const [instituteSearch, setInstituteSearch] = useState("");
-  const [branchSearch, setBranchSearch] = useState("");
 
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -207,8 +204,8 @@ export default function JoSAAPredictor() {
         gender: formData.gender,
         homeState: formData.homeState,
         roundNumber: Number(formData.roundNumber),
-        ...(formData.instituteType.length > 0 ? { instituteType: formData.instituteType } : {}),
-        ...(formData.branchGroup.length > 0 ? { branchGroup: formData.branchGroup } : {}),
+        ...(formData.instituteType ? { instituteType: formData.instituteType } : {}),
+        ...(formData.branchGroup ? { branchGroup: formData.branchGroup } : {}),
       };
       const response = await predictJosaa(payload);
       setResults(response.data);
@@ -248,53 +245,6 @@ export default function JoSAAPredictor() {
       return;
     }
     await fetchPredictions();
-  };
-
-  const handleInstituteTypeSelection = (type) => {
-    setFormData((prev) => {
-      const isSelected = prev.instituteType.includes(type);
-      return {
-        ...prev,
-        instituteType: isSelected
-          ? prev.instituteType.filter((t) => t !== type)
-          : [...prev.instituteType, type],
-      };
-    });
-  };
-
-  const handleSelectAllInstituteTypes = () => {
-    if (formData.instituteType.length === josaaInstituteTypes.length) {
-      setFormData((prev) => ({ ...prev, instituteType: [] }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        instituteType: josaaInstituteTypes.map((t) => t.value),
-      }));
-    }
-  };
-
-  const handleBranchGroupSelection = (group) => {
-    setFormData((prev) => {
-      const isSelected = prev.branchGroup.includes(group);
-      return {
-        ...prev,
-        branchGroup: isSelected
-          ? prev.branchGroup.filter((g) => g !== group)
-          : [...prev.branchGroup, group],
-      };
-    });
-  };
-
-  const handleSelectAllBranchGroups = () => {
-    const availableGroups = branchGroups.filter((group) => group !== "Mining / Geo");
-    if (formData.branchGroup.length === availableGroups.length) {
-      setFormData((prev) => ({ ...prev, branchGroup: [] }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        branchGroup: [...availableGroups],
-      }));
-    }
   };
 
   const handlePaymentSuccess = () => {
@@ -519,143 +469,50 @@ export default function JoSAAPredictor() {
 
             {/* Institute Type */}
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
+              <label
+                htmlFor="instituteType"
+                className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
+              >
                 Institute Type (Optional)
               </label>
-              <div className="border border-[var(--border)] rounded-lg bg-white">
-                <div className="p-2 border-b border-[var(--border)]">
-                  <input
-                    type="text"
-                    placeholder="Search institute types..."
-                    value={instituteSearch}
-                    onChange={(e) => setInstituteSearch(e.target.value)}
-                    className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
-                  />
-                </div>
-                <div className="max-h-48 overflow-y-auto p-2">
-                  <label className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.instituteType.length === josaaInstituteTypes.length}
-                      onChange={handleSelectAllInstituteTypes}
-                      className="mr-2 accent-[var(--primary)]"
-                    />
-                    <span className="text-xs sm:text-sm font-semibold">
-                      Select All ({josaaInstituteTypes.length})
-                    </span>
-                  </label>
-                  <div className="border-t border-[var(--border)] my-1"></div>
-                  {josaaInstituteTypes
-                    .filter((type) =>
-                      type.label.toLowerCase().includes(instituteSearch.toLowerCase())
-                    )
-                    .map((option) => (
-                      <label
-                        key={option.value}
-                        className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.instituteType.includes(option.value)}
-                          onChange={() => handleInstituteTypeSelection(option.value)}
-                          className="mr-2 accent-[var(--primary)]"
-                        />
-                        <span className="text-xs sm:text-sm flex-1">{option.label}</span>
-                        {formData.instituteType.includes(option.value) && (
-                          <svg
-                            className="w-4 h-4 text-green-500 flex-shrink-0"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                      </label>
-                    ))}
-                </div>
-              </div>
-              {formData.instituteType.length > 0 && (
-                <p className="text-xs text-[var(--muted-text)] mt-1">
-                  {formData.instituteType.length} type(s) selected
-                </p>
-              )}
+              <select
+                id="instituteType"
+                value={formData.instituteType}
+                onChange={handleChange}
+                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
+              >
+                <option value="">All</option>
+                {josaaInstituteTypes.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Branch Group / Program Name */}
+            {/* Branch Group */}
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
-                Program Name (Optional)
+              <label
+                htmlFor="branchGroup"
+                className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
+              >
+                Branch Group (Optional)
               </label>
-              <div className="border border-[var(--border)] rounded-lg bg-white">
-                <div className="p-2 border-b border-[var(--border)]">
-                  <input
-                    type="text"
-                    placeholder="Search programs..."
-                    value={branchSearch}
-                    onChange={(e) => setBranchSearch(e.target.value)}
-                    className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
-                  />
-                </div>
-                <div className="max-h-48 overflow-y-auto p-2">
-                  <label className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={
-                        formData.branchGroup.length ===
-                          branchGroups.filter((g) => g !== "Mining / Geo").length &&
-                        branchGroups.filter((g) => g !== "Mining / Geo").length > 0
-                      }
-                      onChange={handleSelectAllBranchGroups}
-                      className="mr-2 accent-[var(--primary)]"
-                    />
-                    <span className="text-xs sm:text-sm font-semibold">
-                      Select All ({branchGroups.filter((g) => g !== "Mining / Geo").length})
-                    </span>
-                  </label>
-                  <div className="border-t border-[var(--border)] my-1"></div>
-                  {branchGroups
-                    .filter((group) => group !== "Mining / Geo")
-                    .filter((group) =>
-                      group.toLowerCase().includes(branchSearch.toLowerCase())
-                    )
-                    .map((group) => (
-                      <label
-                        key={group}
-                        className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.branchGroup.includes(group)}
-                          onChange={() => handleBranchGroupSelection(group)}
-                          className="mr-2 accent-[var(--primary)]"
-                        />
-                        <span className="text-xs sm:text-sm">{group}</span>
-                        {formData.branchGroup.includes(group) && (
-                          <svg
-                            className="w-4 h-4 text-green-500 flex-shrink-0 ml-auto"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                      </label>
-                    ))}
-                </div>
-              </div>
-              {formData.branchGroup.length > 0 && (
-                <p className="text-xs text-[var(--muted-text)] mt-1">
-                  {formData.branchGroup.length} program(s) selected
-                </p>
-              )}
+              <select
+                id="branchGroup"
+                value={formData.branchGroup}
+                onChange={handleChange}
+                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
+              >
+                <option value="">All</option>
+                {branchGroups
+                  .filter((group) => group !== "Mining / Geo")
+                  .map((group) => (
+                    <option key={group} value={group}>
+                      {group}
+                    </option>
+                  ))}
+              </select>
             </div>
 
             {/* Submit */}
