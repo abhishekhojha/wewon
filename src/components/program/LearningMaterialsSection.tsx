@@ -92,7 +92,7 @@ export default function LearningMaterialsSection({
             Learning Materials
           </h2>
           <p className="text-gray-600">
-            {totalMaterialCount}+ comprehensive learning resources
+            Comprehensive learning resources
           </p>
         </div>
         <button

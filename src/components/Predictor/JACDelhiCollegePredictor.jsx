@@ -432,7 +432,7 @@ export default function JACDelhiCollegePredictor() {
               </span>
               {usageStatus && (
                 <span className="bg-orange-50 text-orange-700 text-[10px] sm:text-xs font-bold px-2 sm:px-4 py-1 sm:py-2 rounded-full border border-orange-200 shadow-sm">
-                  {usageStatus.limitLeft === -1 ? "Unlimited" : `${usageStatus.limitLeft} Predictions Left`}
+                  {usageStatus.usageLimit === -1 ? "Unlimited Predictions" : `${usageStatus.limitLeft} Predictions Left`}
                 </span>
               )}
             </div>

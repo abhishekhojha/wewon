@@ -55,7 +55,7 @@ const PredictorCard: React.FC<PredictorCardProps> = ({ predictor }) => {
         
         {/* Combo Badge */}
         {isCombo && (
-          <div className="absolute top-3 left-3 bg-[#0f3a67] text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg border border-white/20 backdrop-blur-sm">
+          <div className="absolute top-3 right-3 bg-[#0f3a67] text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg border border-white/20 backdrop-blur-sm">
             <Sparkles size={10} className="text-yellow-400 fill-yellow-400" />
             Combo Pack
           </div>
