@@ -75,6 +75,10 @@ export default function CheckoutPage({
   }, [showMentorshipStep]);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentStep]);
+
+  useEffect(() => {
     setMentorshipFormErrors({});
     setMentorshipFormValues((prevValues) => {
       const nextValues: Record<string, string> = {};
@@ -382,56 +386,117 @@ export default function CheckoutPage({
                   </div>
                 )}
 
-                {/* Coupon Section */}
-                <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
-                  <h2 className="text-xl font-bold text-gray-800 mb-6">
-                    Apply Coupon
-                  </h2>
-
-                  <CouponInput
-                    productId={productId}
-                    productPrice={productPrice}
-                    onCouponApplied={handleCouponApplied}
-                    onCouponRemoved={handleCouponRemoved}
-                  />
-
-                  <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                    <p className="text-sm text-gray-600">
-                      💡 <strong>Tip:</strong> Enter your coupon code above to
-                      get instant discounts on your purchase!
-                    </p>
+                {/* Payment & Coupon Section */}
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                  <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100">
+                    <h2 className="text-lg font-bold text-gray-800">
+                      Payment Details
+                    </h2>
                   </div>
-                </div>
 
-                {/* Payment Section */}
-                <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
-                  <h2 className="text-xl font-bold text-gray-800 mb-6">
-                    Payment Details
-                  </h2>
+                  <div className="p-6 md:p-8">
+                    {/* Coupon Sub-section */}
+                    <div className="mb-8">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 bg-orange-50 rounded-lg">
+                          <svg
+                            className="w-4 h-4 text-orange-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                            />
+                          </svg>
+                        </div>
+                        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                          Apply Coupon
+                        </h3>
+                      </div>
 
-                  <div className="space-y-4">
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-sm text-blue-800">
-                        <strong>Secure Payment:</strong> Your payment
-                        information is encrypted and secure. We use Razorpay for
-                        safe transactions. 
-                      </p>
+                      <CouponInput
+                        productId={productId}
+                        productPrice={productPrice}
+                        onCouponApplied={handleCouponApplied}
+                        onCouponRemoved={handleCouponRemoved}
+                      />
+
+                      <div className="mt-3 flex items-start gap-2 text-xs text-gray-500 bg-gray-50 p-2 rounded-lg border border-gray-200/50">
+                        <span>💡</span>
+                        <p>
+                          Enter your coupon code above to get instant discounts
+                          on your purchase!
+                        </p>
+                      </div>
                     </div>
 
-                    <RazorpayPayment
-                      productId={productId}
-                      productName={productName}
-                      amount={finalAmount}
-                      couponCode={appliedCoupon?.couponCode}
-                      mentorshipFormData={mentorshipFormPayload}
-                      onSuccess={handlePaymentSuccess}
-                      onFailure={handlePaymentFailure}
-                    />
+                    <div className="relative mb-8">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-100"></div>
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-gray-400">
+                          Secure Checkout
+                        </span>
+                      </div>
+                    </div>
 
-                    <p className="text-xs text-gray-500 text-center">
-                      By completing this purchase, you agree to our Terms of
-                      Service and Privacy Policy
-                    </p>
+                    {/* Payment Sub-section */}
+                    <div className="space-y-6">
+                      <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-xl flex items-start gap-3">
+                        <div className="mt-0.5 p-1.5 bg-blue-100 rounded-lg text-blue-600">
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm text-blue-900 font-medium">
+                            Secure Payment
+                          </p>
+                          <p className="text-xs text-blue-700/80">
+                            Your payment is encrypted and secure. We use
+                            Razorpay for safe transactions.
+                          </p>
+                        </div>
+                      </div>
+
+                      <RazorpayPayment
+                        productId={productId}
+                        productName={productName}
+                        amount={finalAmount}
+                        couponCode={appliedCoupon?.couponCode}
+                        mentorshipFormData={mentorshipFormPayload}
+                        onSuccess={handlePaymentSuccess}
+                        onFailure={handlePaymentFailure}
+                      />
+
+                      <div className="text-center space-y-2">
+                        <p className="text-[10px] text-gray-400">
+                          By completing this purchase, you agree to our{" "}
+                          <button className="text-[var(--primary)] hover:underline">
+                            Terms of Service
+                          </button>{" "}
+                          and{" "}
+                          <button className="text-[var(--primary)] hover:underline">
+                            Privacy Policy
+                          </button>
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </>
