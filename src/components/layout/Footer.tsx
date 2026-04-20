@@ -16,9 +16,7 @@ const footerSections = [
     title: "Success Hub",
     links: [
       { label: "College Predictor", href: "/predictor" },
-      { label: "Rank Analysis", href: "/percentile" },
-      { label: "Percentile Converter", href: "/percentile" },
-      { label: "Early Predictor", href: "/jee-early-predictor" },
+      { label: "Counselling Programs", href: "/counseling" },
     ],
   },
   {
@@ -76,18 +74,18 @@ const Footer = () => {
             <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
               WE WON <span className="text-[var(--accent)]">ACADEMY</span>
             </h2>
-            <p className="text-sm text-white/50 leading-relaxed max-w-xs">
+            <p className="text-sm text-white leading-relaxed max-w-xs">
               AI-driven insights and expert mentorship to bridge the gap to your dream college.
             </p>
             {/* Contact Micro-Section */}
             <div className="space-y-3 pt-2">
-              <a href="mailto:wewonacademyhelpdesk@gmail.com" className="group flex items-center gap-3 text-xs text-white/40 hover:text-[var(--accent)] transition-colors">
+              <a href="mailto:wewonacademyhelpdesk@gmail.com" className="group flex items-center gap-3 text-xs text-white hover:text-[var(--accent)] transition-colors">
                 <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[var(--accent)]/10 transition-colors">
                   <Mail size={14} />
                 </div>
                 wewonacademyhelpdesk@gmail.com
               </a>
-              <a href="tel:+919532845978" className="group flex items-center gap-3 text-xs text-white/40 hover:text-[var(--accent)] transition-colors">
+              <a href="tel:+919532845978" className="group flex items-center gap-3 text-xs text-white hover:text-[var(--accent)] transition-colors">
                 <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[var(--accent)]/10 transition-colors">
                   <Phone size={14} />
                 </div>
@@ -99,7 +97,7 @@ const Footer = () => {
           {/* Links Columns */}
           {footerSections.map((section) => (
             <div key={section.title} className="space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--accent)]/60">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--accent)]">
                 {section.title}
               </h3>
               <ul className="space-y-2.5">
@@ -107,7 +105,7 @@ const Footer = () => {
                   <li key={link.label}>
                     <a
                       href={link.href}
-                      className="text-sm text-white/60 hover:text-[var(--accent)] transition-colors flex items-center group gap-1"
+                      className="text-sm text-white hover:text-[var(--accent)] transition-colors flex items-center group gap-1"
                     >
                       {link.label}
                       <ExternalLink size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -121,7 +119,7 @@ const Footer = () => {
 
         {/* Divider */}
         <div className="mt-12 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 pb-8">
-          <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">
+          <p className="text-[10px] text-white font-bold uppercase tracking-widest">
             &copy; 2026 We Won Academy. All rights reserved.
           </p>
 
@@ -133,7 +131,7 @@ const Footer = () => {
                 href={social.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 text-white/40 hover:bg-[var(--accent)] hover:text-[var(--primary)] hover:scale-110 active:scale-95 transition-all duration-300"
+                className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 text-white hover:bg-[var(--accent)] hover:text-[var(--primary)] hover:scale-110 active:scale-95 transition-all duration-300"
                 aria-label={social.label}
               >
                 <social.icon size={18} />
