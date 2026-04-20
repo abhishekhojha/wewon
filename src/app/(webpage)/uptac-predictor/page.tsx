@@ -3,6 +3,7 @@ import UPTACCollegePredictor from "@/components/Predictor/UPTACCollegePredictor"
 import TrustSection from "@/components/common/TrustSection";
 import MainHeading from "@/components/sections/MainHeading";
 import Recommended from "@/components/sections/Recommended";
+import PredictorGuard from "@/components/Predictor/PredictorGuard";
 
 import { Metadata } from "next";
 
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function page() {
   return (
-    <>
+    <PredictorGuard slug="uptac-predictor">
       <div className="container mx-auto mb-8 px-4">
         <MainHeading
           top="UPTAC College Predictor"
@@ -30,6 +31,6 @@ export default function page() {
       <div className="container mx-auto mt-10 mb-16 px-4">
         <TrustSection />
       </div>
-    </>
+    </PredictorGuard>
   );
 }

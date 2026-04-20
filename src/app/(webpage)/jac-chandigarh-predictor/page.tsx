@@ -3,10 +3,11 @@ import JACChandigarhCollegePredictor from "@/components/Predictor/JACChandigarhC
 import TrustSection from "@/components/common/TrustSection";
 import MainHeading from "@/components/sections/MainHeading";
 import Recommended from "@/components/sections/Recommended";
+import PredictorGuard from "@/components/Predictor/PredictorGuard";
 
 export default function page() {
   return (
-    <>
+    <PredictorGuard slug="jac-chandigarh-predictor">
       <div className="container mx-auto mb-8 px-4">
         <MainHeading
           top="JAC Chandigarh College Predictor"
@@ -22,6 +23,6 @@ export default function page() {
       <div className="container mx-auto mt-10 mb-16 px-4">
         <TrustSection />
       </div>
-    </>
+    </PredictorGuard>
   );
 }

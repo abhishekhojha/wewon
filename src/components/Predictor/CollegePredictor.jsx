@@ -21,6 +21,7 @@ const PRODUCT_SLUG = "jee-mains-predictor";
 const RETURN_URL = "/jee-mains-predictor";
 
 
+
 export default function CollegePredictor() {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectIsAuthenticated);
