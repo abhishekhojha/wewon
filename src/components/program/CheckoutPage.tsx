@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -40,6 +40,8 @@ export default function CheckoutPage({
   onBack,
   onPaymentSuccess,
 }: CheckoutPageProps) {
+  const headerRef = useRef<HTMLDivElement>(null);
+  const paymentRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const dispatch = useAppDispatch();
 
@@ -75,7 +77,12 @@ export default function CheckoutPage({
   }, [showMentorshipStep]);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const isMobile = window.innerWidth < 768;
+    if (currentStep === 2 && isMobile && paymentRef.current) {
+      paymentRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      headerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }, [currentStep]);
 
   useEffect(() => {
@@ -178,6 +185,13 @@ export default function CheckoutPage({
       ) {
         nextErrors[field.name] = `${field.label} must be a valid number`;
       }
+
+      if (field.name === "phone" && value) {
+        const digitsOnly = value.replace(/\D/g, "");
+        if (digitsOnly.length < 10) {
+          nextErrors[field.name] = "Please enter a valid 10-digit phone number";
+        }
+      }
     });
 
     setMentorshipFormErrors(nextErrors);
@@ -234,10 +248,11 @@ export default function CheckoutPage({
       );
     }
 
+    const isPhoneField = field.name === "phone" || normalizedType === "phone" || normalizedType === "tel";
     const supportedInputTypes = ["number", "email", "tel", "date", "text"];
-    const inputType = supportedInputTypes.includes(normalizedType)
+    const inputType = isPhoneField ? "tel" : (supportedInputTypes.includes(normalizedType)
       ? normalizedType
-      : "text";
+      : "text");
 
     return (
       <input
@@ -306,7 +321,7 @@ export default function CheckoutPage({
         )}
 
         {/* Page Header */}
-        <div className="mb-8">
+        <div className="mb-8" ref={headerRef}>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
             {showMentorshipStep && currentStep === 1
               ? "Mentorship Details"
@@ -387,7 +402,10 @@ export default function CheckoutPage({
                 )}
 
                 {/* Payment & Coupon Section */}
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                <div 
+                  ref={paymentRef}
+                  className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100"
+                >
                   <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100">
                     <h2 className="text-lg font-bold text-gray-800">
                       Payment Details

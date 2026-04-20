@@ -135,9 +135,9 @@ export const getPredictorPurchaseDetails = (
   // console.log("matchingOrders", matchingOrders)
   // Get prefill data from the most recent matching order that has form data or rank overrides
   const latestOrderWithData = matchingOrders.sort((a, b) => {
-    const timeA = a.product?.features?.hasMentorship ? 1 : 0;
-    const timeB = b.product?.features?.hasMentorship ? 1 : 0;
-    return timeB - timeA;
+    const priorityA = a.product?.features?.hasMentorship ? 1 : 0;
+    const priorityB = b.product?.features?.hasMentorship ? 1 : 0;
+    return priorityA - priorityB;
   })[0];
   // console.log("latestOrderWithData", latestOrderWithData)
   let prefillData = null;
