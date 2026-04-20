@@ -185,6 +185,13 @@ export default function CheckoutPage({
       ) {
         nextErrors[field.name] = `${field.label} must be a valid number`;
       }
+
+      if (field.name === "phone" && value) {
+        const digitsOnly = value.replace(/\D/g, "");
+        if (digitsOnly.length < 10) {
+          nextErrors[field.name] = "Please enter a valid 10-digit phone number";
+        }
+      }
     });
 
     setMentorshipFormErrors(nextErrors);
@@ -241,10 +248,11 @@ export default function CheckoutPage({
       );
     }
 
+    const isPhoneField = field.name === "phone" || normalizedType === "phone" || normalizedType === "tel";
     const supportedInputTypes = ["number", "email", "tel", "date", "text"];
-    const inputType = supportedInputTypes.includes(normalizedType)
+    const inputType = isPhoneField ? "tel" : (supportedInputTypes.includes(normalizedType)
       ? normalizedType
-      : "text";
+      : "text");
 
     return (
       <input
