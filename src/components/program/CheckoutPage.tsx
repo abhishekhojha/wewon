@@ -41,6 +41,7 @@ export default function CheckoutPage({
   onPaymentSuccess,
 }: CheckoutPageProps) {
   const headerRef = useRef<HTMLDivElement>(null);
+  const paymentRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const dispatch = useAppDispatch();
 
@@ -76,7 +77,12 @@ export default function CheckoutPage({
   }, [showMentorshipStep]);
 
   useEffect(() => {
-    headerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const isMobile = window.innerWidth < 768;
+    if (currentStep === 2 && isMobile && paymentRef.current) {
+      paymentRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      headerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }, [currentStep]);
 
   useEffect(() => {
@@ -388,7 +394,10 @@ export default function CheckoutPage({
                 )}
 
                 {/* Payment & Coupon Section */}
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                <div 
+                  ref={paymentRef}
+                  className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100"
+                >
                   <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100">
                     <h2 className="text-lg font-bold text-gray-800">
                       Payment Details
