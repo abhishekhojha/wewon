@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -40,6 +40,7 @@ export default function CheckoutPage({
   onBack,
   onPaymentSuccess,
 }: CheckoutPageProps) {
+  const headerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const dispatch = useAppDispatch();
 
@@ -75,7 +76,7 @@ export default function CheckoutPage({
   }, [showMentorshipStep]);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    headerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [currentStep]);
 
   useEffect(() => {
@@ -306,7 +307,7 @@ export default function CheckoutPage({
         )}
 
         {/* Page Header */}
-        <div className="mb-8">
+        <div className="mb-8" ref={headerRef}>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
             {showMentorshipStep && currentStep === 1
               ? "Mentorship Details"
