@@ -2,6 +2,7 @@ import React from "react";
 import CollegePredictor from "@/components/Predictor/CollegePredictor";
 import TrustSection from "@/components/common/TrustSection";
 import MainHeading from "@/components/sections/MainHeading";
+import PredictorGuard from "@/components/Predictor/PredictorGuard";
 
 import { Metadata } from "next";
 
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function page() {
   return (
-    <>
+    <PredictorGuard slug="jee-mains-predictor">
       <div className="container mx-auto mb-8 px-4">
         <MainHeading top="Find Your Perfect College" bottom="With Our Tool" />
       </div>
@@ -23,6 +24,6 @@ export default function page() {
       <div className="container mx-auto mt-10 mb-16 px-4">
         <TrustSection />
       </div>
-    </>
+    </PredictorGuard>
   );
 }
