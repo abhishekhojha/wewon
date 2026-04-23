@@ -5,7 +5,7 @@ type Props = {
   slug: string;
   title: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string;
   imageAlt?: string;
   originalPrice?: number;
   currentPrice: number;
