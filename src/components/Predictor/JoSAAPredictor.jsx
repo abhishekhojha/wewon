@@ -207,8 +207,8 @@ export default function JoSAAPredictor() {
         gender: formData.gender,
         homeState: formData.homeState,
         roundNumber: Number(formData.roundNumber),
-        ...(formData.instituteType.length > 0 ? { instituteType: formData.instituteType } : {}),
-        ...(formData.branchGroup.length > 0 ? { branchGroup: formData.branchGroup } : {}),
+        ...(formData.instituteType.length > 0 ? { institutes: formData.instituteType } : {}),
+        ...(formData.branchGroup.length > 0 ? { branches: formData.branchGroup } : {}),
       };
       const response = await predictJosaa(payload);
       setResults(response.data);

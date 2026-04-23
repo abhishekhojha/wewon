@@ -12,8 +12,8 @@ export const predictJosaa = (data: {
   homeState: string;
   roundNumber: number;
   categoryRank?: number;
-  instituteType?: string;
-  branchGroup?: string;
+  institutes?: string[];
+  branches?: string[];
 }) => {
   return apiClient.post("/api/predictor/josaa", data);
 };
@@ -25,8 +25,8 @@ export const predictCsab = (data: {
   gender: string;
   homeState: string;
   roundNumber: number;
-  instituteType?: string;
-  branchGroup?: string;
+  institutes?: string[];
+  branches?: string[];
 }) => {
   return apiClient.post("/api/predictor/csab", data);
 };
