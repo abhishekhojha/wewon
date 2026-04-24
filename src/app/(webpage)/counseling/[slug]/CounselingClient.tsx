@@ -374,7 +374,7 @@ export default function CounselingClient() {
           {/* Features Section */}
           <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-12">
             <h2 className="text-2xl font-bold text-[var(--primary)] mb-6">
-              What You'll Get
+              What You'll Get 
             </h2>
             <div className="flex w-full flex-row items-start flex-wrap md:flex-nowrap justify-between gap-4 md:gap-2">
               {product.features.choiceFilling.isEnabled && (
@@ -393,7 +393,7 @@ export default function CounselingClient() {
                   </div>
                 </div>
               )}
-
+  
               {product.features.collegePredictor.isEnabled && (
                 <div className="flex w-full md:flex-1 items-start gap-2">
                   <CheckCircle
@@ -477,6 +477,7 @@ export default function CounselingClient() {
             </h2>
             <div className="grid gap-6 sm:grid-cols-3 lg:grid-cols-3">
               {/* College Predictor */}
+              {product.features.collegePredictor.isEnabled && (
               <div
                 onClick={() =>
                   !isPurchased
@@ -510,9 +511,10 @@ export default function CounselingClient() {
                     </div>
                   </div>
                 )}
-              </div>
-
+              </div>  
+              )}
               {/* Choice Filling */}
+              {product.features.choiceFilling.isEnabled && (
               <div
                 onClick={() =>
                   !isPurchased
@@ -547,6 +549,7 @@ export default function CounselingClient() {
                   </div>
                 )}
               </div>
+              )}
 
               {/* Notification */}
               <div
