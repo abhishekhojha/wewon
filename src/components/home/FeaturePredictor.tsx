@@ -75,7 +75,7 @@ export default function FeaturePredictor() {
     const loadPredictors = async () => {
       try {
         setLoading(true);
-        const response = await fetchAllPredictors({ limit: 4 });
+        const response = await fetchAllPredictors({ limit: 100 });
         if (response.success) {
           setPredictors(response.data);
         }
@@ -115,32 +115,31 @@ export default function FeaturePredictor() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 md:flex-row lg:grid-cols-4 gap-8">
         {loading && predictors.length === 0
           ? [...Array(4)].map((_, index) => (
-              <div
-                key={index}
-                className="w-full max-w-sm mx-auto overflow-hidden rounded-xl bg-white shadow-lg animate-pulse"
-              >
-                <div className="w-full aspect-video bg-gray-200"></div>
-                <div className="p-5 space-y-3">
-                  <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-100 rounded"></div>
-                  <div className="h-4 bg-gray-100 rounded w-5/6"></div>
-                  <div className="h-10 bg-gray-200 rounded mt-4"></div>
-                </div>
+            <div
+              key={index}
+              className="w-full max-w-sm mx-auto overflow-hidden rounded-xl bg-white shadow-lg animate-pulse"
+            >
+              <div className="w-full aspect-video bg-gray-200"></div>
+              <div className="p-5 space-y-3">
+                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-100 rounded"></div>
+                <div className="h-4 bg-gray-100 rounded w-5/6"></div>
+                <div className="h-10 bg-gray-200 rounded mt-4"></div>
               </div>
-            ))
-          : sortPredictorProducts(predictors, PREDICTOR_SLUG_ORDER).map((predictor) => (
-
-              <PredictorCard
-                key={predictor._id}
-                predictor={mapToPredictorProduct(
-                  predictor,
-                  isPredictorPurchased(predictor.slug)
-                )}
-              />
-            ))}
+            </div>
+          ))
+          : sortPredictorProducts(predictors, PREDICTOR_SLUG_ORDER).slice(0, 4).map((predictor) => (
+            <PredictorCard
+              key={predictor._id}
+              predictor={mapToPredictorProduct(
+                predictor,
+                isPredictorPurchased(predictor.slug)
+              )}
+            />
+          ))}
       </div>
     </Sections>
   );

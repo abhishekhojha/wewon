@@ -514,7 +514,7 @@ export default function CounselingClient() {
               </div>  
               )}
               {/* Choice Filling */}
-              {product.features.choiceFilling.isEnabled && (
+          
               <div
                 onClick={() =>
                   !isPurchased
@@ -549,7 +549,7 @@ export default function CounselingClient() {
                   </div>
                 )}
               </div>
-              )}
+      
 
               {/* Notification */}
               <div
