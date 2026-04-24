@@ -1,15 +1,14 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import CounselingCard from "../cards/CounselingCard";
-import Pagination from "@/components/sections/Pagination";
+
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   selectCounselingProducts,
   selectProductsLoading,
   selectProductsError,
-  selectTotalPages,
-  selectCurrentPage,
 } from "@/store/counseling/counselingSlice";
+
 import { fetchCounselingProducts } from "@/store/counseling/counselingThunk";
 import { sortCounsellingProducts } from "@/utils/counsellingSort";
 import { COUNSELLING_SLUG_ORDER } from "@/data/counsellingOrder";
@@ -20,21 +19,13 @@ export default function Mentorship() {
   const products = useAppSelector(selectCounselingProducts);
   const loading = useAppSelector(selectProductsLoading);
   const error = useAppSelector(selectProductsError);
-  const totalPages = useAppSelector(selectTotalPages);
-  const currentPage = useAppSelector(selectCurrentPage);
 
-  const itemsPerPage = 8;
 
   useEffect(() => {
-    // Fetch products on component mount
-    dispatch(fetchCounselingProducts({ page: 1, limit: itemsPerPage }));
+    // Fetch all products on component mount
+    dispatch(fetchCounselingProducts({ page: 1, limit: 50 }));
   }, [dispatch]);
 
-  const handlePageChange = (page: number) => {
-    dispatch(fetchCounselingProducts({ page, limit: itemsPerPage }));
-    // Scroll to top when page changes
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   const sortedProducts = sortCounsellingProducts(products, COUNSELLING_SLUG_ORDER);
 
@@ -71,8 +62,9 @@ export default function Mentorship() {
           <button
             onClick={() =>
               dispatch(
-                fetchCounselingProducts({ page: 1, limit: itemsPerPage })
+                fetchCounselingProducts({ page: 1, limit: 100 })
               )
+
             }
             className="px-6 py-2 bg-[var(--accent)] text-white rounded-lg hover:bg-[var(--primary)] transition-colors"
           >
@@ -115,16 +107,7 @@ export default function Mentorship() {
         ))}
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-8 md:mt-12 flex justify-center">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
+
     </div>
   );
 }
