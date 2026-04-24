@@ -12,6 +12,9 @@ import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
 import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
+import { sortPredictorProducts } from "@/utils/predictorSort";
+import { PREDICTOR_SLUG_ORDER } from "@/data/predictorOrder";
+
 
 // Map API response to PredictorProduct format for PredictorCard
 const mapToPredictorProduct = (
@@ -209,6 +212,9 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, 
       slugs.includes(predictor.slug)
     );
   }
+
+  displayPredictors = sortPredictorProducts(displayPredictors, PREDICTOR_SLUG_ORDER);
+
   return (
     <div className="w-full">
       {/* Predictors Grid */}

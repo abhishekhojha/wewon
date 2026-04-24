@@ -5,7 +5,7 @@ type Props = {
   slug: string;
   title: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string;
   imageAlt?: string;
   originalPrice?: number;
   currentPrice: number;
@@ -51,7 +51,7 @@ const CounselingCard = ({
       {/* Content Section */}
       <div className="p-4 sm:p-5 flex flex-col flex-grow">
         {/* Title */}
-        <h2 className="text-lg sm:text-xl font-bold text-[var(--primary)] line-clamp-2 leading-tight min-h-[3.5rem]">
+        <h2 className="text-lg sm:text-xl font-bold text-[var(--primary)] line-clamp-2 leading-tight min-h-[2.8rem] sm:min-h-[3.125rem] overflow-hidden">
           {title}
         </h2>
 

@@ -441,7 +441,8 @@ export default function PredictionResults({
             </div>
           ) : (
             <p className="text-xs sm:text-sm text-[var(--muted-text)] font-semibold">
-              No results were found for your rank.
+              No results found for your rank. Please remove filters and try
+              again.
             </p>
           )}
         </div>

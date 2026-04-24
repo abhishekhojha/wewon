@@ -11,6 +11,8 @@ import {
   selectCurrentPage,
 } from "@/store/counseling/counselingSlice";
 import { fetchCounselingProducts } from "@/store/counseling/counselingThunk";
+import { sortCounsellingProducts } from "@/utils/counsellingSort";
+import { COUNSELLING_SLUG_ORDER } from "@/data/counsellingOrder";
 
 export default function Counselings() {
   const dispatch = useAppDispatch();
@@ -92,11 +94,13 @@ export default function Counselings() {
     );
   }
 
+  const sortedProducts = sortCounsellingProducts(products, COUNSELLING_SLUG_ORDER);
+
   return (
     <div className="px-4 md:px-0">
       {/* Responsive Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8">
-        {products.map((product) => (
+        {sortedProducts.map((product) => (
           <CounselingCard
             key={product._id}
             slug={product.slug}
