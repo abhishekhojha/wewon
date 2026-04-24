@@ -1,0 +1,15 @@
+export const PREDICTOR_SLUG_ORDER = [
+  "josaa-csab-advanced-predictor",
+  "josaa-predictor",
+  "csab-predictor",
+  "jac-delhi-predictor",
+  "uptac-hbtu-mmmut-full-combo-predictor",
+  "uptac-predictor",
+  "all-india-counselling-mega-combo-predictor",
+  "jac-chandigarh-predictor",
+  "hbtu-mmmut-combo-predictor",
+  "jac-delhi-uptac-jac-chandigarh-combo-predictor",
+  "wbjee-predictor",
+  "hbtu-predictor",
+  "mmmut-predictor",
+];

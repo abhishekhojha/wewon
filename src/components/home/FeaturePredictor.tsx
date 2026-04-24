@@ -15,6 +15,9 @@ import { PredictorProduct } from "@/data/counsellingProducts";
 import { predictorExamKey } from "@/data/productKeyMap";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { sortPredictorProducts } from "@/utils/predictorSort";
+import { PREDICTOR_SLUG_ORDER } from "@/data/predictorOrder";
+
 
 // Map API response to PredictorProduct format for PredictorCard
 const mapToPredictorProduct = (
@@ -128,7 +131,8 @@ export default function FeaturePredictor() {
                 </div>
               </div>
             ))
-          : predictors.map((predictor) => (
+          : sortPredictorProducts(predictors, PREDICTOR_SLUG_ORDER).map((predictor) => (
+
               <PredictorCard
                 key={predictor._id}
                 predictor={mapToPredictorProduct(
