@@ -11,6 +11,9 @@ import {
 import { fetchCounselingProducts } from "@/store/counseling/counselingThunk";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { sortCounsellingProducts } from "@/utils/counsellingSort";
+import { COUNSELLING_SLUG_ORDER } from "@/data/counsellingOrder";
+
 
 export default function FeatureCounselling() {
   const dispatch = useAppDispatch();
@@ -18,12 +21,13 @@ export default function FeatureCounselling() {
   const loading = useAppSelector(selectProductsLoading);
 
   useEffect(() => {
-    // Fetch top 4 products for the homepage
-    dispatch(fetchCounselingProducts({ page: 1, limit: 4 }));
+    // Fetch products for the homepage with a larger limit to allow sorting
+    dispatch(fetchCounselingProducts({ page: 1, limit: 20 }));
   }, [dispatch]);
 
-  // Take only the first 4 products
-  const features = products.slice(0, 4);
+  // Sort and take only the first 4 products
+  const features = sortCounsellingProducts(products, COUNSELLING_SLUG_ORDER).slice(0, 4);
+
 
   if (!loading && products.length === 0) return null;
 
