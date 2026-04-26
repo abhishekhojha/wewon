@@ -335,7 +335,7 @@ export default function JACDelhiCollegePredictor() {
         round: formData.round,
         instituteName: formData.instituteName.length > 0 ? formData.instituteName : "ALL",
         programName: formData.programName.length > 0 ? formData.programName : "All",
-        ...(formData.categoryRank && { categoryRank: Number(formData.categoryRank) }),
+        // ...(formData.categoryRank && { categoryRank: Number(formData.categoryRank) }),
       };
       console.log("Sending JAC Delhi payload:", payload);
       const response = await predictJACDelhi(payload);
