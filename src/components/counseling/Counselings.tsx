@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense } from "react";
 import CounselingCard from "../cards/CounselingCard";
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -12,9 +12,12 @@ import {
 import { fetchCounselingProducts } from "@/store/counseling/counselingThunk";
 import { sortCounsellingProducts } from "@/utils/counsellingSort";
 import { COUNSELLING_SLUG_ORDER } from "@/data/counsellingOrder";
+import { useSearchParams } from "next/navigation";
 
-export default function Counselings() {
+function CounselingsContent() {
   const dispatch = useAppDispatch();
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get("search")?.toLowerCase() || "";
 
   const products = useAppSelector(selectCounselingProducts);
   const loading = useAppSelector(selectProductsLoading);
@@ -62,7 +65,6 @@ export default function Counselings() {
               dispatch(
                 fetchCounselingProducts({ page: 1, limit: 100 })
               )
-
             }
             className="px-6 py-2 bg-[var(--accent)] text-white rounded-lg hover:bg-[var(--primary)] transition-colors"
           >
@@ -87,12 +89,30 @@ export default function Counselings() {
   }
 
   const sortedProducts = sortCounsellingProducts(products, COUNSELLING_SLUG_ORDER);
+  
+  const filteredProducts = sortedProducts.filter((product) => 
+    product.title.toLowerCase().includes(searchQuery) || 
+    product.description.toLowerCase().includes(searchQuery) ||
+    product.slug.toLowerCase().includes(searchQuery)
+  );
+
+  if (filteredProducts.length === 0) {
+    return (
+      <div className="px-4 md:px-0">
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="text-gray-500 text-xl font-semibold">
+            No counseling packages found for "{searchQuery}".
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 md:px-0">
       {/* Responsive Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8">
-        {sortedProducts.map((product) => (
+        {filteredProducts.map((product) => (
           <CounselingCard
             key={product._id}
             slug={product.slug}
@@ -106,8 +126,33 @@ export default function Counselings() {
           />
         ))}
       </div>
-
-
     </div>
+  );
+}
+
+export default function Counselings() {
+  return (
+    <Suspense fallback={
+      <div className="px-4 md:px-0">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8">
+          {[...Array(8)].map((_, index) => (
+            <div
+              key={index}
+              className="w-full max-w-sm mx-auto overflow-hidden rounded-xl bg-white shadow-lg animate-pulse"
+            >
+              <div className="w-full h-48 sm:h-52 md:h-48 lg:h-52 bg-gray-300"></div>
+              <div className="p-4 sm:p-5">
+                <div className="h-6 bg-gray-300 rounded mb-2"></div>
+                <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                <div className="h-4 bg-gray-300 rounded mb-4"></div>
+                <div className="h-8 bg-gray-300 rounded"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    }>
+      <CounselingsContent />
+    </Suspense>
   );
 }

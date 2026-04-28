@@ -1,10 +1,21 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function OTPForm({ onSubmit, loading, error, onResend, resendLoading }) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [timer, setTimer] = useState(0);
   const inputRefs = useRef([]);
+
+  useEffect(() => {
+    let interval;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
 
   const handleChange = (index, value) => {
     // Only allow digits
@@ -97,15 +108,22 @@ export default function OTPForm({ onSubmit, loading, error, onResend, resendLoad
       <div className="text-center">
         <button
           type="button"
-          className="text-sm text-[var(--primary)] hover:underline transition"
+          className="text-sm text-[var(--primary)] hover:underline transition disabled:opacity-50 disabled:no-underline"
           onClick={async () => {
             // clear inputs and call parent resend
             setOtp(["", "", "", "", "", ""]);
-            if (onResend) await onResend();
+            if (onResend) {
+              await onResend();
+              setTimer(30);
+            }
           }}
-          disabled={resendLoading}
+          disabled={resendLoading || timer > 0}
         >
-          {resendLoading ? "Resending..." : "Didn't receive code? Resend"}
+          {resendLoading
+            ? "Resending..."
+            : timer > 0
+            ? `Resend available in ${timer}s`
+            : "Didn't receive code? Resend"}
         </button>
       </div>
     </form>
