@@ -32,8 +32,9 @@ const PredictorCard: React.FC<PredictorCardProps> = ({ predictor }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      onClick={handleClick}
       transition={{ duration: 0.3 }}
-      className="bg-white rounded-2xl shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col h-full hover:shadow-xl group"
+      className="bg-white rounded-2xl cursor-pointer shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col h-full hover:shadow-xl group"
     >
       {/* Thumbnail Image - 16:9 ratio */}
       <div className="relative w-full aspect-video overflow-hidden">
