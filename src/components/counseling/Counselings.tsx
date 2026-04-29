@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, Suspense } from "react";
+import React, { useEffect, Suspense, useState, useRef } from "react";
 import CounselingCard from "../cards/CounselingCard";
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -23,15 +23,29 @@ function CounselingsContent() {
   const loading = useAppSelector(selectProductsLoading);
   const error = useAppSelector(selectProductsError);
 
+  const [isSearching, setIsSearching] = useState(false);
+  const mounted = useRef(false);
 
   useEffect(() => {
     // Fetch all products on component mount
     dispatch(fetchCounselingProducts({ page: 1, limit: 50 }));
   }, [dispatch]);
 
+  useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
+    setIsSearching(true);
+    const timer = setTimeout(() => {
+      setIsSearching(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
 
   // Loading skeleton
-  if (loading && products.length === 0) {
+  if ((loading && products.length === 0) || isSearching) {
     return (
       <div className="px-4 md:px-0">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8">
