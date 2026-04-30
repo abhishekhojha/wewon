@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PredictorCard from "./PredictorCard";
 import { fetchAllPredictors, PredictorListItem } from "@/network/predictor";
 import { PredictorCategory } from "@/store/types";
@@ -14,6 +14,7 @@ import { fetchUserOrders } from "@/store/order/orderThunk";
 import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 import { sortPredictorProducts } from "@/utils/predictorSort";
 import { PREDICTOR_SLUG_ORDER } from "@/data/predictorOrder";
+import { useSearchParams } from "next/navigation";
 
 
 // Map API response to PredictorProduct format for PredictorCard
@@ -129,6 +130,9 @@ interface PredictorsGridProps {
 
 const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, slugs, withLocal = false }) => {
   const dispatch = useAppDispatch();
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get("search")?.toLowerCase() || "";
+
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const userData = useAppSelector(selectUser);
   const userOrders = useAppSelector(selectUserOrders);
@@ -138,6 +142,9 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, 
   const [predictors, setPredictors] = useState<PredictorListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [isSearching, setIsSearching] = useState(false);
+  const mounted = useRef(false);
 
   // Fetch user orders when authenticated
   useEffect(() => {
@@ -157,7 +164,7 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, 
       try {
         setLoading(true);
         setError(null);
-        const response = await fetchAllPredictors({ limit: 50 });
+        const response = await fetchAllPredictors({ limit: 100 });
         if (response.success) {
           setPredictors(
             withLocal ? mergePredictorsWithLocal(response.data) : response.data,
@@ -176,12 +183,65 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, 
     loadPredictors();
   }, [withLocal]);
 
-  if (loading) {
+  useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
+    setIsSearching(true);
+    const timer = setTimeout(() => {
+      setIsSearching(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const displayPredictors = React.useMemo(() => {
+    let filtered = onlyPurchased
+      ? predictors.filter((predictor) => isPredictorPurchased(predictor.slug))
+      : predictors;
+
+    // Filter by slugs if provided
+    if (slugs && slugs.length > 0) {
+      filtered = filtered.filter((predictor) => 
+        slugs.includes(predictor.slug)
+      );
+    }
+
+    filtered = sortPredictorProducts(filtered, PREDICTOR_SLUG_ORDER);
+
+    // Filter by search query
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (predictor) =>
+          predictor.title?.toLowerCase().includes(searchQuery) ||
+          predictor.description?.toLowerCase().includes(searchQuery) ||
+          predictor.slug?.toLowerCase().includes(searchQuery)
+      );
+    }
+    return filtered;
+  }, [predictors, searchQuery, onlyPurchased, slugs, userOrders]);
+
+  if ((loading && predictors.length === 0) || isSearching) {
     return (
-      <div className="w-full flex items-center justify-center py-16">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 animate-spin text-[#0f3a67]" />
-          <p className="text-gray-500">Loading predictors...</p>
+      <div className="w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {[...Array(6)].map((_, index) => (
+            <div
+              key={index}
+              className="w-full overflow-hidden rounded-xl bg-white shadow-lg animate-pulse border border-gray-100"
+            >
+              <div className="w-full h-48 bg-gray-200"></div>
+              <div className="p-5 space-y-3">
+                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                <div className="pt-4 flex justify-between items-center">
+                  <div className="h-8 bg-gray-200 rounded w-24"></div>
+                  <div className="h-10 bg-gray-200 rounded w-32"></div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -201,19 +261,6 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, 
     );
   }
 
-  // Filter to only purchased predictors if onlyPurchased is true
-  let displayPredictors = onlyPurchased
-    ? predictors.filter((predictor) => isPredictorPurchased(predictor.slug))
-    : predictors;
-
-  // Filter by slugs if provided
-  if (slugs && slugs.length > 0) {
-    displayPredictors = displayPredictors.filter((predictor) => 
-      slugs.includes(predictor.slug)
-    );
-  }
-
-  displayPredictors = sortPredictorProducts(displayPredictors, PREDICTOR_SLUG_ORDER);
 
   return (
     <div className="w-full">
@@ -233,11 +280,13 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, 
       ) : (
         <div className="text-center py-16">
           <p className="text-gray-500 text-lg">
-            {isCounsellor
-              ? "No predictors assigned to you yet."
-              : "No predictors available at the moment."}
+            {searchQuery 
+              ? `No predictors found for "${searchQuery}"`
+              : isCounsellor
+                ? "No predictors assigned to you yet."
+                : "No predictors available at the moment."}
           </p>
-        </div>
+        </div>  
       )}
     </div>
   );

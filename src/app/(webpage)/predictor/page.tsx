@@ -2,6 +2,7 @@ import React from "react";
 import PredictorsGrid from "@/components/Predictor/PredictorsGrid";
 import MainHeading from "@/components/sections/MainHeading";
 import Recommended from "@/components/sections/Recommended";
+import SearchInput from "@/components/counseling/Search";
 
 import { Metadata } from "next";
 
@@ -25,8 +26,42 @@ export default function page() {
           by previous year data and expert analysis.
         </p>
       </div>
+
+      <div className="container mx-auto mt-10 px-4 ">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-[var(--primary)]">
+            Search Predictors
+          </h2>
+          <SearchInput placeholder="Predictor" />
+        </div>
+      </div>
+
       <div className="container mx-auto px-4">
-        <PredictorsGrid />
+        <React.Suspense fallback={
+          <div className="w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, index) => (
+                <div
+                  key={index}
+                  className="w-full overflow-hidden rounded-xl bg-white shadow-lg animate-pulse border border-gray-100"
+                >
+                  <div className="w-full h-48 bg-gray-200"></div>
+                  <div className="p-5 space-y-3">
+                    <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                    <div className="pt-4 flex justify-between items-center">
+                      <div className="h-8 bg-gray-200 rounded w-24"></div>
+                      <div className="h-10 bg-gray-200 rounded w-32"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        }>
+          <PredictorsGrid />
+        </React.Suspense>
         <div className="mb-16 mt-16">
           <Recommended />
         </div>

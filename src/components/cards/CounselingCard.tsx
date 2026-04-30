@@ -1,5 +1,6 @@
 import { CircleChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type Props = {
   slug: string;
@@ -27,10 +28,19 @@ const CounselingCard = ({
   className = "",
 }: Props) => {
   const href = `/counseling/${slug}`;
+  const router = useRouter();
+  const handleCtaClick = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      router.push(`/counseling/${slug}`);
+    }
+  };
 
   return (
     <div
-      className={`w-full max-w-sm mx-auto overflow-hidden rounded-xl bg-white shadow-lg font-sans h-full flex flex-col ${className}`}
+      onClick={handleCtaClick}
+      className={`w-full cursor-pointer max-w-sm mx-auto overflow-hidden rounded-xl bg-white shadow-lg font-sans h-full flex flex-col ${className}`}
     >
       {/* Image Container with fixed aspect ratio */}
       <div className="relative w-full aspect-video overflow-hidden flex-shrink-0">
