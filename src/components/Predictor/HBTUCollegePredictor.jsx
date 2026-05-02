@@ -360,7 +360,6 @@ export default function HBTUCollegePredictor() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.crlRank) { toast.error("Please enter CRL Rank"); return; }
-    if (formData.category !== "OPEN" && !formData.categoryRank) { toast.error("Please enter Category Rank for the selected category"); return; }
     if (!formData.round) { toast.error("Please select Round"); return; }
     if (!formData.homeState) { toast.error("Please select Home State"); return; }
     if (!validateSubCategoryGender()) { return; }
@@ -503,8 +502,7 @@ export default function HBTUCollegePredictor() {
                 htmlFor="categoryRank"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Enter Category Rank{" "}
-                {formData.category !== "OPEN" ? "(Required)" : "(Optional)"}
+                Enter Category Rank (Optional)
               </label>
               <input
                 type="number"
@@ -513,7 +511,6 @@ export default function HBTUCollegePredictor() {
                 onChange={handleChange}
                 placeholder="2000"
                 min="1"
-                required={formData.category !== "OPEN"}
                 disabled={categoryRankLocked}
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
