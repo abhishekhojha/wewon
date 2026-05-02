@@ -328,7 +328,6 @@ export default function UPTACCollegePredictor() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.crlRank) { toast.error("Please enter CRL Rank"); return; }
-    if (formData.category !== "OPEN" && !formData.categoryRank) { toast.error("Please enter Category Rank for the selected category"); return; }
     if (!formData.homeState) { toast.error("Please select Home State"); return; }
     if (!formData.roundNumber) { toast.error("Please select Round Number"); return; }
     if (!validateSubCategoryGender()) { return; }
@@ -422,8 +421,8 @@ export default function UPTACCollegePredictor() {
             </div>
 
             <div>
-              <label htmlFor="categoryRank" className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">Enter Category Rank {formData.category !== "OPEN" ? "(Required)" : "(Optional)"}</label>
-              <input type="number" id="categoryRank" value={formData.categoryRank} onChange={handleChange} placeholder="2000" min="1" required={formData.category !== "OPEN"} disabled={categoryRankLocked} onWheel={(e) => e.currentTarget.blur()} className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]" />
+              <label htmlFor="categoryRank" className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">Enter Category Rank (Optional)</label>
+              <input type="number" id="categoryRank" value={formData.categoryRank} onChange={handleChange} placeholder="2000" min="1" disabled={categoryRankLocked} onWheel={(e) => e.currentTarget.blur()} className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]" />
               {categoryRankLocked && (
                 <p className="text-xs text-amber-700 mt-1.5 font-medium">
                   {rankLockMessage}

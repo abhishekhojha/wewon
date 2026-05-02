@@ -375,7 +375,7 @@ export default function CSABPredictor() {
                 htmlFor="categoryRank"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Enter Category Rank (optional)
+                Enter Category Rank (Optional)
               </label>
               <input
                 type="number"
