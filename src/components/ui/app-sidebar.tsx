@@ -11,6 +11,7 @@ import {
   BarChart3,
   ListChecks,
   Bell,
+  UserCheck,
 } from "lucide-react";
 
 import {
@@ -70,6 +71,11 @@ export function AppSidebar() {
           title: "Choice Filling",
           url: "/s/choice-filling",
           icon: ListChecks,
+        },
+        {
+          title: "Mentor Info",
+          url: "/s/mentor-info",
+          icon: UserCheck,
         },
         {
           title: "My Orders",
