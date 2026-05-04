@@ -15,13 +15,9 @@ import {
 } from "@/network/choice-filling";
 import { useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
-import { selectUserOrders } from "@/store/order/orderSlice";
 import { useRouter } from "next/navigation";
 import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
 import Image from "next/image";
-import { limitLeft } from "@/utils/helpers";
-import { getChoiceFillingPurchaseDetails } from "@/utils/checkChoiceFillingPurchase";
-import PredictorPaymentModal from "../Predictor/PredictorPaymentModal";
 
 
 type ChoiceFillingFormState = {
@@ -52,6 +48,7 @@ const mergePrefillIntoForm = (
     homeState?: string;
   },
   preserveExistingValues: boolean = false,
+  isJACDelhi: boolean = false
 ): ChoiceFillingFormState => {
   if (!prefill) return prev;
 
@@ -77,7 +74,7 @@ const mergePrefillIntoForm = (
         : prev.gender,
     category:
       prefill.category && (!preserveExistingValues || !prev.category)
-        ? prefill.category
+        ? (isJACDelhi && prefill.category === "GEN" ? "OPEN" : prefill.category)
         : prev.category,
     homeState:
       prefill.homeState && (!preserveExistingValues || !prev.homeState)
@@ -103,24 +100,9 @@ export default function ChoiceFillingForm({
 }: ChoiceFillingFormProps) {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const user = useAppSelector(selectUser);
-  const userOrders = useAppSelector(selectUserOrders);
   const router = useRouter();
 
-  const isCounsellor = user?.userId?.role === "counsellor";
-
-  const [hasPurchased, setHasPurchased] = useState(false);
-  const [checkingPurchase, setCheckingPurchase] = useState(true);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   
-  const usageStatus = (isAuthenticated && hasPurchased && !isCounsellor && userOrders?.length > 0 && productSlug)
-    ? (() => {
-        try {
-          return limitLeft(userOrders, productSlug, "choiceFilling");
-        } catch (e) {
-          return null;
-        }
-      })()
-    : null;
 
 
   const {
@@ -165,42 +147,10 @@ export default function ChoiceFillingForm({
   const [loading, setLoading] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  // Check purchase status when orders change
-  useEffect(() => {
-    if (userOrders.length > 0 && productSlug) {
-      const { hasPurchased: purchased } = getChoiceFillingPurchaseDetails(userOrders, productSlug);
-      setHasPurchased(purchased);
-    }
-  }, [userOrders, productSlug]);
-
-  // Initial check and free product check
-  useEffect(() => {
-    const checkStatus = () => {
-      // If product is free, it's considered purchased
-      if (product && product.price === 0 && (product.discountPrice === null || product.discountPrice === 0)) {
-        setHasPurchased(true);
-        setCheckingPurchase(false);
-        return;
-      }
-
-      // Counsellors get free access
-      if (isCounsellor) {
-        setHasPurchased(true);
-        setCheckingPurchase(false);
-        return;
-      }
-
-      setCheckingPurchase(false);
-    };
-
-    if (product) {
-      checkStatus();
-    }
-  }, [product, isCounsellor]);
 
   useEffect(() => {
     if (orderPrefill) {
-      setFormData((prev) => mergePrefillIntoForm(prev, orderPrefill));
+      setFormData((prev) => mergePrefillIntoForm(prev, orderPrefill, false, isJACDelhi));
     }
 
     if (isOrderRankLocked) {
@@ -229,7 +179,7 @@ export default function ChoiceFillingForm({
 
         const prefill = data.prefill;
         if (prefill) {
-          setFormData((prev) => mergePrefillIntoForm(prev, prefill, true));
+          setFormData((prev) => mergePrefillIntoForm(prev, prefill, true, isJACDelhi));
         }
 
         const isMetadataCrlPrefilled = typeof prefill?.crlRank === "number";
@@ -377,10 +327,6 @@ export default function ChoiceFillingForm({
       return;
     }
 
-    if (!hasPurchased && product && (product.price > 0 || (product.discountPrice && product.discountPrice > 0))) {
-      setShowPaymentModal(true);
-      return;
-    }
 
     if (!formData.name.trim()) {
       toast.error("Please enter your name.");
@@ -460,7 +406,7 @@ export default function ChoiceFillingForm({
 
       const prefill = response.prefill;
       if (prefill) {
-        setFormData((prev) => mergePrefillIntoForm(prev, prefill));
+        setFormData((prev) => mergePrefillIntoForm(prev, prefill, false, isJACDelhi));
         if (typeof prefill.crlRank === "number") {
           setRankLocked(true);
         }
@@ -472,7 +418,7 @@ export default function ChoiceFillingForm({
       if (error.response?.data?.code === "LIMIT_EXCEEDED") {
         toast.error("Your limit has been exceeded! Please contact to your alloted mentor");
       } else if (error?.response?.status === 403) {
-        setShowPaymentModal(true);
+        toast.error("You don't have access to this tool. Please contact support.");
       } else if (error?.response?.status === 401) {
         toast.error(error.message || "Please login to use the Choice Filling tool.");
         router.push("/auth");
@@ -557,11 +503,6 @@ export default function ChoiceFillingForm({
               <span className="bg-[var(--light-blue)] text-[var(--primary)] text-[10px] sm:text-xs font-semibold px-2 sm:px-4 py-1 sm:py-2 rounded-full whitespace-nowrap w-fit">
                 Powered by real cutoff data
               </span>
-              {usageStatus && (
-                <span className="bg-orange-50 text-orange-700 text-[10px] sm:text-xs font-bold px-2 sm:px-4 py-1 sm:py-2 rounded-full border border-orange-200 shadow-sm">
-                  {usageStatus.limitLeft === -1 ? "Unlimited" : `${usageStatus.limitLeft} Choice Lists Left`}
-                </span>
-              )}
             </div>
           </div>
 
@@ -687,7 +628,7 @@ export default function ChoiceFillingForm({
                     "SC (PwD)",
                     "ST (PwD)",
                   ]
-                ).map((cat) => (
+                ).map((cat) => (isJACDelhi && cat === "GEN" ? "OPEN" : cat)).map((cat) => (
                   <option key={cat} value={cat}>
                     {cat}
                   </option>
@@ -1023,18 +964,6 @@ export default function ChoiceFillingForm({
         )}
       </div>
 
-      {/* Payment Modal */}
-      {product && (
-        <PredictorPaymentModal
-          isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
-          onPaymentSuccess={() => {
-            setHasPurchased(true);
-            setShowPaymentModal(false);
-          }}
-          product={product as any}
-        />
-      )}
     </div>
   );
 }
