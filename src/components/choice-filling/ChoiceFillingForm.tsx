@@ -114,7 +114,8 @@ export default function ChoiceFillingForm({
     productId,
     productSlug,
   });
-
+  const isDevelopmentMode = process.env.NODE_ENV === "development";
+  console.log("isDevelopmentMode", isDevelopmentMode);
   const [metadata, setMetadata] = useState<ChoiceFillingMetadata | null>(null);
   const [metaLoading, setMetaLoading] = useState(true);
   const [rankLocked, setRankLocked] = useState(false);
@@ -153,10 +154,10 @@ export default function ChoiceFillingForm({
       setFormData((prev) => mergePrefillIntoForm(prev, orderPrefill, false, isJACDelhi));
     }
 
-    if (isOrderRankLocked) {
+    if (isOrderRankLocked && !isDevelopmentMode) {
       setRankLocked(true);
     }
-    if (isOrderCategoryRankLocked) {
+    if (isOrderCategoryRankLocked && !isDevelopmentMode) {
       setCategoryRankLocked(true);
     }
     if (orderRankLockMessage) {
@@ -167,6 +168,7 @@ export default function ChoiceFillingForm({
     isOrderRankLocked,
     orderPrefill,
     orderRankLockMessage,
+    isDevelopmentMode,
   ]);
 
   // Fetch metadata on mount
@@ -183,16 +185,15 @@ export default function ChoiceFillingForm({
         }
 
         const isMetadataCrlPrefilled = typeof prefill?.crlRank === "number";
-        const isMetadataCategoryPrefilled =
-          typeof prefill?.categoryRank === "number";
+        const isMetadataCategoryPrefilled = prefill?.categoryRank && (typeof prefill?.categoryRank === "number");
         setRankLocked(
-          Boolean(data.rankLocked || isOrderRankLocked || isMetadataCrlPrefilled),
+          Boolean((data.rankLocked || isOrderRankLocked || isMetadataCrlPrefilled) && !isDevelopmentMode),
         );
         setCategoryRankLocked(
           Boolean(
-            data.rankLocked ||
+            (data.rankLocked ||
               isOrderCategoryRankLocked ||
-              isMetadataCategoryPrefilled,
+              isMetadataCategoryPrefilled) && !isDevelopmentMode,
           ),
         );
         if (data.lockMessage && !isOrderRankLocked) {
@@ -205,7 +206,7 @@ export default function ChoiceFillingForm({
       }
     };
     loadMetadata();
-  }, [isOrderCategoryRankLocked, isOrderRankLocked, toolKey]);
+  }, [isOrderCategoryRankLocked, isOrderRankLocked, toolKey, isDevelopmentMode]);
 
   // Auto-scroll to results
   useEffect(() => {
@@ -396,7 +397,7 @@ export default function ChoiceFillingForm({
       setResults(response);
       setLastRequest(payload);
 
-      if (response.rankLocked) {
+      if (response.rankLocked && !isDevelopmentMode) {
         setRankLocked(true);
         setCategoryRankLocked(true);
       }
@@ -407,10 +408,10 @@ export default function ChoiceFillingForm({
       const prefill = response.prefill;
       if (prefill) {
         setFormData((prev) => mergePrefillIntoForm(prev, prefill, false, isJACDelhi));
-        if (typeof prefill.crlRank === "number") {
+        if (typeof prefill.crlRank === "number" && !isDevelopmentMode) {
           setRankLocked(true);
         }
-        if (typeof prefill.categoryRank === "number") {
+        if (typeof prefill.categoryRank === "number" && !isDevelopmentMode) {
           setCategoryRankLocked(true);
         }
       }
