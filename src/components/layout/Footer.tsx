@@ -89,7 +89,7 @@ const Footer = () => {
                 <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[var(--accent)]/10 transition-colors">
                   <Phone size={14} />
                 </div>
-                +91-9532845978
+                +91-9532845978 (WhatsApp Only)
               </a>
             </div>
           </div>
