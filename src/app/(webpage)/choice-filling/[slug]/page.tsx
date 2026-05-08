@@ -62,12 +62,12 @@ export default function ChoiceFillingProductDetailPage() {
           <p className="text-red-700 font-semibold">
             {error || "Product not found"}
           </p>
-          <Link
+          {/* <Link
             href="/choice-filling"
             className="inline-block mt-4 px-4 py-2 rounded-lg bg-[#0f3a67] text-white"
           >
             Back To Choice-Filling
-          </Link>
+          </Link> */}
         </div>
       </div>
     );
@@ -79,7 +79,7 @@ export default function ChoiceFillingProductDetailPage() {
   return (
     <>
       <div className="container mx-auto mb-8 px-4">
-        <div className="mb-6 mt-6">
+        {/* <div className="mb-6 mt-6">
           <Link
             href={`/choice-filling`}
             className="inline-flex items-center gap-2 text-sm font-semibold text-[#0f3a67] hover:text-[#0a2847]"
@@ -87,7 +87,7 @@ export default function ChoiceFillingProductDetailPage() {
             <ArrowLeft className="w-4 h-4" />
             Back To Choice-Filling
           </Link>
-        </div>
+        </div> */}
         <MainHeading top={toolLabel} bottom="Choice Filling Tool" />
       </div>
 

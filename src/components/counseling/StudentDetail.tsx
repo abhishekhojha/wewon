@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import apiClient from "@/hooks/Axios";
 import SetTaskStatusModal from "./SetTaskStatusModal";
+import MentorshipFormUpdateModal from "./MentorshipFormUpdateModal";
 import StudentToolUsage from "./StudentToolUsage";
 import { toast } from "sonner";
 
@@ -167,6 +168,9 @@ export default function StudentDetail({ studentId }: Props) {
   const [editingPurchaseId, setEditingPurchaseId] = useState<string | null>(
     null,
   );
+  const [editingMentorshipPurchaseId, setEditingMentorshipPurchaseId] = useState<
+    string | null
+  >(null);
   const [rankForm, setRankForm] = useState({
     crlRank: "",
     categoryRank: "",
@@ -585,17 +589,26 @@ export default function StudentDetail({ studentId }: Props) {
                     )}
                   </div>
 
-                  {canOverrideRank && (
-                    <div className="pt-1">
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {canOverrideRank && (
                       <button
                         onClick={() => openRankEditor(purchase)}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#073d68] text-white text-xs font-semibold hover:bg-[#0a4c82] transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#073d68] text-white text-[11px] font-semibold hover:bg-[#0a4c82] transition-colors"
                       >
-                        <Edit2 className="w-3.5 h-3.5" />
+                        <Edit2 className="w-3 h-3" />
                         Update Rank Override
                       </button>
-                    </div>
-                  )}
+                    )}
+                    <button
+                      onClick={() =>
+                        setEditingMentorshipPurchaseId(purchase.purchaseId)
+                      }
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#073d68] text-[#073d68] text-[11px] font-semibold hover:bg-[#073d68]/5 transition-colors"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                      Update Mentorship Form
+                    </button>
+                  </div>
 
                   {isEditing && !isRankLocked && (
                     <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 space-y-3">
@@ -703,6 +716,24 @@ export default function StudentDetail({ studentId }: Props) {
             fetchDetail();
           }}
           onClose={() => setModalOrderId(null)}
+        />
+      )}
+
+      {/* Mentorship Form Update Modal */}
+      {editingMentorshipPurchaseId && (
+        <MentorshipFormUpdateModal
+          studentId={studentId}
+          purchaseId={editingMentorshipPurchaseId}
+          initialData={
+            activePurchases.find(
+              (p) => p.purchaseId === editingMentorshipPurchaseId,
+            )?.mentorshipFormData || {}
+          }
+          onSuccess={() => {
+            setEditingMentorshipPurchaseId(null);
+            fetchDetail();
+          }}
+          onClose={() => setEditingMentorshipPurchaseId(null)}
         />
       )}
     </div>
