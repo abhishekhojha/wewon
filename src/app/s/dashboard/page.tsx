@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   Clock,
   Sparkles,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -191,76 +192,104 @@ export default function Page() {
             <Target className="w-6 h-6 text-[#073d68]" />
             Quick Actions
           </h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
             {/* College Predictor */}
-            <Link href="/predictor">
-              <div className="group bg-[#073d68] rounded-2xl shadow-lg p-6 cursor-pointer">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <BookOpen className="w-8 h-8 text-white" />
+            <Link href="/predictor" className="h-full">
+              <div className="group relative bg-gradient-to-br from-[#073d68] to-[#0a5a96] rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 cursor-pointer hover:-translate-y-1 overflow-hidden h-full">
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-white/20 backdrop-blur-md rounded-xl group-hover:scale-110 transition-transform">
+                      <BookOpen className="w-8 h-8 text-white" />
+                    </div>
+                    <ArrowRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
                   </div>
-                  <ArrowRight className="w-6 h-6 text-white/70" />
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    College Predictor
+                  </h3>
+                  <p className="text-blue-100 text-sm leading-relaxed">
+                    Find colleges based on your rank and preferences
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">
-                  College Predictor
-                </h3>
-                <p className="text-blue-100 text-sm">
-                  Find colleges based on your rank and preferences
-                </p>
               </div>
             </Link>
 
             {/* Choice Filling */}
-            <Link href="/choice-filling">
-              <div className="group bg-orange-500 rounded-2xl shadow-lg p-6 cursor-pointer">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <ListChecks className="w-8 h-8 text-white" />
+            <Link href="/choice-filling" className="h-full">
+              <div className="group relative bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 cursor-pointer hover:-translate-y-1 overflow-hidden h-full">
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-white/20 backdrop-blur-md rounded-xl group-hover:scale-110 transition-transform">
+                      <ListChecks className="w-8 h-8 text-white" />
+                    </div>
+                    <ArrowRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
                   </div>
-                  <ArrowRight className="w-6 h-6 text-white/70" />
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    Choice Filling
+                  </h3>
+                  <p className="text-orange-100 text-sm leading-relaxed">
+                    Browse products and generate your personalized choice list
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">
-                  Choice Filling
-                </h3>
-                <p className="text-orange-100 text-sm">
-                  Browse products and generate your personalized choice list
-                </p>
+              </div>
+            </Link>
+
+            {/* View Mentor Info */}
+            <Link href="/s/mentor-info" className="h-full">
+              <div className="group relative bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 cursor-pointer hover:-translate-y-1 overflow-hidden h-full">
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-white/20 backdrop-blur-md rounded-xl group-hover:scale-110 transition-transform">
+                      <Users className="w-8 h-8 text-white" />
+                    </div>
+                    <ArrowRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    Expert Mentor
+                  </h3>
+                  <p className="text-indigo-100 text-sm leading-relaxed">
+                    Get 1-on-1 guidance from top experts to secure your dream college.
+                  </p>
+                </div>
               </div>
             </Link>
 
             {/* View Saved Colleges */}
-            <Link href="/s/saved-colleges">
-              <div className="group bg-pink-500 rounded-2xl shadow-lg p-6 cursor-pointer">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <Heart className="w-8 h-8 text-white" />
+            <Link href="/s/saved-colleges" className="h-full">
+              <div className="group relative bg-gradient-to-br from-pink-500 to-rose-600 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 cursor-pointer hover:-translate-y-1 overflow-hidden h-full">
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-white/20 backdrop-blur-md rounded-xl group-hover:scale-110 transition-transform">
+                      <Heart className="w-8 h-8 text-white" />
+                    </div>
+                    <ArrowRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
                   </div>
-                  <ArrowRight className="w-6 h-6 text-white/70" />
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    Saved Colleges
+                  </h3>
+                  <p className="text-pink-100 text-sm leading-relaxed">
+                    View and manage your shortlisted college list
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">
-                  Saved Colleges
-                </h3>
-                <p className="text-pink-100 text-sm">
-                  View and manage your saved college list
-                </p>
               </div>
             </Link>
 
             {/* Complete Profile */}
-            <Link href="/s/profile">
-              <div className="group bg-purple-500 rounded-2xl shadow-lg p-6 cursor-pointer">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <Award className="w-8 h-8 text-white" />
+            <Link href="/s/profile" className="h-full">
+              <div className="group relative bg-gradient-to-br from-purple-600 to-fuchsia-700 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 cursor-pointer hover:-translate-y-1 overflow-hidden h-full">
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-white/20 backdrop-blur-md rounded-xl group-hover:scale-110 transition-transform">
+                      <Award className="w-8 h-8 text-white" />
+                    </div>
+                    <ArrowRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
                   </div>
-                  <ArrowRight className="w-6 h-6 text-white/70" />
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    Complete Profile
+                  </h3>
+                  <p className="text-purple-100 text-sm leading-relaxed">
+                    Add your academic details and exam scores
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">
-                  Complete Profile
-                </h3>
-                <p className="text-purple-100 text-sm">
-                  Add your academic details and exam scores
-                </p>
               </div>
             </Link>
           </div>
