@@ -46,7 +46,18 @@ interface StudentDetailData {
   };
   orders: {
     orderId: string;
-    product: { title: string };
+    product: {
+      _id?: string;
+      title: string;
+      features?: {
+        collegePredictor?: {
+          allowedPredictors?: string[];
+        };
+        choiceFilling?: {
+          allowedChoiceFillers?: string[];
+        };
+      };
+    };
     taskStatus: "pending" | "completed" | "incomplete" | "other_issue";
     issueDescription?: string | null;
     allocationDate: string;
@@ -59,6 +70,9 @@ interface StudentDetailData {
     usageStats: { choiceFillingCount?: number; collegePredictorCount?: number };
     counsellorOverrides?: {
       isUnlimitedChoiceFilling?: boolean;
+      forceEnable?: boolean;
+      forceEnableSetBy?: string;
+      forceEnableSetAt?: string;
       [key: string]: unknown;
     };
     mentorshipFormData?: Record<string, string | number | boolean | null>;
@@ -177,6 +191,27 @@ export default function StudentDetail({ studentId }: Props) {
   });
   const [rankUpdateLoading, setRankUpdateLoading] = useState(false);
   const [rankUpdateError, setRankUpdateError] = useState<string | null>(null);
+
+  // ── JEE Advanced Force-Enable ─────────────────────────────────────────────
+  const [forceEnableLoadingId, setForceEnableLoadingId] = useState<string | null>(null);
+
+  const handleForceEnable = async (purchaseId: string, currentValue: boolean) => {
+    setForceEnableLoadingId(purchaseId);
+    const next = !currentValue;
+    try {
+      const res = await apiClient.patch(
+        `/api/counsellor/purchases/${purchaseId}/jee-advanced/force-enable`,
+        { forceEnable: next },
+      );
+      toast.success(res.data?.message || `Force-enable ${next ? "activated" : "deactivated"}.`);
+      await fetchDetail();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      toast.error(msg || "Failed to update force-enable status.");
+    } finally {
+      setForceEnableLoadingId(null);
+    }
+  };
 
   const fetchDetail = useCallback(async () => {
     setLoading(true);
@@ -498,6 +533,14 @@ export default function StudentDetail({ studentId }: Props) {
               const isEditing = editingPurchaseId === purchase.purchaseId;
               const canOverrideRank = !isRankLocked;
 
+              // Derive allowedPredictors from the matching order (API doesn't include it on activePurchases)
+              const matchingOrder = orders.find(
+                (o) => o.product?._id === purchase.productId
+              );
+              const allowedPredictors =
+                matchingOrder?.product?.features?.collegePredictor?.allowedPredictors ?? [];
+              const isJosaaProduct = allowedPredictors.includes("JOSAA");
+
               return (
                 <div
                   key={purchase.purchaseId}
@@ -586,6 +629,56 @@ export default function StudentDetail({ studentId }: Props) {
                       <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-2.5 py-1.5">
                         Unlimited choice filling is enabled for this purchase.
                       </p>
+                    )}
+
+                    {/* ── JEE Advanced Force-Enable (JOSAA purchases only) ── */}
+                    {isJosaaProduct && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                          JEE Advanced Access Override
+                        </p>
+                        <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-white border border-gray-100">
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-gray-800">
+                              Force-Enable Full Access
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
+                              Bypasses rank and task checks — grants immediate access to IIT predictor and choice filling.
+                            </p>
+                            {purchase.counsellorOverrides?.forceEnable && purchase.counsellorOverrides?.forceEnableSetAt && (
+                              <p className="text-[10px] text-green-600 mt-1">
+                                Enabled {formatDateTime(purchase.counsellorOverrides.forceEnableSetAt as string)}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() =>
+                              handleForceEnable(
+                                purchase.purchaseId,
+                                Boolean(purchase.counsellorOverrides?.forceEnable),
+                              )
+                            }
+                            disabled={forceEnableLoadingId === purchase.purchaseId}
+                            aria-label="Toggle JEE Advanced force-enable"
+                            className={`relative flex-shrink-0 inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-60 cursor-pointer ${
+                              purchase.counsellorOverrides?.forceEnable
+                                ? "bg-green-500 focus:ring-green-400"
+                                : "bg-gray-300 focus:ring-gray-400"
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                                purchase.counsellorOverrides?.forceEnable ? "translate-x-6" : "translate-x-1"
+                              }`}
+                            />
+                            {forceEnableLoadingId === purchase.purchaseId && (
+                              <span className="absolute inset-0 flex items-center justify-center">
+                                <Loader2 className="w-3 h-3 animate-spin text-white" />
+                              </span>
+                            )}
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
 
