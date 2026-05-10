@@ -244,10 +244,10 @@ export default function Page() {
                     <ArrowRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
                   </div>
                   <h3 className="text-xl font-bold text-white mb-2">
-                    Expert Mentor
+                    Know Your Mentor
                   </h3>
                   <p className="text-indigo-100 text-sm leading-relaxed">
-                    Get 1-on-1 guidance from top experts to secure your dream college.
+                    Get detailed information about your assigned mentor
                   </p>
                 </div>
               </div>
