@@ -24,6 +24,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarClose,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 import {
@@ -44,6 +46,7 @@ export function AppSidebar() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { userOrders, userOrdersLoaded } = useAppSelector((state) => state.order);
+  const { isMobile } = useSidebar();
 
   useEffect(() => {
     if (!userOrdersLoaded) {
@@ -127,6 +130,11 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r border-gray-200 bg-white">
+      {isMobile && (
+        <div className="absolute top-4 right-4 z-50">
+          <SidebarClose className="hover:bg-gray-100 rounded-full" />
+        </div>
+      )}
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
