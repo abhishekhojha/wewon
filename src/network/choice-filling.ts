@@ -78,7 +78,7 @@ export interface ChoiceFillingMetadata {
 
 export interface ChoiceFillingRequest {
   name: string;
-  crlRank: number;
+  crlRank?: number;
   categoryRank?: number;
   gender: string;
   category: string;

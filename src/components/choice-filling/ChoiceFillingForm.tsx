@@ -146,6 +146,14 @@ export default function ChoiceFillingForm({
     null,
   );
   const [loading, setLoading] = useState(false);
+  const [iitSearch, setIitSearch] = useState("");
+  const [stateSearch, setStateSearch] = useState("");
+  const [branchGroupSearch, setBranchGroupSearch] = useState("");
+  const [instituteTypeSearch, setInstituteTypeSearch] = useState("");
+  const [jacInstituteSearch, setJacInstituteSearch] = useState("");
+  const [homeStateSearch, setHomeStateSearch] = useState("");
+
+
   const resultsRef = useRef<HTMLDivElement>(null);
 
 
@@ -334,7 +342,9 @@ export default function ChoiceFillingForm({
       return;
     }
 
-    if (!formData.crlRank) {
+    const isCrlRankRequired = !isIIT || formData.category.startsWith("OPEN");
+
+    if (isCrlRankRequired && !formData.crlRank) {
       toast.error("Please enter your CRL Rank.");
       return;
     }
@@ -360,7 +370,7 @@ export default function ChoiceFillingForm({
     try {
       const payload: ChoiceFillingRequest = {
         name: formData.name.trim(),
-        crlRank: Number(formData.crlRank),
+        crlRank: formData.crlRank ? Number(formData.crlRank) : undefined,
         categoryRank: formData.categoryRank
           ? Number(formData.categoryRank)
           : undefined,
@@ -534,7 +544,7 @@ export default function ChoiceFillingForm({
                 htmlFor="crlRank"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                CRL Rank <span className="text-red-500">*</span>
+                CRL Rank {!isIIT || formData.category.startsWith("OPEN") ? <span className="text-red-500">*</span> : <span className="text-[var(--muted-text)] font-normal text-[10px] ml-1">(Optional)</span>}
               </label>
               <input
                 type="text"
@@ -542,7 +552,7 @@ export default function ChoiceFillingForm({
                 value={formData.crlRank}
                 onChange={handleChange}
                 placeholder="e.g. 52341"
-                required
+                required={!isIIT || formData.category.startsWith("OPEN")}
                 disabled={rankLocked}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
@@ -646,29 +656,121 @@ export default function ChoiceFillingForm({
                     (Optional – select specific IITs)
                   </span>
                 </label>
-                <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-48 overflow-y-auto pr-1">
-                  {(metadata?.iitList || []).map((iit) => (
-                    <button
-                      key={iit.shortName}
-                      type="button"
-                      onClick={() => handleIITToggle(iit.shortName)}
-                      className={`px-3 py-1.5 border rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer ${
-                        formData.includedIITs.includes(iit.shortName)
-                          ? "bg-[var(--primary)] text-white border-[var(--primary)]"
-                          : "bg-white text-[var(--muted-text)] border-[var(--border)] hover:bg-[var(--muted-background)]"
-                      }`}
-                    >
-                      {iit.shortName}
-                    </button>
-                  ))}
+                <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
+                  <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
+                    <input
+                      type="text"
+                      placeholder="Search IITs..."
+                      value={iitSearch}
+                      onChange={(e) => setIitSearch(e.target.value)}
+                      className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
+                    />
+                  </div>
+                  <div className="max-h-48 overflow-y-auto p-1.5">
+                    {metadata?.iitList && metadata.iitList.length > 0 ? (
+                      <>
+                        <label className="flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-1 group">
+                          <input
+                            type="checkbox"
+                            checked={
+                              formData.includedIITs.length ===
+                              metadata.iitList.length
+                            }
+                            onChange={() => {
+                              if (!metadata?.iitList) return;
+                              const all = metadata.iitList.map(
+                                (i) => i.shortName
+                              );
+                              if (formData.includedIITs.length === all.length) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  includedIITs: [],
+                                }));
+                              } else {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  includedIITs: all,
+                                }));
+                              }
+                            }}
+                            className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
+                          />
+                          <span className="text-xs sm:text-sm font-bold text-[var(--foreground)]">
+                            Select All ({metadata.iitList.length})
+                          </span>
+                        </label>
+                        <div className="border-t border-[var(--border)] my-1.5 mx-2"></div>
+                        {metadata.iitList
+                          .filter((i) =>
+                            i.shortName
+                              .toLowerCase()
+                              .includes(iitSearch.toLowerCase()) ||
+                            i.fullName
+                              .toLowerCase()
+                              .includes(iitSearch.toLowerCase())
+                          )
+                          .map((iit) => (
+                            <label
+                              key={iit.shortName}
+                              className={`flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-0.5 ${
+                                formData.includedIITs.includes(iit.shortName)
+                                  ? "bg-[var(--primary)]/5"
+                                  : ""
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={formData.includedIITs.includes(
+                                  iit.shortName
+                                )}
+                                onChange={() => handleIITToggle(iit.shortName)}
+                                className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
+                              />
+                              <span className="text-xs sm:text-sm flex-1 text-[var(--muted-text)] font-medium group-hover:text-[var(--foreground)]">
+                                {iit.shortName}
+                              </span>
+                              {formData.includedIITs.includes(iit.shortName) && (
+                                <svg
+                                  className="w-4 h-4 text-[var(--primary)] flex-shrink-0"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              )}
+                            </label>
+                          ))}
+                        {metadata.iitList.filter((i) =>
+                          i.shortName
+                            .toLowerCase()
+                            .includes(iitSearch.toLowerCase()) ||
+                          i.fullName
+                            .toLowerCase()
+                            .includes(iitSearch.toLowerCase())
+                        ).length === 0 && (
+                          <p className="text-[10px] sm:text-xs text-[var(--muted-text)] text-center py-4">
+                            No IITs match your search
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-[10px] sm:text-xs text-[var(--muted-text)] text-center py-4">
+                        Loading IITs...
+                      </p>
+                    )}
+                  </div>
                 </div>
                 {formData.includedIITs.length === 0 && (
-                  <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1">
-                    No selection = All 23 IITs included
+                  <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1.5 ml-1">
+                    No selection = All IITs included
                   </p>
                 )}
                 {formData.includedIITs.length > 0 && (
-                  <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1 font-medium">
+                  <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1.5 ml-1 font-semibold">
                     {formData.includedIITs.length} IIT
                     {formData.includedIITs.length > 1 ? "s" : ""} selected
                   </p>
@@ -731,29 +833,99 @@ export default function ChoiceFillingForm({
                       (Optional – select specific institutes)
                     </span>
                   </label>
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-48 overflow-y-auto pr-1">
-                    {(metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"]).map((inst) => (
-                      <button
-                        key={inst}
-                        type="button"
-                        onClick={() => handleInstituteToggle(inst)}
-                        className={`px-3 py-1.5 border rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer ${
-                          formData.includedInstitutes.includes(inst)
-                            ? "bg-[var(--primary)] text-white border-[var(--primary)]"
-                            : "bg-white text-[var(--muted-text)] border-[var(--border)] hover:bg-[var(--muted-background)]"
-                        }`}
-                      >
-                        {inst}
-                      </button>
-                    ))}
+                  <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
+                    <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
+                      <input
+                        type="text"
+                        placeholder="Search institutes..."
+                        value={jacInstituteSearch}
+                        onChange={(e) => setJacInstituteSearch(e.target.value)}
+                        className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto p-1.5">
+                      {(metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"]).length > 0 ? (
+                        <>
+                          <label className="flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-1 group">
+                            <input
+                              type="checkbox"
+                              checked={
+                                formData.includedInstitutes.length ===
+                                (metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"]).length
+                              }
+                              onChange={() => {
+                                const all = metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"];
+                                if (formData.includedInstitutes.length === all.length) {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    includedInstitutes: [],
+                                  }));
+                                } else {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    includedInstitutes: [...all],
+                                  }));
+                                }
+                              }}
+                              className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
+                            />
+                            <span className="text-xs sm:text-sm font-bold text-[var(--foreground)]">
+                              Select All ({(metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"]).length})
+                            </span>
+                          </label>
+                          <div className="border-t border-[var(--border)] my-1.5 mx-2"></div>
+                          {(metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"])
+                            .filter((inst) =>
+                              inst.toLowerCase().includes(jacInstituteSearch.toLowerCase())
+                            )
+                            .map((inst) => (
+                              <label
+                                key={inst}
+                                className={`flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-0.5 ${
+                                  formData.includedInstitutes.includes(inst)
+                                    ? "bg-[var(--primary)]/5"
+                                    : ""
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={formData.includedInstitutes.includes(inst)}
+                                  onChange={() => handleInstituteToggle(inst)}
+                                  className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
+                                />
+                                <span className="text-xs sm:text-sm flex-1 text-[var(--muted-text)] font-medium group-hover:text-[var(--foreground)]">
+                                  {inst}
+                                </span>
+                                {formData.includedInstitutes.includes(inst) && (
+                                  <svg
+                                    className="w-4 h-4 text-[var(--primary)] flex-shrink-0"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                )}
+                              </label>
+                            ))}
+                        </>
+                      ) : (
+                        <p className="text-[10px] sm:text-xs text-[var(--muted-text)] text-center py-4">
+                          No institutes available
+                        </p>
+                      )}
+                    </div>
                   </div>
                   {formData.includedInstitutes.length === 0 && (
-                    <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1">
+                    <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1.5 ml-1">
                       No selection = All institutes included
                     </p>
                   )}
                   {formData.includedInstitutes.length > 0 && (
-                    <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1 font-medium">
+                    <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1.5 ml-1 font-semibold">
                       {formData.includedInstitutes.length} institute
                       {formData.includedInstitutes.length > 1 ? "s" : ""} selected
                     </p>
@@ -770,20 +942,60 @@ export default function ChoiceFillingForm({
                   >
                     Select Your Home State
                   </label>
-                  <select
-                    required
-                    id="homeState"
-                    value={formData.homeState}
-                    onChange={handleChange}
-                    className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
-                  >
-                    <option value="">Select Your Home State</option>
-                    {(metadata?.homeStates || []).map((state) => (
-                      <option key={state} value={state}>
-                        {state}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
+                    <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
+                      <input
+                        type="text"
+                        placeholder="Search home state..."
+                        value={homeStateSearch}
+                        onChange={(e) => setHomeStateSearch(e.target.value)}
+                        className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto p-1.5">
+                      {(metadata?.homeStates || [])
+                        .filter((state) =>
+                          state.toLowerCase().includes(homeStateSearch.toLowerCase())
+                        )
+                        .map((state) => (
+                          <label
+                            key={state}
+                            className={`flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-0.5 ${
+                              formData.homeState === state
+                                ? "bg-[var(--primary)]/5 text-[var(--primary)]"
+                                : "text-[var(--muted-text)] hover:text-[var(--foreground)]"
+                            }`}
+                            onClick={() =>
+                              setFormData((prev) => ({ ...prev, homeState: state }))
+                            }
+                          >
+                            <span className="text-xs sm:text-sm flex-1 font-medium">
+                              {state}
+                            </span>
+                            {formData.homeState === state && (
+                              <svg
+                                className="w-4 h-4 text-[var(--primary)] flex-shrink-0"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </label>
+                        ))}
+                      {(metadata?.homeStates || []).filter((state) =>
+                        state.toLowerCase().includes(homeStateSearch.toLowerCase())
+                      ).length === 0 && (
+                        <p className="text-[10px] sm:text-xs text-[var(--muted-text)] text-center py-4">
+                          No states match your search
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Included States - Multi Select (Inclusion Filter) */}
@@ -792,29 +1004,97 @@ export default function ChoiceFillingForm({
                     <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
                       States (Optional – select multiple)
                     </label>
-                    <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-48 overflow-y-auto pr-1">
-                      {availableInstituteStates.map((state) => (
-                        <button
-                          key={state}
-                          type="button"
-                          onClick={() => handleIncludedStateToggle(state)}
-                          className={`px-3 sm:px-4 py-1.5 sm:py-2 border rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer ${
-                            formData.includedStates.includes(state)
-                              ? "bg-[var(--primary)] text-white border-[var(--primary)]"
-                              : "bg-white text-[var(--muted-text)] border-[var(--border)] hover:bg-[var(--muted-background)]"
-                          }`}
-                        >
-                          {state}
-                        </button>
-                      ))}
+                    <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
+                      <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
+                        <input
+                          type="text"
+                          placeholder="Search states..."
+                          value={stateSearch}
+                          onChange={(e) => setStateSearch(e.target.value)}
+                          className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
+                        />
+                      </div>
+                      <div className="max-h-48 overflow-y-auto p-1.5">
+                        <label className="flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-1 group">
+                          <input
+                            type="checkbox"
+                            checked={
+                              formData.includedStates.length ===
+                              availableInstituteStates.length
+                            }
+                            onChange={() => {
+                              if (formData.includedStates.length === availableInstituteStates.length) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  includedStates: [],
+                                }));
+                              } else {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  includedStates: [...availableInstituteStates],
+                                }));
+                              }
+                            }}
+                            className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
+                          />
+                          <span className="text-xs sm:text-sm font-bold text-[var(--foreground)]">
+                            Select All ({availableInstituteStates.length})
+                          </span>
+                        </label>
+                        <div className="border-t border-[var(--border)] my-1.5 mx-2"></div>
+                        {availableInstituteStates
+                          .filter((state) =>
+                            state.toLowerCase().includes(stateSearch.toLowerCase())
+                          )
+                          .map((state) => (
+                            <label
+                              key={state}
+                              className={`flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-0.5 ${
+                                formData.includedStates.includes(state)
+                                  ? "bg-[var(--primary)]/5"
+                                  : ""
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={formData.includedStates.includes(state)}
+                                onChange={() => handleIncludedStateToggle(state)}
+                                className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
+                              />
+                              <span className="text-xs sm:text-sm flex-1 text-[var(--muted-text)] font-medium group-hover:text-[var(--foreground)]">
+                                {state}
+                              </span>
+                              {formData.includedStates.includes(state) && (
+                                <svg
+                                  className="w-4 h-4 text-[var(--primary)] flex-shrink-0"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              )}
+                            </label>
+                          ))}
+                        {availableInstituteStates.filter((state) =>
+                          state.toLowerCase().includes(stateSearch.toLowerCase())
+                        ).length === 0 && (
+                          <p className="text-[10px] sm:text-xs text-[var(--muted-text)] text-center py-4">
+                            No states match your search
+                          </p>
+                        )}
+                      </div>
                     </div>
                     {formData.includedStates.length === 0 && (
-                      <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1">
-                        No selection = All states shown
+                      <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1.5 ml-1">
+                        No selection = All states included
                       </p>
                     )}
                     {formData.includedStates.length > 0 && (
-                      <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1 font-medium">
+                      <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1.5 ml-1 font-semibold">
                         {formData.includedStates.length} state
                         {formData.includedStates.length > 1 ? "s" : ""} included
                       </p>
@@ -827,27 +1107,93 @@ export default function ChoiceFillingForm({
                   <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
                     Institute Type (Optional – select multiple)
                   </label>
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                    {(metadata?.instituteTypes || ["NIT", "IIIT", "GFTI"]).map(
-                      (type) => (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() => handleInstituteTypeToggle(type)}
-                          className={`px-3 sm:px-4 py-1.5 sm:py-2 border rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer ${
-                            formData.instituteTypes.includes(type)
-                              ? "bg-[var(--primary)] text-white border-[var(--primary)]"
-                              : "bg-white text-[var(--muted-text)] border-[var(--border)] hover:bg-[var(--muted-background)]"
-                          }`}
-                        >
-                          {type}
-                        </button>
-                      ),
-                    )}
+                  <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
+                    <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
+                      <input
+                        type="text"
+                        placeholder="Search institute types..."
+                        value={instituteTypeSearch}
+                        onChange={(e) => setInstituteTypeSearch(e.target.value)}
+                        className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto p-1.5">
+                      <label className="flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-1 group">
+                        <input
+                          type="checkbox"
+                          checked={
+                            formData.instituteTypes.length ===
+                            (metadata?.instituteTypes || ["NIT", "IIIT", "GFTI"]).length
+                          }
+                          onChange={() => {
+                            const all = metadata?.instituteTypes || ["NIT", "IIIT", "GFTI"];
+                            if (formData.instituteTypes.length === all.length) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                instituteTypes: [],
+                              }));
+                            } else {
+                              setFormData((prev) => ({
+                                ...prev,
+                                instituteTypes: [...all],
+                              }));
+                            }
+                          }}
+                          className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
+                        />
+                        <span className="text-xs sm:text-sm font-bold text-[var(--foreground)]">
+                          Select All ({(metadata?.instituteTypes || ["NIT", "IIIT", "GFTI"]).length})
+                        </span>
+                      </label>
+                      <div className="border-t border-[var(--border)] my-1.5 mx-2"></div>
+                      {(metadata?.instituteTypes || ["NIT", "IIIT", "GFTI"])
+                        .filter((type) =>
+                          type.toLowerCase().includes(instituteTypeSearch.toLowerCase())
+                        )
+                        .map((type) => (
+                          <label
+                            key={type}
+                            className={`flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-0.5 ${
+                              formData.instituteTypes.includes(type)
+                                ? "bg-[var(--primary)]/5"
+                                : ""
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.instituteTypes.includes(type)}
+                              onChange={() => handleInstituteTypeToggle(type)}
+                              className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
+                            />
+                            <span className="text-xs sm:text-sm flex-1 text-[var(--muted-text)] font-medium group-hover:text-[var(--foreground)]">
+                              {type}
+                            </span>
+                            {formData.instituteTypes.includes(type) && (
+                              <svg
+                                className="w-4 h-4 text-[var(--primary)] flex-shrink-0"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </label>
+                        ))}
+                    </div>
                   </div>
                   {formData.instituteTypes.length === 0 && (
-                    <p className="text-[10px] sm:text-xs text(--muted-text)] mt-1">
-                      No selection = All institute types
+                    <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1.5 ml-1">
+                      No selection = All institute types included
+                    </p>
+                  )}
+                  {formData.instituteTypes.length > 0 && (
+                    <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1.5 ml-1 font-semibold">
+                      {formData.instituteTypes.length} type
+                      {formData.instituteTypes.length > 1 ? "s" : ""} included
                     </p>
                   )}
                 </div>
@@ -898,31 +1244,104 @@ export default function ChoiceFillingForm({
             {/* Branch Groups - Multi Select */}
             <div>
               <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
-                Branch Groups (Optional – select multiple)
+                Branch Groups{" "}
+                <span className="text-[var(--muted-text)] font-normal">
+                  (Optional – select multiple)
+                </span>
               </label>
-              <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-48 overflow-y-auto pr-1">
-                {(metadata?.branchGroups || []).map((group) => (
-                  <button
-                    key={group}
-                    type="button"
-                    onClick={() => handleBranchGroupToggle(group)}
-                    className={`px-3 sm:px-4 py-1.5 sm:py-2 border rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer ${
-                      formData.branchGroups.includes(group)
-                        ? "bg-[var(--primary)] text-white border-[var(--primary)]"
-                        : "bg-white text-[var(--muted-text)] border-[var(--border)] hover:bg-[var(--muted-background)]"
-                    }`}
-                  >
-                    {group}
-                  </button>
-                ))}
+              <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
+                <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
+                  <input
+                    type="text"
+                    placeholder="Search branch groups..."
+                    value={branchGroupSearch}
+                    onChange={(e) => setBranchGroupSearch(e.target.value)}
+                    className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto p-1.5">
+                  {(metadata?.branchGroups || []).length > 0 ? (
+                    <>
+                      <label className="flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-1 group">
+                        <input
+                          type="checkbox"
+                          checked={
+                            formData.branchGroups.length ===
+                            (metadata?.branchGroups || []).length
+                          }
+                          onChange={() => {
+                            const all = metadata?.branchGroups || [];
+                            if (formData.branchGroups.length === all.length) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                branchGroups: [],
+                              }));
+                            } else {
+                              setFormData((prev) => ({
+                                ...prev,
+                                branchGroups: [...all],
+                              }));
+                            }
+                          }}
+                          className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
+                        />
+                        <span className="text-xs sm:text-sm font-bold text-[var(--foreground)]">
+                          Select All ({(metadata?.branchGroups || []).length})
+                        </span>
+                      </label>
+                      <div className="border-t border-[var(--border)] my-1.5 mx-2"></div>
+                      {(metadata?.branchGroups || [])
+                        .filter((group) =>
+                          group.toLowerCase().includes(branchGroupSearch.toLowerCase())
+                        )
+                        .map((group) => (
+                          <label
+                            key={group}
+                            className={`flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-0.5 ${
+                              formData.branchGroups.includes(group)
+                                ? "bg-[var(--primary)]/5"
+                                : ""
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.branchGroups.includes(group)}
+                              onChange={() => handleBranchGroupToggle(group)}
+                              className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
+                            />
+                            <span className="text-xs sm:text-sm flex-1 text-[var(--muted-text)] font-medium group-hover:text-[var(--foreground)]">
+                              {group}
+                            </span>
+                            {formData.branchGroups.includes(group) && (
+                              <svg
+                                className="w-4 h-4 text-[var(--primary)] flex-shrink-0"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </label>
+                        ))}
+                    </>
+                  ) : (
+                    <p className="text-[10px] sm:text-xs text-[var(--muted-text)] text-center py-4">
+                      Loading branch groups...
+                    </p>
+                  )}
+                </div>
               </div>
               {formData.branchGroups.length === 0 && (
-                <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1">
+                <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1.5 ml-1">
                   No selection = All branches included
                 </p>
               )}
               {formData.branchGroups.length > 0 && (
-                <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1 font-medium">
+                <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1.5 ml-1 font-semibold">
                   {formData.branchGroups.length} group
                   {formData.branchGroups.length > 1 ? "s" : ""} selected
                 </p>
