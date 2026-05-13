@@ -32,7 +32,7 @@ export default function IITCollegePredictor() {
   const isCounsellor = userData?.userId?.role === "counsellor";
 
   const [formData, setFormData] = useState({
-    crlRank: "",
+    jeeAdvancedRank: "",
     categoryRank: "",
     category: "OPEN", // Default to OPEN (General)
     gender: "Male",
@@ -136,12 +136,12 @@ export default function IITCollegePredictor() {
 
     setFormData((prev) => ({
       ...prev,
-      crlRank:
+      jeeAdvancedRank:
         typeof prefill.jeeAdvancedRank === "number"
           ? String(prefill.jeeAdvancedRank)
           : typeof prefill.crlRank === "number"
           ? String(prefill.crlRank)
-          : prev.crlRank,
+          : prev.jeeAdvancedRank,
       categoryRank:
         typeof prefill.categoryRank === "number"
           ? String(prefill.categoryRank)
@@ -232,7 +232,7 @@ export default function IITCollegePredictor() {
 
     try {
       const payload = {
-        crlRank: Number(formData.crlRank || 1),
+        jeeAdvancedRank: Number(formData.jeeAdvancedRank || 1),
         categoryRank: formData.categoryRank ? formData.categoryRank : undefined,
         category: formData.category,
         gender: formData.gender,
@@ -261,9 +261,9 @@ export default function IITCollegePredictor() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate that CRL Rank is provided for OPEN category
-    if (formData.category === "OPEN" && !formData.crlRank) {
-      toast.error("Please enter CRL Rank for OPEN category");
+    // Validate that JEE Advanced Rank is provided for OPEN category
+    if (formData.category === "OPEN" && !formData.jeeAdvancedRank) {
+      toast.error("Please enter JEE Advanced Rank for OPEN category");
       return;
     }
 
@@ -371,18 +371,18 @@ export default function IITCollegePredictor() {
 
           {/* Form */}
           <form className="space-y-3 sm:space-y-5" onSubmit={handleSubmit}>
-            {/* CRL Rank */}
+            {/* JEE Advanced Rank */}
             <div>
               <label
-                htmlFor="crlRank"
+                htmlFor="jeeAdvancedRank"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Enter CRL Rank
+                Enter JEE Advanced Rank
               </label>
               <input
                 type="number"
-                id="crlRank"
-                value={formData.crlRank}
+                id="jeeAdvancedRank"
+                value={formData.jeeAdvancedRank}
                 onChange={handleChange}
                 placeholder="15000"
                 min="1"
