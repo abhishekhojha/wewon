@@ -69,12 +69,13 @@ interface StudentDetailData {
     status: string;
     usageStats: { choiceFillingCount?: number; collegePredictorCount?: number };
     counsellorOverrides?: {
+      choiceFillingLimit?: number | null;
+      collegePredictorLimit?: number | null;
       isUnlimitedChoiceFilling?: boolean;
-      forceEnable?: boolean;
-      forceEnableSetBy?: string;
-      forceEnableSetAt?: string;
+      isUnlimitedCollegePredictor?: boolean;
       [key: string]: unknown;
     };
+
     mentorshipFormData?: Record<string, string | number | boolean | null>;
     mentorshipFormSubmittedAt?: string | null;
     rankOverrides?: {
@@ -193,23 +194,23 @@ export default function StudentDetail({ studentId }: Props) {
   const [rankUpdateError, setRankUpdateError] = useState<string | null>(null);
 
   // ── JEE Advanced Force-Enable ─────────────────────────────────────────────
-  const [forceEnableLoadingId, setForceEnableLoadingId] = useState<string | null>(null);
+  const [forceEnableLoadingKey, setForceEnableLoadingKey] = useState<string | null>(null);
 
-  const handleForceEnable = async (purchaseId: string, currentValue: boolean) => {
-    setForceEnableLoadingId(purchaseId);
-    const next = !currentValue;
+  const handleForceEnable = async (purchaseId: string, forceEnable: boolean) => {
+    const key = `${purchaseId}-${forceEnable ? "enable" : "disable"}`;
+    setForceEnableLoadingKey(key);
     try {
       const res = await apiClient.patch(
         `/api/counsellor/purchases/${purchaseId}/jee-advanced/force-enable`,
-        { forceEnable: next },
+        { forceEnable },
       );
-      toast.success(res.data?.message || `Force-enable ${next ? "activated" : "deactivated"}.`);
+      toast.success(res.data?.message || `Force-enable ${forceEnable ? "activated" : "deactivated"}.`);
       await fetchDetail();
     } catch (err: any) {
       const msg = err?.response?.data?.message;
       toast.error(msg || "Failed to update force-enable status.");
     } finally {
-      setForceEnableLoadingId(null);
+      setForceEnableLoadingKey(null);
     }
   };
 
@@ -245,11 +246,11 @@ export default function StudentDetail({ studentId }: Props) {
     setRankForm({
       crlRank: String(
         purchase.rankOverrides?.crlRank ??
-          (typeof formCrlRank === "number" ? formCrlRank : ""),
+        (typeof formCrlRank === "number" ? formCrlRank : ""),
       ),
       categoryRank: String(
         purchase.rankOverrides?.categoryRank ??
-          (typeof formCategoryRank === "number" ? formCategoryRank : ""),
+        (typeof formCategoryRank === "number" ? formCategoryRank : ""),
       ),
     });
     setRankUpdateError(null);
@@ -300,7 +301,7 @@ export default function StudentDetail({ studentId }: Props) {
       if (apiError?.code === "RANK_LOCKED") {
         setRankUpdateError(
           apiError?.message ||
-            "Rank fields are locked by admin and cannot be edited.",
+          "Rank fields are locked by admin and cannot be edited.",
         );
       } else if (err?.response?.status === 400) {
         setRankUpdateError(
@@ -506,13 +507,13 @@ export default function StudentDetail({ studentId }: Props) {
                   )}
                 </div>
                 {/* Action */}
-                  <button
-                    onClick={() => setModalOrderId(order.orderId)}
-                    className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#073d68] text-white text-sm font-semibold hover:bg-[#0a4c82] transition-colors shadow-sm"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                    Set Status
-                  </button>
+                <button
+                  onClick={() => setModalOrderId(order.orderId)}
+                  className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#073d68] text-white text-sm font-semibold hover:bg-[#0a4c82] transition-colors shadow-sm"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  Set Status
+                </button>
               </div>
             ))}
           </div>
@@ -637,46 +638,42 @@ export default function StudentDetail({ studentId }: Props) {
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                           JEE Advanced Access Override
                         </p>
-                        <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-white border border-gray-100">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-white border border-gray-100">
                           <div className="min-w-0">
                             <p className="text-xs font-semibold text-gray-800">
-                              Force-Enable Full Access
+                              Access Control
                             </p>
                             <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
                               Bypasses rank and task checks — grants immediate access to IIT predictor and choice filling.
                             </p>
-                            {purchase.counsellorOverrides?.forceEnable && purchase.counsellorOverrides?.forceEnableSetAt && (
-                              <p className="text-[10px] text-green-600 mt-1">
-                                Enabled {formatDateTime(purchase.counsellorOverrides.forceEnableSetAt as string)}
-                              </p>
-                            )}
+                            <p className="text-[10px] text-gray-500 mt-1 font-medium">
+                              Status is managed via the buttons below.
+                            </p>
                           </div>
-                          <button
-                            onClick={() =>
-                              handleForceEnable(
-                                purchase.purchaseId,
-                                Boolean(purchase.counsellorOverrides?.forceEnable),
-                              )
-                            }
-                            disabled={forceEnableLoadingId === purchase.purchaseId}
-                            aria-label="Toggle JEE Advanced force-enable"
-                            className={`relative flex-shrink-0 inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-60 cursor-pointer ${
-                              purchase.counsellorOverrides?.forceEnable
-                                ? "bg-green-500 focus:ring-green-400"
-                                : "bg-gray-300 focus:ring-gray-400"
-                            }`}
-                          >
-                            <span
-                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-                                purchase.counsellorOverrides?.forceEnable ? "translate-x-6" : "translate-x-1"
-                              }`}
-                            />
-                            {forceEnableLoadingId === purchase.purchaseId && (
-                              <span className="absolute inset-0 flex items-center justify-center">
-                                <Loader2 className="w-3 h-3 animate-spin text-white" />
-                              </span>
-                            )}
-                          </button>
+                          <div className="flex gap-2 flex-shrink-0">
+                            <button
+                              onClick={() => handleForceEnable(purchase.purchaseId, true)}
+                              disabled={!!forceEnableLoadingKey?.startsWith(purchase.purchaseId)}
+                              className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all shadow-sm active:scale-95 bg-green-600 text-white hover:bg-green-700 border border-transparent disabled:opacity-50"
+                            >
+                              {forceEnableLoadingKey === `${purchase.purchaseId}-enable` ? (
+                                <Loader2 className="w-3 h-3 animate-spin mx-auto" />
+                              ) : (
+                                "Force Enable"
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleForceEnable(purchase.purchaseId, false)}
+                              disabled={!!forceEnableLoadingKey?.startsWith(purchase.purchaseId)}
+                              className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all shadow-sm active:scale-95 bg-red-600 text-white hover:bg-red-700 border border-transparent disabled:opacity-50"
+                            >
+                              {forceEnableLoadingKey === `${purchase.purchaseId}-disable` ? (
+                                <Loader2 className="w-3 h-3 animate-spin mx-auto" />
+                              ) : (
+                                "Remove Force Enable"
+                              )}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
