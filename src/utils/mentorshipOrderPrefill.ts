@@ -135,7 +135,7 @@ export const resolveMentorshipToolPrefill = (
 
   let matchingOrder: Order | undefined;
   const isPredictor = params.productSlug?.toLowerCase().includes("predictor");
-
+  const isJeeAdvancePredictor = "jee-advanced-predictor"
   if (isPredictor && params.productSlug) {
     // Standardize order matching using getPredictorPurchaseDetails
     const { hasPurchased, matchingOrder: order } = getPredictorPurchaseDetails(
@@ -195,7 +195,7 @@ export const resolveMentorshipToolPrefill = (
       "studentName",
       "candidateName",
     ]),
-    crlRank: crlRankFromOverride ?? crlRankFromForm,
+    crlRank: crlRankFromOverride || isJeeAdvancePredictor ? pickNumberValue(formData, ["jeeadvancedrank", "crlRank", "crl_rank", "rank"]) :  crlRankFromForm,
     categoryRank: categoryRankFromOverride ?? categoryRankFromForm,
     gender: pickTextValue(formData, ["gender", "sex"]),
     category: pickTextValue(formData, ["category", "studentCategory"]),

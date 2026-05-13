@@ -23,9 +23,6 @@ const RETURN_URL = "/jee-advanced-predictor";
 export default function IITCollegePredictor() {
   const {
     prefill,
-    crlRankLocked,
-    categoryRankLocked,
-    lockMessage,
   } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
 
   const dispatch = useAppDispatch();
@@ -47,9 +44,7 @@ export default function IITCollegePredictor() {
 
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [rankLockMessage, setRankLockMessage] = useState(
-    "Your rank has been set by your counsellor.",
-  );
+
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
@@ -142,7 +137,11 @@ export default function IITCollegePredictor() {
     setFormData((prev) => ({
       ...prev,
       crlRank:
-        typeof prefill.crlRank === "number" ? String(prefill.crlRank) : prev.crlRank,
+        typeof prefill.jeeAdvancedRank === "number"
+          ? String(prefill.jeeAdvancedRank)
+          : typeof prefill.crlRank === "number"
+          ? String(prefill.crlRank)
+          : prev.crlRank,
       categoryRank:
         typeof prefill.categoryRank === "number"
           ? String(prefill.categoryRank)
@@ -151,10 +150,7 @@ export default function IITCollegePredictor() {
       gender: prefill.gender || prev.gender,
     }));
 
-    if (lockMessage) {
-      setRankLockMessage(lockMessage);
-    }
-  }, [lockMessage, prefill]);
+  }, [prefill]);
 
   // Auto-scroll to results when they become available
   useEffect(() => {
@@ -169,13 +165,7 @@ export default function IITCollegePredictor() {
   const handleChange = (e) => {
     const { id, value, type } = e.target;
 
-    if (id === "crlRank" && crlRankLocked) {
-      return;
-    }
 
-    if (id === "categoryRank" && categoryRankLocked) {
-      return;
-    }
 
     // Validate categoryRank to accept only numbers or numbers ending with 'P'
     if (id === "categoryRank") {
@@ -396,15 +386,9 @@ export default function IITCollegePredictor() {
                 onChange={handleChange}
                 placeholder="15000"
                 min="1"
-                disabled={crlRankLocked}
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
-              {crlRankLocked && (
-                <p className="text-xs text-amber-700 mt-1.5 font-medium">
-                  {rankLockMessage}
-                </p>
-              )}
             </div>
 
             {/* Category Rank */}
@@ -421,15 +405,9 @@ export default function IITCollegePredictor() {
                 value={formData.categoryRank}
                 onChange={handleChange}
                 placeholder="2000 or 2000P"
-                disabled={categoryRankLocked}
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
-              {categoryRankLocked && (
-                <p className="text-xs text-amber-700 mt-1.5 font-medium">
-                  {rankLockMessage}
-                </p>
-              )}
             </div>
 
             {/* Gender */}
