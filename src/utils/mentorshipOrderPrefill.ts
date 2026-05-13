@@ -9,6 +9,7 @@ export interface ToolAutoPrefillData {
   gender?: string;
   category?: string;
   homeState?: string;
+  jeeAdvancedRank?: number;
 }
 
 export interface ResolveMentorshipToolPrefillParams {
@@ -205,6 +206,7 @@ export const resolveMentorshipToolPrefill = (
       "domicileState",
       "domicile",
     ]),
+    jeeAdvancedRank: pickNumberValue(formData, ["jeeAdvancedRank", "jeeadvancedrank"]),
   };
 
   const hasMentorshipCrlField = hasMentorshipField(matchingOrder, "crlRank");

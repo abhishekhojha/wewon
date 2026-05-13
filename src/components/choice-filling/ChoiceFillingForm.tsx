@@ -42,13 +42,15 @@ const mergePrefillIntoForm = (
   prefill?: {
     name?: string;
     crlRank?: number;
+    jeeAdvancedRank?: number;
     categoryRank?: number;
     gender?: string;
     category?: string;
     homeState?: string;
   },
   preserveExistingValues: boolean = false,
-  isJACDelhi: boolean = false
+  isJACDelhi: boolean = false,
+  isIIT: boolean = false
 ): ChoiceFillingFormState => {
   if (!prefill) return prev;
 
@@ -59,8 +61,10 @@ const mergePrefillIntoForm = (
         ? prefill.name
         : prev.name,
     crlRank:
-      typeof prefill.crlRank === "number" &&
-      (!preserveExistingValues || !prev.crlRank)
+      isIIT && typeof prefill.jeeAdvancedRank === "number" && (!preserveExistingValues || !prev.crlRank)
+        ? String(prefill.jeeAdvancedRank)
+        : typeof prefill.crlRank === "number" &&
+          (!preserveExistingValues || !prev.crlRank)
         ? String(prefill.crlRank)
         : prev.crlRank,
     categoryRank:
@@ -101,6 +105,10 @@ export default function ChoiceFillingForm({
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const user = useAppSelector(selectUser);
   const router = useRouter();
+
+  const isIIT = toolKey === "iit";
+  const isUPTAC = toolKey === "uptac";
+  const isJACDelhi = toolKey === "jac-delhi";
 
   
 
@@ -159,13 +167,13 @@ export default function ChoiceFillingForm({
 
   useEffect(() => {
     if (orderPrefill) {
-      setFormData((prev) => mergePrefillIntoForm(prev, orderPrefill, false, isJACDelhi));
+      setFormData((prev) => mergePrefillIntoForm(prev, orderPrefill, false, isJACDelhi, isIIT));
     }
 
-    if (isOrderRankLocked && !isDevelopmentMode) {
+    if (isOrderRankLocked && !isDevelopmentMode && !isIIT) {
       setRankLocked(true);
     }
-    if (isOrderCategoryRankLocked && !isDevelopmentMode) {
+    if (isOrderCategoryRankLocked && !isDevelopmentMode && !isIIT) {
       setCategoryRankLocked(true);
     }
     if (orderRankLockMessage) {
@@ -188,20 +196,21 @@ export default function ChoiceFillingForm({
         setMetadata(data);
 
         const prefill = data.prefill;
+        
         if (prefill) {
-          setFormData((prev) => mergePrefillIntoForm(prev, prefill, true, isJACDelhi));
+          setFormData((prev) => mergePrefillIntoForm(prev, prefill, true, isJACDelhi, isIIT));
         }
 
         const isMetadataCrlPrefilled = typeof prefill?.crlRank === "number";
         const isMetadataCategoryPrefilled = prefill?.categoryRank && (typeof prefill?.categoryRank === "number");
         setRankLocked(
-          Boolean((data.rankLocked || isOrderRankLocked || isMetadataCrlPrefilled) && !isDevelopmentMode),
+          Boolean((data.rankLocked || isOrderRankLocked || isMetadataCrlPrefilled) && !isDevelopmentMode && !isIIT),
         );
         setCategoryRankLocked(
           Boolean(
             (data.rankLocked ||
               isOrderCategoryRankLocked ||
-              isMetadataCategoryPrefilled) && !isDevelopmentMode,
+              isMetadataCategoryPrefilled) && !isDevelopmentMode && !isIIT,
           ),
         );
         if (data.lockMessage && !isOrderRankLocked) {
@@ -308,9 +317,7 @@ export default function ChoiceFillingForm({
     });
   };
 
-  const isIIT = toolKey === "iit";
-  const isUPTAC = toolKey === "uptac";
-  const isJACDelhi = toolKey === "jac-delhi";
+
 
   const handleInstituteToggle = (institute: string) => {
     setFormData((prev) => {
@@ -415,9 +422,10 @@ export default function ChoiceFillingForm({
         setRankLockMessage(response.lockMessage);
       }
 
+    
       const prefill = response.prefill;
       if (prefill) {
-        setFormData((prev) => mergePrefillIntoForm(prev, prefill, false, isJACDelhi));
+        setFormData((prev) => mergePrefillIntoForm(prev, prefill, false, isJACDelhi, isIIT));
         if (typeof prefill.crlRank === "number" && !isDevelopmentMode) {
           setRankLocked(true);
         }
