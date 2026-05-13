@@ -135,7 +135,7 @@ export const resolveMentorshipToolPrefill = (
 
   let matchingOrder: Order | undefined;
   const isPredictor = params.productSlug?.toLowerCase().includes("predictor");
-  const isJeeAdvancePredictor = "jee-advanced-predictor"
+  const isJeeAdvancePredictor = params.productSlug === "jee-advanced-predictor";
   if (isPredictor && params.productSlug) {
     // Standardize order matching using getPredictorPurchaseDetails
     const { hasPurchased, matchingOrder: order } = getPredictorPurchaseDetails(
