@@ -67,6 +67,9 @@ interface StudentDetailData {
     productId: string;
     productTitle?: string;
     status: string;
+    forceEnable?: boolean;
+    forceEnableSetBy?: string | { name: string; _id: string };
+    forceEnableSetAt?: string;
     usageStats: { choiceFillingCount?: number; collegePredictorCount?: number };
     counsellorOverrides?: {
       choiceFillingLimit?: number | null;
@@ -201,7 +204,7 @@ export default function StudentDetail({ studentId }: Props) {
     setForceEnableLoadingKey(key);
     try {
       const res = await apiClient.patch(
-        `/api/counsellor/purchases/${purchaseId}/jee-advanced/force-enable`,
+        `/api/counsellor/purchases/${purchaseId}/force-enable`,
         { forceEnable },
       );
       toast.success(res.data?.message || `Force-enable ${forceEnable ? "activated" : "deactivated"}.`);
@@ -560,6 +563,11 @@ export default function StudentDetail({ studentId }: Props) {
                       <span className="px-2.5 py-1 rounded-full text-xs font-semibold border bg-blue-100 text-blue-700 border-blue-200 capitalize">
                         {purchase.status || "active"}
                       </span>
+                      {purchase.forceEnable && (
+                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold border bg-green-100 text-green-700 border-green-200">
+                          Force Enabled
+                        </span>
+                      )}
                       {isRankLocked && (
                         <span className="px-2.5 py-1 rounded-full text-xs font-semibold border bg-red-100 text-red-700 border-red-200">
                           Locked by Admin
@@ -635,9 +643,20 @@ export default function StudentDetail({ studentId }: Props) {
                     {/* ── JEE Advanced Force-Enable (JOSAA purchases only) ── */}
                     {isJosaaProduct && (
                       <div className="mt-3 pt-3 border-t border-gray-100">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                          JEE Advanced Access Override
-                        </p>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                            JEE Advanced Access Override
+                          </p>
+                          {purchase.forceEnable ? (
+                            <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 text-[10px] font-bold border border-green-200">
+                              CURRENTLY ACTIVE
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-500 text-[10px] font-bold border border-gray-200">
+                              INACTIVE
+                            </span>
+                          )}
+                        </div>
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-white border border-gray-100">
                           <div className="min-w-0">
                             <p className="text-xs font-semibold text-gray-800">
@@ -647,14 +666,30 @@ export default function StudentDetail({ studentId }: Props) {
                               Bypasses rank and task checks — grants immediate access to IIT predictor and choice filling.
                             </p>
                             <p className="text-[10px] text-gray-500 mt-1 font-medium">
-                              Status is managed via the buttons below.
+                              Status: {purchase.forceEnable ? "Enabled" : "Default (Disabled)"}
                             </p>
+                            {purchase.forceEnable && (
+                              <div className="mt-2 text-[10px] text-gray-500 flex flex-wrap gap-x-3 gap-y-1">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gray-50 rounded border border-gray-100">
+                                  <User className="w-2.5 h-2.5" />
+                                  By: <span className="font-bold">{typeof purchase.forceEnableSetBy === 'object' ? purchase.forceEnableSetBy.name : (purchase.forceEnableSetBy || 'Counsellor')}</span>
+                                </span>
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gray-50 rounded border border-gray-100">
+                                  <Clock className="w-2.5 h-2.5" />
+                                  At: <span className="font-bold">{formatDateTime(purchase.forceEnableSetAt)}</span>
+                                </span>
+                              </div>
+                            )}
                           </div>
                           <div className="flex gap-2 flex-shrink-0">
                             <button
                               onClick={() => handleForceEnable(purchase.purchaseId, true)}
-                              disabled={!!forceEnableLoadingKey?.startsWith(purchase.purchaseId)}
-                              className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all shadow-sm active:scale-95 bg-green-600 text-white hover:bg-green-700 border border-transparent disabled:opacity-50"
+                              disabled={!!forceEnableLoadingKey?.startsWith(purchase.purchaseId) || purchase.forceEnable}
+                              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all shadow-sm active:scale-95 border disabled:opacity-50 ${
+                                purchase.forceEnable
+                                  ? "bg-white text-gray-400 border-gray-200"
+                                  : "bg-green-600 text-white hover:bg-green-700 border-transparent"
+                              }`}
                             >
                               {forceEnableLoadingKey === `${purchase.purchaseId}-enable` ? (
                                 <Loader2 className="w-3 h-3 animate-spin mx-auto" />
@@ -664,8 +699,12 @@ export default function StudentDetail({ studentId }: Props) {
                             </button>
                             <button
                               onClick={() => handleForceEnable(purchase.purchaseId, false)}
-                              disabled={!!forceEnableLoadingKey?.startsWith(purchase.purchaseId)}
-                              className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all shadow-sm active:scale-95 bg-red-600 text-white hover:bg-red-700 border border-transparent disabled:opacity-50"
+                              disabled={!!forceEnableLoadingKey?.startsWith(purchase.purchaseId) || !purchase.forceEnable}
+                              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all shadow-sm active:scale-95 border disabled:opacity-50 ${
+                                !purchase.forceEnable
+                                  ? "bg-white text-gray-400 border-gray-200"
+                                  : "bg-red-600 text-white hover:bg-red-700 border-transparent"
+                              }`}
                             >
                               {forceEnableLoadingKey === `${purchase.purchaseId}-disable` ? (
                                 <Loader2 className="w-3 h-3 animate-spin mx-auto" />

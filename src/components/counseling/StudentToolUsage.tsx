@@ -56,7 +56,6 @@ function EditLimitForm({
   );
   const [limit, setLimit] = useState<number>(0);
   const [unlimited, setUnlimited] = useState(false);
-  console.log(studentId)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(clearUpdateError());
