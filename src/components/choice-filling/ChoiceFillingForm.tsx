@@ -434,8 +434,19 @@ export default function ChoiceFillingForm({
         }
       }
     } catch (error: any) {
-      if (error.response?.data?.code === "LIMIT_EXCEEDED") {
+      const data = error.response?.data;
+      const code = data?.code;
+
+      if (code === "LIMIT_EXCEEDED") {
         toast.error("Your limit has been exceeded! Please contact to your alloted mentor");
+      } else if (code === "CHOICE_FILLING_LOCKED") {
+        toast.error("Choice filling is locked until your mentor completes your assigned task. Contact your mentor or ask them to force-enable access.");
+      } else if (code === "CHOICE_FILLER_NOT_ALLOWED") {
+        toast.error("Your plan doesn't include access to this type of choice filling (IIT/JEE Main). Please contact support.");
+      } else if (code === "FEATURE_NOT_ENABLED") {
+        toast.error("Choice filling is not enabled in your counselling plan.");
+      } else if (code === "NO_ACTIVE_PLAN") {
+        toast.error("You don't have an active counselling plan. Please purchase one to use this tool.");
       } else if (error?.response?.status === 403) {
         toast.error("You don't have access to this tool. Please contact support.");
       } else if (error?.response?.status === 401) {

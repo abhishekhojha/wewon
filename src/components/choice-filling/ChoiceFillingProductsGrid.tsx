@@ -144,14 +144,19 @@ export default function ChoiceFillingProductsGrid({
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {displayProducts.map((product) => {
         const isIitProduct = product.slug === IIT_CHOICE_FILLING_SLUG;
-        const isLocked = isIitProduct && iitLocked;
+        
+        // Check if this specific product is locked via orders
+        const matchingOrder = userOrders.find(o => o.product?.slug === product.slug);
+        const isOrderLocked = matchingOrder?.choiceFillingLocked === true;
+        
+        const isLocked = (isIitProduct && iitLocked) || isOrderLocked;
 
         return (
           <div
             key={product._id}
             className="bg-white rounded-2xl shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col h-full hover:shadow-xl relative"
           >
-            {/* Lock overlay for IIT choice-filling when access is pending */}
+            {/* Lock overlay for choice-filling when access is pending */}
             {isLocked && (
               <div className="absolute inset-0 z-10 rounded-2xl bg-white/70 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 border-2 border-orange-200">
                 <div className="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center shadow-md">
@@ -159,7 +164,7 @@ export default function ChoiceFillingProductsGrid({
                 </div>
                 <div className="text-center px-6">
                   <p className="text-sm font-bold text-gray-800">
-                    IIT Choice Filling Locked
+                    {isIitProduct ? "IIT Choice Filling Locked" : "Tool Locked"}
                   </p>
                   <p className="text-xs text-gray-500 mt-1 leading-relaxed">
                     Complete your mentorship task to unlock this tool.

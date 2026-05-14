@@ -26,6 +26,7 @@ import {
   BarChart3,
   ListChecks,
   ShieldCheck,
+  Lock
 } from "lucide-react";
 
 interface StudentToolUsageProps {
@@ -266,6 +267,11 @@ function UsageCard({
                 Override
               </span>
             )}
+            {item.choiceFilling.isLocked && (
+              <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-xs font-medium flex items-center gap-1">
+                <Lock size={10} /> Mentorship Locked
+              </span>
+            )}
           </div>
           {item.choiceFilling.isEnabled && (
             <div className="ml-9">
@@ -300,6 +306,19 @@ function UsageCard({
                   }}
                 />
               </div>
+              {/* Allowed Choice Fillers */}
+              {item.choiceFilling.allowedChoiceFillers && item.choiceFilling.allowedChoiceFillers.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                  {item.choiceFilling.allowedChoiceFillers.map((f) => (
+                    <span
+                      key={f}
+                      className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-100"
+                    >
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

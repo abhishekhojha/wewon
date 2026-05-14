@@ -668,16 +668,24 @@ export default function StudentDetail({ studentId }: Props) {
                             <p className="text-[10px] text-gray-500 mt-1 font-medium">
                               Status: {purchase.forceEnable ? "Enabled" : "Default (Disabled)"}
                             </p>
-                            {purchase.forceEnable && (
+                            {purchase.forceEnable && (purchase.forceEnableSetBy || purchase.forceEnableSetAt) && (
                               <div className="mt-2 text-[10px] text-gray-500 flex flex-wrap gap-x-3 gap-y-1">
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gray-50 rounded border border-gray-100">
-                                  <User className="w-2.5 h-2.5" />
-                                  By: <span className="font-bold">{typeof purchase.forceEnableSetBy === 'object' ? purchase.forceEnableSetBy.name : (purchase.forceEnableSetBy || 'Counsellor')}</span>
-                                </span>
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gray-50 rounded border border-gray-100">
-                                  <Clock className="w-2.5 h-2.5" />
-                                  At: <span className="font-bold">{formatDateTime(purchase.forceEnableSetAt)}</span>
-                                </span>
+                                {purchase.forceEnableSetBy && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gray-50 rounded border border-gray-100">
+                                    <User className="w-2.5 h-2.5" />
+                                    By: <span className="font-bold">
+                                      {typeof purchase.forceEnableSetBy === 'object' 
+                                        ? purchase.forceEnableSetBy.name 
+                                        : purchase.forceEnableSetBy}
+                                    </span>
+                                  </span>
+                                )}
+                                {purchase.forceEnableSetAt && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gray-50 rounded border border-gray-100">
+                                    <Clock className="w-2.5 h-2.5" />
+                                    At: <span className="font-bold">{formatDateTime(purchase.forceEnableSetAt)}</span>
+                                  </span>
+                                )}
                               </div>
                             )}
                           </div>

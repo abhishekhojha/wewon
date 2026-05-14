@@ -51,6 +51,14 @@ const ChoiceFillingPage = () => {
   const iitChoiceFillingHidden =
     hasIitProduct && access !== null && !access.choiceFillingVisible;
 
+  // General lock from orders (for any choice-filling tool)
+  const isAnyToolLockedViaOrder = useMemo(() => {
+    return userOrders.some((o) => o.choiceFillingLocked === true);
+  }, [userOrders]);
+
+  // Combine locks: if specific IIT lock is on, or if any order has a general lock
+  const finalIitLocked = iitChoiceFillingLocked || isAnyToolLockedViaOrder;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -64,7 +72,7 @@ const ChoiceFillingPage = () => {
 
         <ChoiceFillingProductsGrid
           onlyPurchased={true}
-          iitLocked={iitChoiceFillingLocked}
+          iitLocked={finalIitLocked}
           iitHidden={iitChoiceFillingHidden}
         />
       </div>

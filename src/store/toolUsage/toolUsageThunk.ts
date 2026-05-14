@@ -65,6 +65,12 @@ export const updateStudentToolUsage = createAsyncThunk<
           case "STUDENT_ID_REQUIRED":
             msg = "System Error: Student ID is required to perform this action.";
             break;
+          case "CHOICE_FILLER_NOT_ALLOWED":
+            msg = "This choice-filling type is not available in the student's plan.";
+            break;
+          case "NO_ACTIVE_PLAN":
+            msg = "No active purchase found for this student.";
+            break;
         }
       }
       return rejectWithValue(msg);

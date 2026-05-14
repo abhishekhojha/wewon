@@ -304,10 +304,12 @@ export interface CounselingProduct {
     choiceFilling: {
       isEnabled: boolean;
       usageLimit: number;
+      allowedChoiceFillers?: string[];
     };
     collegePredictor: {
       isEnabled: boolean;
       usageLimit: number;
+      allowedPredictors?: string[];
     };
     hasMentorship: boolean;
     hasCourseContent: boolean;
@@ -451,6 +453,7 @@ export interface Order {
   mentorshipFormData?: Record<string, string | number | boolean | null>;
   mentorshipFormSubmittedAt?: string | null;
   rankOverrides?: OrderRankOverrides;
+  choiceFillingLocked?: boolean;
   createdAt: string;
   updatedAt: string;
   __v?: number;

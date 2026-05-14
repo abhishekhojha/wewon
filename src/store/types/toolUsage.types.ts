@@ -6,6 +6,8 @@ export interface ChoiceFillingStats {
   productLimit: number;
   effectiveLimit: number;
   hasOverride: boolean;
+  allowedChoiceFillers?: string[];
+  isLocked?: boolean;
 }
 
 export interface CollegePredictorStats {
