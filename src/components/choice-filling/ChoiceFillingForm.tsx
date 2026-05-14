@@ -447,6 +447,10 @@ export default function ChoiceFillingForm({
         toast.error("Choice filling is not enabled in your counselling plan.");
       } else if (code === "NO_ACTIVE_PLAN") {
         toast.error("You don't have an active counselling plan. Please purchase one to use this tool.");
+      } else if (code === "STUDENT_ID_REQUIRED") {
+        toast.error("A system error occurred. Please refresh and try again.");
+      } else if (code === "STUDENT_NOT_ASSIGNED") {
+        toast.error("Access denied. Please contact support.");
       } else if (error?.response?.status === 403) {
         toast.error("You don't have access to this tool. Please contact support.");
       } else if (error?.response?.status === 401) {
