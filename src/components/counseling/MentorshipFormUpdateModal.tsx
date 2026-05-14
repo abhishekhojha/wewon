@@ -35,7 +35,7 @@ const SUGGESTED_MENTORSHIP_FIELDS: SuggestedField[] = [
   { key: "gender", title: "Gender", placeholder: "Select Gender", type: "radio", options: "Male, Female" },
   { key: "category", title: "Category", placeholder: "Select Category", type: "radio", options: "OPEN, EWS, OBC-NCL, SC, ST, OPEN (PwD), EWS (PwD), OBC-NCL (PwD), SC (PwD), ST (PwD)" },
   { key: "subCategory", title: "Sub-Category", placeholder: "Select Sub-Category", type: "radio", options: "NOT APPLICABLE, PH, FF, AF" },
-  { key: "homeState", title: "Home State", placeholder: "Select Home State", type: "radio", options: "Uttar Pradesh, Delhi, West Bengal, Bihar, Rajasthan, Madhya Pradesh, Haryana" },
+  { key: "homeState", title: "Home State", placeholder: "Select Home State", type: "radio", options: "Andaman and Nicobar Islands, Andhra Pradesh, Arunachal Pradesh, Assam, Bihar, Chandigarh, Chhattisgarh, Dadra and Nagar Haveli and Daman and Diu, Delhi, Goa, Gujarat, Haryana, Himachal Pradesh, Jammu and Kashmir, Jharkhand, Karnataka, Kerala, Ladakh, Lakshadweep, Madhya Pradesh, Maharashtra, Manipur, Meghalaya, Mizoram, Nagaland, Odisha, Puducherry, Punjab, Rajasthan, Sikkim, Tamil Nadu, Telangana, Tripura, Uttar Pradesh, Uttarakhand, West Bengal" },
   { key: "region", title: "Region", placeholder: "Delhi / Outside Delhi", type: "radio", options: "Delhi, Outside Delhi" },
   { key: "exam", title: "Exam Type", placeholder: "Select Exam", type: "radio", options: "WBJEE, JEE" },
   { key: "quota", title: "Quota", placeholder: "Select Quota", type: "radio", options: "All India, Home State, Other State" },
@@ -43,7 +43,7 @@ const SUGGESTED_MENTORSHIP_FIELDS: SuggestedField[] = [
   { key: "instituteType", title: "Institute Type", placeholder: "Select Type", type: "select", options: "NIT, IIIT, GFTI, IIT, GOVERNMENT, PRIVATE" },
   { key: "instituteName", title: "Institute Name", placeholder: "Select specific institutes", type: "select", options: "" },
   { key: "programName", title: "Program / Branch", placeholder: "Select branches", type: "select", options: "CSE, IT, EE, ECE, ME, CE, CHE" },
-  { key: "includedStates", title: "Included States", placeholder: "Select states to include", type: "select", options: "Uttar Pradesh, Delhi, Maharashtra, Karnataka" },
+  { key: "includedStates", title: "Included States", placeholder: "Select states to include", type: "select", options: "Andaman and Nicobar Islands, Andhra Pradesh, Arunachal Pradesh, Assam, Bihar, Chandigarh, Chhattisgarh, Dadra and Nagar Haveli and Daman and Diu, Delhi, Goa, Gujarat, Haryana, Himachal Pradesh, Jammu and Kashmir, Jharkhand, Karnataka, Kerala, Ladakh, Lakshadweep, Madhya Pradesh, Maharashtra, Manipur, Meghalaya, Mizoram, Nagaland, Odisha, Puducherry, Punjab, Rajasthan, Sikkim, Tamil Nadu, Telangana, Tripura, Uttar Pradesh, Uttarakhand, West Bengal" },
   { key: "includedIITs", title: "Included IITs", placeholder: "Select specific IITs", type: "select", options: "IITB, IITD, IITM, IITK" }
 ];
 
