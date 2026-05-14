@@ -714,9 +714,9 @@ export default function StudentDetail({ studentId }: Props) {
                           <div className="flex gap-2 flex-shrink-0">
                             <button
                               onClick={() => handleForceEnable(purchase.purchaseId, true)}
-                              disabled={!!forceEnableLoadingKey?.startsWith(purchase.purchaseId) || purchase.forceEnable}
+                              disabled={!!forceEnableLoadingKey?.startsWith(purchase.purchaseId) || purchase.forceEnable === true}
                               className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all shadow-sm active:scale-95 border disabled:opacity-50 ${
-                                purchase.forceEnable
+                                purchase.forceEnable === true
                                   ? "bg-white text-gray-400 border-gray-200"
                                   : "bg-green-600 text-white hover:bg-green-700 border-transparent"
                               }`}
@@ -729,9 +729,9 @@ export default function StudentDetail({ studentId }: Props) {
                             </button>
                             <button
                               onClick={() => handleForceEnable(purchase.purchaseId, false)}
-                              disabled={!!forceEnableLoadingKey?.startsWith(purchase.purchaseId) || !purchase.forceEnable}
+                              disabled={!!forceEnableLoadingKey?.startsWith(purchase.purchaseId) || purchase.forceEnable === false}
                               className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all shadow-sm active:scale-95 border disabled:opacity-50 ${
-                                !purchase.forceEnable
+                                purchase.forceEnable === false
                                   ? "bg-white text-gray-400 border-gray-200"
                                   : "bg-red-600 text-white hover:bg-red-700 border-transparent"
                               }`}

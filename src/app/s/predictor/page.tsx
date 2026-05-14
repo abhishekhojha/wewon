@@ -1,26 +1,12 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import PredictorsGrid from "@/components/Predictor/PredictorsGrid";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated } from "@/store/auth/authSlice";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
-import { useJeeAdvancedAccess } from "@/hooks/useJeeAdvancedAccess";
-
-/**
- * Returns true if any of the student's purchased orders contain a counselling
- * product whose allowedPredictors includes "JOSAA".
- */
-function useHasJosaaProduct(userOrders: ReturnType<typeof selectUserOrders>) {
-  return useMemo(() => {
-    return userOrders.some((order) => {
-      const allowed =
-        order.product?.features?.collegePredictor?.allowedPredictors ?? [];
-      return allowed.includes("JOSAA");
-    });
-  }, [userOrders]);
-}
+import { useJeeAdvancedGates } from "@/hooks/useJeeAdvancedGates";
 
 const PredictorsPage = () => {
   const dispatch = useAppDispatch();
@@ -34,21 +20,10 @@ const PredictorsPage = () => {
     }
   }, [isAuthenticated, dispatch]);
 
-  const hasJosaaProduct = useHasJosaaProduct(userOrders);
-
-  // Only call the JEE Advanced access API when the student actually has a JOSAA product
-  const { access, loading: accessLoading } = useJeeAdvancedAccess(
-    isAuthenticated && hasJosaaProduct
+  const { predictorHiddenSlugs, predictorLockedSlugs } = useJeeAdvancedGates(
+    isAuthenticated,
+    userOrders
   );
-
-  // Determine JOSAA predictor visibility based on access state
-  const josaaHidden =
-    hasJosaaProduct &&
-    access !== null &&
-    !access.predictorVisible;
-
-  // Slugs to exclude (hide) from the grid — JOSAA predictor slug
-  const hiddenSlugs = josaaHidden ? ["josaa-predictor"] : [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -64,7 +39,8 @@ const PredictorsPage = () => {
         <PredictorsGrid
           onlyPurchased={true}
           withLocal={true}
-          hiddenSlugs={hiddenSlugs}
+          hiddenSlugs={predictorHiddenSlugs}
+          lockedSlugs={predictorLockedSlugs}
         />
       </div>
     </div>

@@ -31,6 +31,7 @@ interface ChoiceFillingProductsGridProps {
    * Takes precedence over `iitLocked`.
    */
   iitHidden?: boolean;
+  lockMessage?: string;
 }
 
 export default function ChoiceFillingProductsGrid({
@@ -38,6 +39,7 @@ export default function ChoiceFillingProductsGrid({
   tools,
   iitLocked = false,
   iitHidden = false,
+  lockMessage = "Please Complete Mentorship Task",
 }: ChoiceFillingProductsGridProps) {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
@@ -167,7 +169,7 @@ export default function ChoiceFillingProductsGrid({
                     {isIitProduct ? "IIT Choice Filling Locked" : "Tool Locked"}
                   </p>
                   <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                    Complete your mentorship task to unlock this tool.
+                    {lockMessage}
                   </p>
                 </div>
               </div>

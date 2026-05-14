@@ -128,9 +128,11 @@ interface PredictorsGridProps {
   withLocal?: boolean;
   /** Slugs to hide from the grid (e.g. access-gated JOSAA predictor) */
   hiddenSlugs?: string[];
+  /** Slugs to show with a lock overlay */
+  lockedSlugs?: string[];
 }
 
-const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, slugs, withLocal = false, hiddenSlugs }) => {
+const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, slugs, withLocal = false, hiddenSlugs, lockedSlugs }) => {
   const dispatch = useAppDispatch();
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search")?.toLowerCase() || "";
@@ -279,6 +281,7 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, 
           {displayPredictors.map((predictor) => (
             <PredictorCard
               key={predictor._id}
+              isLocked={lockedSlugs?.includes(predictor.slug)}
               predictor={mapToPredictorProduct(
                 predictor,
                 isPredictorPurchased(predictor.slug),

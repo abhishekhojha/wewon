@@ -4,14 +4,16 @@ import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowRight, Check,Sparkles } from "lucide-react";
+import { ArrowRight, Check, Sparkles, Lock } from "lucide-react";
 import { PredictorProduct } from "@/data/counsellingProducts";
 
 interface PredictorCardProps {
   predictor: PredictorProduct;
+  isLocked?: boolean;
+  lockMessage?: string;
 }
 
-const PredictorCard: React.FC<PredictorCardProps> = ({ predictor }) => {
+const PredictorCard: React.FC<PredictorCardProps> = ({ predictor, isLocked = false, lockMessage = "Please Complete Mentorship Task" }) => {
   const router = useRouter();
 
   const isCombo =
@@ -22,6 +24,7 @@ const PredictorCard: React.FC<PredictorCardProps> = ({ predictor }) => {
     (predictor.features?.collegePredictor.allowedPredictors?.length ?? 0) > 1;
 
   const handleClick = () => {
+    if (isLocked) return;
     // Always navigate to the predictor page
     // If it's a combo, it goes to the combo selector page
     // If it's a single tool, it goes to the tool page
@@ -34,8 +37,25 @@ const PredictorCard: React.FC<PredictorCardProps> = ({ predictor }) => {
       animate={{ opacity: 1, y: 0 }}
       onClick={handleClick}
       transition={{ duration: 0.3 }}
-      className="bg-white rounded-2xl cursor-pointer shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col h-full hover:shadow-xl group"
+      className={`bg-white rounded-2xl cursor-pointer shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col h-full hover:shadow-xl group relative ${isLocked ? "cursor-not-allowed" : ""}`}
     >
+      {/* Lock overlay for predictor when access is pending */}
+      {isLocked && (
+        <div className="absolute inset-0 z-10 rounded-2xl bg-white/70 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 border-2 border-orange-200">
+          <div className="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center shadow-md">
+            <Lock className="w-7 h-7 text-orange-500" />
+          </div>
+          <div className="text-center px-6">
+            <p className="text-sm font-bold text-gray-800">
+              Predictor Locked
+            </p>
+            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+              {lockMessage}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Thumbnail Image - 16:9 ratio */}
       <div className="relative w-full aspect-video overflow-hidden">
         {predictor.thumbnail ? (
@@ -123,10 +143,20 @@ const PredictorCard: React.FC<PredictorCardProps> = ({ predictor }) => {
           {/* Action Button */}
           <button
             onClick={handleClick}
-            className={`py-2.5 px-5 rounded-xl font-semibold text-white transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer bg-[#0f3a67] hover:bg-[#0a2847]`}
+            disabled={isLocked}
+            className={`py-2.5 px-5 rounded-xl font-semibold text-white transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg ${isLocked ? "bg-gray-400 cursor-not-allowed" : "bg-[#0f3a67] hover:bg-[#0a2847] cursor-pointer"}`}
           >
-            Use
-            <ArrowRight size={16} />
+            {isLocked ? (
+              <>
+                <Lock size={16} />
+                Locked
+              </>
+            ) : (
+              <>
+                Use
+                <ArrowRight size={16} />
+              </>
+            )}
           </button>
         </div>
       </div>

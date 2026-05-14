@@ -1,29 +1,12 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import ChoiceFillingProductsGrid from "@/components/choice-filling/ChoiceFillingProductsGrid";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated } from "@/store/auth/authSlice";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
-import { useJeeAdvancedAccess } from "@/hooks/useJeeAdvancedAccess";
-
-/**
- * Returns true if any of the student's purchased orders contain a counselling
- * product whose allowedChoiceFillers includes "IIT" (JEE Advanced / JOSAA
- * choice filling tool).
- */
-function useHasIitChoiceFillingProduct(
-  userOrders: ReturnType<typeof selectUserOrders>
-) {
-  return useMemo(() => {
-    return userOrders.some((order) => {
-      const allowed =
-        order.product?.features?.choiceFilling?.allowedChoiceFillers ?? [];
-      return allowed.includes("IIT");
-    });
-  }, [userOrders]);
-}
+import { useJeeAdvancedGates } from "@/hooks/useJeeAdvancedGates";[]
 
 const ChoiceFillingPage = () => {
   const dispatch = useAppDispatch();
@@ -37,27 +20,10 @@ const ChoiceFillingPage = () => {
     }
   }, [isAuthenticated, dispatch]);
 
-  const hasIitProduct = useHasIitChoiceFillingProduct(userOrders);
-
-  // Only call the JEE Advanced access API when the student has an IIT choice-filling product
-  const { access, loading: accessLoading } = useJeeAdvancedAccess(
-    isAuthenticated && hasIitProduct
+  const { iitChoiceFillingHidden, iitChoiceFillingLocked } = useJeeAdvancedGates(
+    isAuthenticated,
+    userOrders
   );
-
-  // Determine locked / hidden slugs
-  const iitChoiceFillingLocked =
-    hasIitProduct && access !== null && access.choiceFillingLocked;
-
-  const iitChoiceFillingHidden =
-    hasIitProduct && access !== null && !access.choiceFillingVisible;
-
-  // General lock from orders (for any choice-filling tool)
-  const isAnyToolLockedViaOrder = useMemo(() => {
-    return userOrders.some((o) => o.choiceFillingLocked === true);
-  }, [userOrders]);
-
-  // Combine locks: if specific IIT lock is on, or if any order has a general lock
-  const finalIitLocked = iitChoiceFillingLocked || isAnyToolLockedViaOrder;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -72,7 +38,7 @@ const ChoiceFillingPage = () => {
 
         <ChoiceFillingProductsGrid
           onlyPurchased={true}
-          iitLocked={finalIitLocked}
+          iitLocked={iitChoiceFillingLocked}
           iitHidden={iitChoiceFillingHidden}
         />
       </div>
