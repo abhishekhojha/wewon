@@ -59,6 +59,7 @@ interface StudentDetailData {
       };
     };
     taskStatus: "pending" | "completed" | "incomplete" | "other_issue";
+    taskStatusLocked?: boolean;
     issueDescription?: string | null;
     allocationDate: string;
   }[];
@@ -492,6 +493,11 @@ export default function StudentDetail({ studentId }: Props) {
                 <div className="flex-1 space-y-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <TaskStatusBadge status={order.taskStatus} />
+                    {order.taskStatusLocked && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
+                        <Lock className="w-2.5 h-2.5" /> Locked
+                      </span>
+                    )}
                     <span className="text-xs text-gray-400 font-mono">
                       #{order.orderId.slice(-8)}
                     </span>
@@ -512,10 +518,19 @@ export default function StudentDetail({ studentId }: Props) {
                 {/* Action */}
                 <button
                   onClick={() => setModalOrderId(order.orderId)}
-                  className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#073d68] text-white text-sm font-semibold hover:bg-[#0a4c82] transition-colors shadow-sm"
+                  disabled={order.taskStatusLocked}
+                  className={`flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm ${
+                    order.taskStatusLocked
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                      : "bg-[#073d68] text-white hover:bg-[#0a4c82]"
+                  }`}
                 >
-                  <Edit2 className="w-3.5 h-3.5" />
-                  Set Status
+                  {order.taskStatusLocked ? (
+                    <Lock className="w-3.5 h-3.5" />
+                  ) : (
+                    <Edit2 className="w-3.5 h-3.5" />
+                  )}
+                  {order.taskStatusLocked ? "Locked" : "Set Status"}
                 </button>
               </div>
             ))}
@@ -847,6 +862,9 @@ export default function StudentDetail({ studentId }: Props) {
           orderId={modalOrderId}
           currentStatus={
             orders.find((o) => o.orderId === modalOrderId)?.taskStatus ?? "pending"
+          }
+          isLocked={
+            orders.find((o) => o.orderId === modalOrderId)?.taskStatusLocked
           }
           onSuccess={() => {
             setModalOrderId(null);

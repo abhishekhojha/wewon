@@ -17,6 +17,7 @@ interface Props {
   studentId: string;
   orderId: string;
   currentStatus: TaskStatus;
+  isLocked?: boolean;
   onSuccess: () => void;
   onClose: () => void;
 }
@@ -47,6 +48,7 @@ export default function SetTaskStatusModal({
   studentId,
   orderId,
   currentStatus,
+  isLocked: initialIsLocked,
   onSuccess,
   onClose,
 }: Props) {
@@ -54,7 +56,7 @@ export default function SetTaskStatusModal({
   const [issueDescription, setIssueDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [alreadySet, setAlreadySet] = useState(false);
+  const [isLocked, setIsLocked] = useState(initialIsLocked ?? false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,9 +79,9 @@ export default function SetTaskStatusModal({
       onSuccess();
     } catch (err: any) {
       const data = err.response?.data;
-      if (data?.code === "STATUS_ALREADY_SET") {
-        setAlreadySet(true);
-        setError(data.message || "Task status is already set.");
+      if (data?.code === "TASK_STATUS_LOCKED") {
+        setIsLocked(true);
+        setError(data.message || "This task status has been locked by an admin.");
       } else {
         setError(data?.message || "Something went wrong. Please try again.");
       }
@@ -107,15 +109,15 @@ export default function SetTaskStatusModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Already-set notice */}
-          {alreadySet ? (
+          {/* Locked notice */}
+          {isLocked ? (
             <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-red-700">Status Already Set</p>
+                <p className="text-sm font-semibold text-red-700">Task Locked</p>
                 <p className="text-sm text-red-600 mt-0.5">{error}</p>
                 <p className="text-xs text-red-500 mt-1">
-                  Only an Admin can reset this status.
+                  Only an Admin can unlock or change this status now.
                 </p>
               </div>
             </div>
@@ -166,7 +168,7 @@ export default function SetTaskStatusModal({
               )}
 
               {/* Inline error */}
-              {error && !alreadySet && (
+              {error && !isLocked && (
                 <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 rounded-xl px-4 py-3 border border-red-100">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   {error}
@@ -200,7 +202,7 @@ export default function SetTaskStatusModal({
             </>
           )}
 
-          {alreadySet && (
+          {isLocked && (
             <button
               type="button"
               onClick={onClose}
