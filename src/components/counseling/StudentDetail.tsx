@@ -60,6 +60,7 @@ interface StudentDetailData {
     };
     taskStatus: "pending" | "completed" | "incomplete" | "other_issue";
     taskStatusLocked?: boolean;
+    taskStatusSetAt?: string | null;
     issueDescription?: string | null;
     allocationDate: string;
   }[];
@@ -509,6 +510,12 @@ export default function StudentDetail({ studentId }: Props) {
                     <Calendar className="w-3 h-3" />
                     Allocated {formatDate(order.allocationDate)}
                   </div>
+                  {order.taskStatusSetAt && (
+                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                      <Clock className="w-3 h-3" />
+                      Updated {formatDateTime(order.taskStatusSetAt)}
+                    </div>
+                  )}
                   {order.issueDescription && (
                     <p className="text-xs text-amber-700 bg-amber-50 px-2.5 py-1.5 rounded-lg border border-amber-100 mt-1.5">
                       Note: {order.issueDescription}
