@@ -442,6 +442,41 @@ export const PREDICTOR_PRODUCTS: PredictorProduct[] =
       "Round-wise Cutoffs",
     ],
   },
+  {
+    _id: "69888981c6aafde7dfa7c207",
+    title: "MPDTE College Predictor",
+    slug: "mpdte-predictor",
+    thumbnail: "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769516739/tmjrprmaxcl0mygj8djq.webp",
+    description:
+      "Predict colleges for MPDTE counseling (Madhya Pradesh DTE). Get predictions for engineering colleges in MP based on your JEE Main rank.",
+    price: 399,
+    discountPrice: 249,
+    validityInDays: 365,
+    features: {
+      hasMentorship: false,
+      choiceFilling: {
+        isEnabled: false,
+        usageLimit: 0,
+      },
+      collegePredictor: {
+        isEnabled: true,
+        usageLimit: -1, // Unlimited
+      },
+      hasCourseContent: false,
+    },
+    totalMaterialCount: 0,
+    isActive: true,
+    // Frontend-specific fields
+    icon: "🏛️",
+    category: PredictorCategory.STATE,
+    purchased: false,
+    displayFeatures: [
+      "MP Engineering Colleges",
+      "Round-wise Predictions",
+      "Category-wise Analysis",
+      "Private College Predictions",
+    ],
+  },
   // Placeholder for future predictors (15 more to be added)
   // Examples:
   // - NEET UG Predictor
