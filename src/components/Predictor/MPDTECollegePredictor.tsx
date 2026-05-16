@@ -517,7 +517,7 @@ export default function MPDTECollegePredictor() {
         {results && <PredictionResults results={results} userGender={formData.gender} />}
       </div>
 
-      {product && <PredictorPaymentModal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} onPaymentSuccess={() => setHasPurchased(true)} product={product} />}
+      {product && <PredictorPaymentModal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} onPaymentSuccess={() => setHasPurchased(true)} product={product as PredictorProduct} />}
     </div>
   );
 }

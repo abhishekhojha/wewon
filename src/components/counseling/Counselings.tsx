@@ -102,7 +102,7 @@ function CounselingsContent() {
     );
   }
 
-  const sortedProducts = sortCounsellingProducts(products, COUNSELLING_SLUG_ORDER);
+  const sortedProducts = sortCounsellingProducts(products as any, COUNSELLING_SLUG_ORDER);
   
   const filteredProducts = sortedProducts.filter((product) => 
     product.title.toLowerCase().includes(searchQuery) || 
