@@ -161,6 +161,8 @@ export default function ChoiceFillingForm({
   const [jacInstituteSearch, setJacInstituteSearch] = useState("");
   const [homeStateSearch, setHomeStateSearch] = useState("");
 
+  const isCategoryRankRequired = formData.category !== "OPEN" && (!isIIT || formData.category !== "OPEN (PwD)");
+
 
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -356,7 +358,7 @@ export default function ChoiceFillingForm({
       return;
     }
 
-    if (formData.category !== "OPEN" && !formData.categoryRank) {
+    if (isCategoryRankRequired && !formData.categoryRank) {
       toast.error("Please enter Category Rank for the selected category.");
       return;
     }
@@ -593,7 +595,7 @@ export default function ChoiceFillingForm({
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
                 Category Rank {" "}
-                {formData.category !== "OPEN" ? <span className="text-red-500">*</span> : "(Optional)"}
+                {isCategoryRankRequired ? <span className="text-red-500">*</span> : "(Optional)"}
               </label>
               <input
                 type="text"
@@ -601,7 +603,7 @@ export default function ChoiceFillingForm({
                 value={formData.categoryRank}
                 onChange={handleChange}
                 placeholder="e.g. 14211"
-                required={formData.category !== "OPEN"}
+                required={isCategoryRankRequired}
                 disabled={categoryRankLocked}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
