@@ -1,4 +1,5 @@
 export const COUNSELLING_SLUG_ORDER = [
+  
   "josaa-csab-combo-program",
   "josaa-counselling-support",
   "jac-delhi-full-counselling-program",
@@ -8,6 +9,7 @@ export const COUNSELLING_SLUG_ORDER = [
   "all-india-full-counselling-support",
   "ggsipu-full-counselling-program",
   "ggsipu-jac-delhi-full-counselling-program",
+  "josaa-csab-jac-delhi-combo-counselling-program-2026",
   "jac-chandigarh-full-support",
   "mpdte-full-counselling-support",
   "wbjee-full-counselling-program",
