@@ -74,8 +74,13 @@ export default function ChoiceFillingProductDetailPage() {
   }
 
   const resolvedToolKey = resolveChoiceFillingToolKey(product);
-  const toolLabel = product.toolLabel || product.title || "Choice Filling";
-
+  const toolLabel =  product.title || "Choice Filling";
+  const labels ={
+    "iit" : {heading : "Personalised IIT Choice Filling" ,subHeading : "", formHeading : "Generate a personalised IIT choice list based on your rank", capsule :"IIT"},
+    "jee-main" : {heading : "Personalised NIT, IIIT & GFTI Choice Filling" ,subHeading : "", formHeading : "Generate a personalised JOSAA choice list based on your rank", capsule : "NIT · IIIT · GFTI"}
+  }
+  const toolDescription =  labels[resolvedToolKey as keyof typeof labels]?.formHeading || resolvedToolKey.toUpperCase() + " Choice Filling";
+  const toolCapsule =  labels[resolvedToolKey as keyof typeof labels]?.capsule || "Powered by real cutoff data";
   return (
     <>
       <div className="container mx-auto mb-8 px-4">
@@ -88,13 +93,14 @@ export default function ChoiceFillingProductDetailPage() {
             Back To Choice-Filling
           </Link>
         </div> */}
-        <MainHeading top={toolLabel} bottom="Choice Filling Tool" />
+        <MainHeading top={toolLabel}  />
       </div>
 
       <div className="container mx-auto px-4">
         <ChoiceFillingForm
           toolKey={resolvedToolKey}
-          toolLabel={toolLabel}
+          toolDescription={toolDescription}
+          capsule={toolCapsule}
           product={product}
           productId={product._id}
           productSlug={product.slug}

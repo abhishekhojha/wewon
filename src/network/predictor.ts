@@ -105,6 +105,42 @@ export const predictWBJEE = (data: {
   return apiClient.post("/api/wbjee/predict", data);
 };
 
+// MPDTE Predictor APIs
+export const getMPDTEMetadata = () => {
+  return apiClient.get("/api/mpdte/metadata");
+};
+
+export const getMPDTEInstitutes = (round: string) => {
+  return apiClient.get("/api/mpdte/institutes", { params: { round } });
+};
+
+export const getMPDTEBranches = (
+  round: string,
+  institutes?: string[],
+) => {
+  return apiClient.get("/api/mpdte/branches", {
+    params: {
+      round,
+      institutes: institutes?.join(","),
+    },
+  });
+};
+
+export const predictMPDTE = (data: {
+  jee_main_rank: number;
+  categoryRank?: number;
+  institute_type: string[];
+  category: string;
+  gender: string;
+  seat_class: string;
+  domicile: string;
+  round: string;
+  institutes?: string[];
+  branches?: string[];
+}) => {
+  return apiClient.post("/api/mpdte/predict", data);
+};
+
 // JEE Main Percentile to Rank Converter API
 export const predictJEEMainRank = (data: {
   percentile: number;

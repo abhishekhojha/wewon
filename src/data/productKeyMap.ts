@@ -11,7 +11,8 @@ interface keyPredictorSlugMap {
   "CSAB": "csab-predictor",
   "JOSAA": "josaa-predictor",
   "IIT": "iit-predictor",
-  "EARLY_JEE": "jee-early-predictor"
+  "EARLY_JEE": "jee-early-predictor",
+  "MPDTE": "mpdte-predictor"
 }
 
 interface choiceFillingKeySlugMap {
@@ -32,7 +33,8 @@ interface predictorSlugKeyMap {
   "csab-predictor": "CSAB",
   "josaa-predictor": "JOSAA",
   "iit-predictor": "IIT",
-  "jee-early-predictor": "EARLY_JEE"
+  "jee-early-predictor": "EARLY_JEE",
+  "mpdte-predictor": "MPDTE"
 }
 
 interface choiceFillingSlugKeyMap {
@@ -41,7 +43,7 @@ interface choiceFillingSlugKeyMap {
   "uptac": "UPTAC",
   "iit": "IIT"
 }
-export type predictorExamKey = "WBJEE" | "JEE_MAIN" | "JAC_DELHI" | "JAC_CHANDIGARH" | "UPTAC" | "MMMUT" | "HBTU" | "CSAB" | "JOSAA" | "IIT" | "EARLY_JEE";
+export type predictorExamKey = "WBJEE" | "JEE_MAIN" | "JAC_DELHI" | "JAC_CHANDIGARH" | "UPTAC" | "MMMUT" | "HBTU" | "CSAB" | "JOSAA" | "IIT" | "EARLY_JEE" | "MPDTE";
 
 export const predictorKeyMap: keyPredictorSlugMap = {
   "WBJEE": "wbjee-predictor",
@@ -55,7 +57,8 @@ export const predictorKeyMap: keyPredictorSlugMap = {
   "CSAB": "csab-predictor",
   "JOSAA": "josaa-predictor",
   "IIT": "iit-predictor",
-  "EARLY_JEE": "jee-early-predictor"
+  "EARLY_JEE": "jee-early-predictor",
+  "MPDTE": "mpdte-predictor"
 }
 // reverse mapping for predictor
 export const predictorSlugKeyMap: predictorSlugKeyMap = {
@@ -70,7 +73,8 @@ export const predictorSlugKeyMap: predictorSlugKeyMap = {
   "csab-predictor": "CSAB",
   "josaa-predictor": "JOSAA",
   "iit-predictor": "IIT",
-  "jee-early-predictor": "EARLY_JEE"
+  "jee-early-predictor": "EARLY_JEE",
+  "mpdte-predictor": "MPDTE"
 }
 
 // reverse mapping for choice filling

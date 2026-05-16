@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
-import { PanelLeftIcon } from "lucide-react"
+import { PanelLeftIcon, Menu, X } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -258,7 +258,7 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, isMobile } = useSidebar()
 
   return (
     <Button
@@ -273,7 +273,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      {isMobile ? <Menu className="size-5" /> : <PanelLeftIcon />}
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )
@@ -698,6 +698,32 @@ function SidebarMenuSubButton({
   )
 }
 
+function SidebarClose({
+  className,
+  onClick,
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  const { setOpenMobile } = useSidebar()
+
+  return (
+    <Button
+      data-sidebar="close"
+      data-slot="sidebar-close"
+      variant="ghost"
+      size="icon"
+      className={cn("size-7", className)}
+      onClick={(event) => {
+        onClick?.(event)
+        setOpenMobile(false)
+      }}
+      {...props}
+    >
+      <X className="size-5" />
+      <span className="sr-only">Close Sidebar</span>
+    </Button>
+  )
+}
+
 export {
   Sidebar,
   SidebarContent,
@@ -722,5 +748,6 @@ export {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
+  SidebarClose,
   useSidebar,
 }

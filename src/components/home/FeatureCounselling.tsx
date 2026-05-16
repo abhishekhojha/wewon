@@ -26,7 +26,7 @@ export default function FeatureCounselling() {
   }, [dispatch]);
 
   // Sort and take only the first 4 products
-  const features = sortCounsellingProducts(products, COUNSELLING_SLUG_ORDER).slice(0, 4);
+  const features = sortCounsellingProducts(products as any, COUNSELLING_SLUG_ORDER).slice(0, 4);
 
 
   if (!loading && products.length === 0) return null;

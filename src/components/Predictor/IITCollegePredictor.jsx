@@ -20,12 +20,14 @@ import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 const PRODUCT_SLUG = "jee-advanced-predictor";
 const RETURN_URL = "/jee-advanced-predictor";
 
+const CATEGORY_RANK_MANDATORY_CATEGORIES = [
+  "SC", "ST", "OPEN (PwD)", "EWS (PwD)", "OBC-NCL (PwD)", 
+  "ST (PwD)", "SC (PwD)", "EWS", "OBC-NCL"
+];
+
 export default function IITCollegePredictor() {
   const {
     prefill,
-    crlRankLocked,
-    categoryRankLocked,
-    lockMessage,
   } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
 
   const dispatch = useAppDispatch();
@@ -35,21 +37,19 @@ export default function IITCollegePredictor() {
   const isCounsellor = userData?.userId?.role === "counsellor";
 
   const [formData, setFormData] = useState({
-    crlRank: "",
+    jeeAdvancedRank: "",
     categoryRank: "",
     category: "OPEN", // Default to OPEN (General)
     gender: "Male",
     counselingType: "JoSAA", // Fixed for IIT predictor
     roundNumber: "",
     instituteType: "IIT", // Fixed for IIT predictor
-    branchGroup: "",
+    branchGroup: [],
   });
 
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [rankLockMessage, setRankLockMessage] = useState(
-    "Your rank has been set by your counsellor.",
-  );
+
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
@@ -57,6 +57,7 @@ export default function IITCollegePredictor() {
   const [product, setProduct] = useState(null);
   const [productLoading, setProductLoading] = useState(true);
   const resultsRef = useRef(null);
+  const [branchSearchQuery, setBranchSearchQuery] = useState("");
 
   const usageStatus = (user && hasPurchased && !isCounsellor && userOrders?.length > 0)
     ? (() => {
@@ -141,8 +142,12 @@ export default function IITCollegePredictor() {
 
     setFormData((prev) => ({
       ...prev,
-      crlRank:
-        typeof prefill.crlRank === "number" ? String(prefill.crlRank) : prev.crlRank,
+      jeeAdvancedRank:
+        typeof prefill.jeeAdvancedRank === "number"
+          ? String(prefill.jeeAdvancedRank)
+          : typeof prefill.crlRank === "number"
+          ? String(prefill.crlRank)
+          : prev.jeeAdvancedRank,
       categoryRank:
         typeof prefill.categoryRank === "number"
           ? String(prefill.categoryRank)
@@ -151,10 +156,7 @@ export default function IITCollegePredictor() {
       gender: prefill.gender || prev.gender,
     }));
 
-    if (lockMessage) {
-      setRankLockMessage(lockMessage);
-    }
-  }, [lockMessage, prefill]);
+  }, [prefill]);
 
   // Auto-scroll to results when they become available
   useEffect(() => {
@@ -166,18 +168,12 @@ export default function IITCollegePredictor() {
     }
   }, [results]);
 
+
+
   const handleChange = (e) => {
     const { id, value, type } = e.target;
 
-    if (id === "crlRank" && crlRankLocked) {
-      return;
-    }
-
-    if (id === "categoryRank" && categoryRankLocked) {
-      return;
-    }
-
-    // Validate categoryRank to accept only numbers or numbers ending with 'P'
+    // Validate categoryRank to accept only numbers or numbers ending with 'P' for specific categories
     if (id === "categoryRank") {
       if (value === "") {
         setFormData((prev) => ({
@@ -186,16 +182,30 @@ export default function IITCollegePredictor() {
         }));
         return;
       }
-      const categoryRankPattern = /^\d+[Pp]?$/;
-      if (!categoryRankPattern.test(value)) {
+      
+      const allowedCategories = ["SC", "ST", "OPEN (PwD)", "EWS (PwD)", "OBC-NCL (PwD)", "ST (PwD)", "SC (PwD)"];
+      
+      if (allowedCategories.includes(formData.category)) {
+        const categoryRankPattern = /^\d+[Pp]?$/;
+        if (!categoryRankPattern.test(value)) {
+          return;
+        }
+        const normalizedValue = value.replace(/p$/, "P");
+        setFormData((prev) => ({
+          ...prev,
+          [id]: normalizedValue,
+        }));
+        return;
+      } else {
+        if (!/^\d+$/.test(value)) {
+          return;
+        }
+        setFormData((prev) => ({
+          ...prev,
+          [id]: value,
+        }));
         return;
       }
-      const normalizedValue = value.replace(/p$/, "P");
-      setFormData((prev) => ({
-        ...prev,
-        [id]: normalizedValue,
-      }));
-      return;
     }
 
     // Validate number inputs to prevent negative values
@@ -223,6 +233,29 @@ export default function IITCollegePredictor() {
       return;
     }
 
+    // Handle category change and strip 'P' if not allowed
+    if (id === "category") {
+      const allowedCategories = ["SC", "ST", "OPEN (PwD)", "EWS (PwD)", "OBC-NCL (PwD)", "ST (PwD)", "SC (PwD)"];
+      const newCategory = value;
+      
+      setFormData((prev) => {
+        let updatedCategoryRank = prev.categoryRank;
+        
+        if (!allowedCategories.includes(newCategory)) {
+          if (updatedCategoryRank.endsWith('P')) {
+            updatedCategoryRank = updatedCategoryRank.slice(0, -1);
+          }
+        }
+        
+        return {
+          ...prev,
+          category: newCategory,
+          categoryRank: updatedCategoryRank
+        };
+      });
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       [id]: value,
@@ -242,14 +275,14 @@ export default function IITCollegePredictor() {
 
     try {
       const payload = {
-        crlRank: Number(formData.crlRank || 1),
+        jeeAdvancedRank: Number(formData.jeeAdvancedRank || 1),
         categoryRank: formData.categoryRank ? formData.categoryRank : undefined,
         category: formData.category,
         gender: formData.gender,
         counselingType: formData.counselingType,
         roundNumber: Number(formData.roundNumber),
         instituteType: formData.instituteType || undefined,
-        branchGroup: formData.branchGroup || undefined,
+        branchGroup: formData.branchGroup.length > 0 ? formData.branchGroup : undefined,
       };
 
       console.log("Sending payload:", payload);
@@ -271,17 +304,30 @@ export default function IITCollegePredictor() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate that CRL Rank is provided for OPEN category
-    if (formData.category === "OPEN" && !formData.crlRank) {
-      toast.error("Please enter CRL Rank for OPEN category");
+    // Validate that JEE Advanced Rank is provided for OPEN category
+    if (formData.category === "OPEN" && !formData.jeeAdvancedRank) {
+      toast.error("Please enter JEE Advanced Rank for OPEN category");
+      return;
+    }
+
+    // Validate that Category Rank is provided for specific categories
+    if (CATEGORY_RANK_MANDATORY_CATEGORIES.includes(formData.category) && !formData.categoryRank) {
+      toast.error(`Please enter Category Rank for ${formData.category} category`);
       return;
     }
 
     // Validate categoryRank format if provided
     if (formData.categoryRank) {
-      const categoryRankPattern = /^\d+P?$/;
-      if (!categoryRankPattern.test(formData.categoryRank)) {
-        toast.error("Category Rank must be a number or a number ending with 'P'");
+      const allowedCategories = ["SC", "ST", "OPEN (PwD)", "EWS (PwD)", "OBC-NCL (PwD)", "ST (PwD)", "SC (PwD)"];
+      const isAllowedCategory = allowedCategories.includes(formData.category);
+      
+      const pattern = isAllowedCategory ? /^\d+P?$/ : /^\d+$/;
+      if (!pattern.test(formData.categoryRank)) {
+        toast.error(
+          isAllowedCategory
+            ? "Category Rank must be a number or a number ending with 'P'"
+            : "Category Rank must be a number"
+        );
         return;
       }
     }
@@ -381,30 +427,24 @@ export default function IITCollegePredictor() {
 
           {/* Form */}
           <form className="space-y-3 sm:space-y-5" onSubmit={handleSubmit}>
-            {/* CRL Rank */}
+            {/* JEE Advanced Rank */}
             <div>
               <label
-                htmlFor="crlRank"
+                htmlFor="jeeAdvancedRank"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Enter CRL Rank
+                Enter JEE Advanced Rank {formData.category === "OPEN" ? <span className="text-red-500">*</span> : "(Optional)"}
               </label>
               <input
                 type="number"
-                id="crlRank"
-                value={formData.crlRank}
+                id="jeeAdvancedRank"
+                value={formData.jeeAdvancedRank}
                 onChange={handleChange}
                 placeholder="15000"
                 min="1"
-                disabled={crlRankLocked}
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
-              {crlRankLocked && (
-                <p className="text-xs text-amber-700 mt-1.5 font-medium">
-                  {rankLockMessage}
-                </p>
-              )}
             </div>
 
             {/* Category Rank */}
@@ -413,7 +453,7 @@ export default function IITCollegePredictor() {
                 htmlFor="categoryRank"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Enter Category Rank (Optional)
+                Enter Category Rank {CATEGORY_RANK_MANDATORY_CATEGORIES.includes(formData.category) ? <span className="text-red-500">*</span> : "(Optional)"}
               </label>
               <input
                 type="text"
@@ -421,15 +461,9 @@ export default function IITCollegePredictor() {
                 value={formData.categoryRank}
                 onChange={handleChange}
                 placeholder="2000 or 2000P"
-                disabled={categoryRankLocked}
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
-              {categoryRankLocked && (
-                <p className="text-xs text-amber-700 mt-1.5 font-medium">
-                  {rankLockMessage}
-                </p>
-              )}
             </div>
 
             {/* Gender */}
@@ -483,7 +517,7 @@ export default function IITCollegePredictor() {
                 htmlFor="roundNumber"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Round Number
+                Round Number <span className="text-red-500">*</span>
               </label>
               <select
                 required
@@ -502,28 +536,55 @@ export default function IITCollegePredictor() {
             </div>
 
             {/* Branch Group (Optional) */}
+            {/* Branch Group (Optional) */}
             <div>
-              <label
-                htmlFor="branchGroup"
-                className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
-              >
-                Branch Group (Optional)
-              </label>
-              <select
-                id="branchGroup"
-                value={formData.branchGroup}
-                onChange={handleChange}
-                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
-              >
-                <option value="">All</option>
-                {options.branchGroups
-                  .filter((group) => group !== "Mining")
-                  .map((group) => (
-                    <option key={group} value={group}>
-                      {group}
-                    </option>
-                  ))}
-              </select>
+              <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">Branch Group (Optional)</label>
+              <div className="border border-[var(--border)] rounded-lg bg-white">
+                <div className="p-2 border-b border-[var(--border)]">
+                  <input type="text" placeholder="Search branch groups..." value={branchSearchQuery} onChange={(e) => setBranchSearchQuery(e.target.value)} className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]" />
+                </div>
+                <div className="max-h-48 overflow-y-auto p-2">
+                  {options.branchGroups.filter((group) => group !== "Mining").length > 0 ? (
+                    <>
+                      <label className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer">
+                        <input type="checkbox" checked={formData.branchGroup.length === options.branchGroups.filter((group) => group !== "Mining").length} onChange={() => {
+                          const available = options.branchGroups.filter((group) => group !== "Mining");
+                          if (formData.branchGroup.length === available.length) {
+                            setFormData((prev) => ({ ...prev, branchGroup: [] }));
+                          } else {
+                            setFormData((prev) => ({ ...prev, branchGroup: available }));
+                          }
+                        }} className="mr-2 accent-[var(--primary)]" />
+                        <span className="text-xs sm:text-sm font-semibold">Select All ({options.branchGroups.filter((group) => group !== "Mining").length})</span>
+                      </label>
+                      <div className="border-t border-[var(--border)] my-1"></div>
+                      {options.branchGroups.filter((group) => group !== "Mining").filter((group) => group.toLowerCase().includes(branchSearchQuery.toLowerCase())).map((group) => (
+                        <label key={group} className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer">
+                          <input type="checkbox" checked={formData.branchGroup.includes(group)} onChange={() => {
+                            setFormData((prev) => {
+                              const current = prev.branchGroup;
+                              const next = current.includes(group)
+                                ? current.filter((g) => g !== group)
+                                : [...current, group];
+                              return { ...prev, branchGroup: next };
+                            });
+                          }} className="mr-2 accent-[var(--primary)]" />
+                          <span className="text-xs sm:text-sm flex-1">{group}</span>
+                          {formData.branchGroup.includes(group) && (
+                            <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                          )}
+                        </label>
+                      ))}
+                      {options.branchGroups.filter((group) => group !== "Mining").filter((group) => group.toLowerCase().includes(branchSearchQuery.toLowerCase())).length === 0 && (
+                        <p className="text-xs text-[var(--muted-text)] p-2">No branch groups match your search</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-xs text-[var(--muted-text)] p-2">No branch groups available</p>
+                  )}
+                </div>
+              </div>
+              {formData.branchGroup.length > 0 && (<p className="text-xs text-[var(--muted-text)] mt-1">{formData.branchGroup.length} branch group(s) selected</p>)}
             </div>
 
             {/* Submit Button */}

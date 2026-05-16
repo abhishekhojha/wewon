@@ -39,9 +39,41 @@ export const updateStudentToolUsage = createAsyncThunk<
       );
       return res.data.data;
     } catch (err: any) {
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to update tool usage"
-      );
+      const data = err.response?.data;
+      let msg = data?.message || "Failed to update tool usage";
+
+      if (data?.code) {
+        switch (data.code) {
+          case "CHOICE_FILLING_LOCKED":
+            msg = "Choice filling is locked — mentorship task must be completed first, or use Force Enable.";
+            break;
+          case "LIMIT_EXCEEDED":
+            msg = "Usage limit reached. You cannot set a limit higher than the admin-defined maximum.";
+            break;
+          case "STUDENT_NOT_ASSIGNED":
+            msg = "Access Denied: This student is not assigned to your products.";
+            break;
+          case "FEATURE_NOT_ENABLED":
+            msg = "This tool is not enabled for the selected product.";
+            break;
+          case "PREDICTOR_NOT_ALLOWED":
+            msg = "The specific predictor requested is not available in this product.";
+            break;
+          case "NO_ASSIGNED_PRODUCTS":
+            msg = "Account Error: You have no active products assigned to your counsellor profile.";
+            break;
+          case "STUDENT_ID_REQUIRED":
+            msg = "System Error: Student ID is required to perform this action.";
+            break;
+          case "CHOICE_FILLER_NOT_ALLOWED":
+            msg = "This choice-filling type is not available in the student's plan.";
+            break;
+          case "NO_ACTIVE_PLAN":
+            msg = "No active purchase found for this student.";
+            break;
+        }
+      }
+      return rejectWithValue(msg);
     }
   }
 );

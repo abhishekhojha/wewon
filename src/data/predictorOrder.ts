@@ -11,6 +11,7 @@ export const PREDICTOR_SLUG_ORDER = [
   "hbtu-mmmut-combo-predictor",
   "jac-delhi-uptac-jac-chandigarh-combo-predictor",
   "wbjee-predictor",
+  "mpdte-predictor",
   "hbtu-predictor",
   "mmmut-predictor",
 ];

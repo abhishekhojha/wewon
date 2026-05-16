@@ -10,7 +10,7 @@ export default function page() {
   return (
     <PredictorGuard slug="jee-advanced-predictor">
       <div className="container mx-auto mb-8 px-4">
-        <MainHeading top="Find Your Perfect College" bottom="With Our Tool" />
+        <MainHeading top="IIT's College Predictor" bottom="(Round 1 - 6)" />
       </div>
       <div className="container mx-auto px-4">
         <IITCollegePredictor />

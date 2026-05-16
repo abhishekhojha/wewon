@@ -1,0 +1,37 @@
+{
+  "institute_types": [
+    { "label": "Government Autonomous", "value": "Government Autonomous" },
+    { "label": "Government Aided", "value": "Government Aided" },
+    { "label": "University Owned", "value": "University Owned" },
+    { "label": "Self Finance", "value": "Self Finance" },
+    { "label": "Private Colleges", "value": "Private Colleges" }
+  ],
+  "categories": [
+    { "label": "OPEN", "value": "OPEN" },
+    { "label": "EWS", "value": "EWS" },
+    { "label": "OBC", "value": "OBC" },
+    { "label": "SC", "value": "SC" },
+    { "label": "ST", "value": "ST" }
+  ],
+  "genders": [
+    { "label": "Male", "value": "MALE" },
+    { "label": "Female", "value": "FEMALE" }
+  ],
+  "seat_classes": [
+    { "label": "Not Applicable", "value": "Not Applicable" },
+    { "label": "Regular Seat", "value": "Regular Seat" },
+    { "label": "Freedom Fighter Quota", "value": "Freedom Fighter Quota" },
+    { "label": "Home State Quota", "value": "Home State Quota" },
+    { "label": "NCC Quota", "value": "NCC Quota" },
+    { "label": "Special Quota", "value": "Special Quota" }
+  ],
+  "domiciles": [
+    { "label": "Madhya Pradesh", "value": "Madhya Pradesh" },
+    { "label": "Outside Madhya Pradesh", "value": "Outside Madhya Pradesh" }
+  ],
+  "rounds": [
+    { "label": "Round 1", "value": "Round 1" },
+    { "label": "Round 2", "value": "Round 2" },
+    { "label": "Upgrade Round", "value": "Upgrade Round" }
+  ]
+}

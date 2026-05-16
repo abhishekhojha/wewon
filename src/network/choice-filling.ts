@@ -5,7 +5,7 @@ import apiClient from "@/hooks/Axios";
 export interface ToolAutoFillData {
   name?: string;
   crlRank?: number;
-  categoryRank?: number;
+  categoryRank?: number | string;
   gender?: string;
   category?: string;
   homeState?: string;
@@ -78,8 +78,8 @@ export interface ChoiceFillingMetadata {
 
 export interface ChoiceFillingRequest {
   name: string;
-  crlRank: number;
-  categoryRank?: number;
+  crlRank?: number;
+  categoryRank?: number | string;
   gender: string;
   category: string;
   homeState?: string;

@@ -9,6 +9,7 @@ export interface ToolAutoPrefillData {
   gender?: string;
   category?: string;
   homeState?: string;
+  jeeAdvancedRank?: number;
 }
 
 export interface ResolveMentorshipToolPrefillParams {
@@ -135,7 +136,7 @@ export const resolveMentorshipToolPrefill = (
 
   let matchingOrder: Order | undefined;
   const isPredictor = params.productSlug?.toLowerCase().includes("predictor");
-
+  const isJeeAdvancePredictor = params.productSlug === "jee-advanced-predictor";
   if (isPredictor && params.productSlug) {
     // Standardize order matching using getPredictorPurchaseDetails
     const { hasPurchased, matchingOrder: order } = getPredictorPurchaseDetails(
@@ -195,7 +196,7 @@ export const resolveMentorshipToolPrefill = (
       "studentName",
       "candidateName",
     ]),
-    crlRank: crlRankFromOverride ?? crlRankFromForm,
+    crlRank: crlRankFromOverride || isJeeAdvancePredictor ? pickNumberValue(formData, ["jeeadvancedrank", "crlRank", "crl_rank", "rank"]) :  crlRankFromForm,
     categoryRank: categoryRankFromOverride ?? categoryRankFromForm,
     gender: pickTextValue(formData, ["gender", "sex"]),
     category: pickTextValue(formData, ["category", "studentCategory"]),
@@ -205,6 +206,7 @@ export const resolveMentorshipToolPrefill = (
       "domicileState",
       "domicile",
     ]),
+    jeeAdvancedRank: pickNumberValue(formData, ["jeeAdvancedRank", "jeeadvancedrank"]),
   };
 
   const hasMentorshipCrlField = hasMentorshipField(matchingOrder, "crlRank");

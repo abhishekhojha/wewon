@@ -126,9 +126,13 @@ interface PredictorsGridProps {
   onlyPurchased?: boolean;
   slugs?: string[];
   withLocal?: boolean;
+  /** Slugs to hide from the grid (e.g. access-gated JOSAA predictor) */
+  hiddenSlugs?: string[];
+  /** Slugs to show with a lock overlay */
+  lockedSlugs?: string[];
 }
 
-const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, slugs, withLocal = false }) => {
+const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, slugs, withLocal = false, hiddenSlugs, lockedSlugs }) => {
   const dispatch = useAppDispatch();
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search")?.toLowerCase() || "";
@@ -207,6 +211,13 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, 
       );
     }
 
+    // Hide slugs that are access-gated (e.g. JOSAA when JEE Advanced rank not set)
+    if (hiddenSlugs && hiddenSlugs.length > 0) {
+      filtered = filtered.filter(
+        (predictor) => !hiddenSlugs.includes(predictor.slug)
+      );
+    }
+
     filtered = sortPredictorProducts(filtered, PREDICTOR_SLUG_ORDER);
 
     // Filter by search query
@@ -219,7 +230,7 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, 
       );
     }
     return filtered;
-  }, [predictors, searchQuery, onlyPurchased, slugs, userOrders]);
+  }, [predictors, searchQuery, onlyPurchased, slugs, hiddenSlugs, userOrders]);
 
   if ((loading && predictors.length === 0) || isSearching) {
     return (
@@ -270,6 +281,7 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, 
           {displayPredictors.map((predictor) => (
             <PredictorCard
               key={predictor._id}
+              isLocked={lockedSlugs?.includes(predictor.slug)}
               predictor={mapToPredictorProduct(
                 predictor,
                 isPredictorPurchased(predictor.slug),

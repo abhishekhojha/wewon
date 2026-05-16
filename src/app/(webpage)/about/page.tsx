@@ -12,6 +12,7 @@ import {
   Wand2,
 } from "lucide-react";
 import GoogleAds from "@/components/sections/GoogleAds";
+import { GOOGLE_ADS_ACTIVE } from "@/data/constants";
 
 const About = () => {
   const values = [
@@ -121,7 +122,7 @@ const About = () => {
       <CoreValues values={values} />
       
       <div className="container mx-auto">
-        <GoogleAds />
+        {GOOGLE_ADS_ACTIVE && <GoogleAds />}
         <OurImpact impacts={impacts} />
       </div>
     </>
