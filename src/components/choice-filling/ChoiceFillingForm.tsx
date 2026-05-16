@@ -1387,9 +1387,6 @@ export default function ChoiceFillingForm({
                   "Generate My Choice List"
                 )}
               </button>
-              <p className="text-[10px] sm:text-xs text-center text-[var(--muted-text)] mt-3">
-                By generating, you agree to our terms of service.
-              </p>
             </div>
           </form>
         </div>
