@@ -4,6 +4,7 @@ import FilterColleges from "./sections/FilterCollege";
 import GoogleAds from "@/components/sections/GoogleAds";
 import Recommended from "@/components/sections/Recommended";
 import { Loader2 } from "lucide-react";
+import { GOOGLE_ADS_ACTIVE } from "@/data/constants";
 
 // Loading component for Suspense fallback
 const FilterCollegesLoader = () => (
@@ -25,7 +26,7 @@ const page = () => {
         </Suspense>
       </div>
       <div className="container mx-auto pb-16 pt-12 sm:pb-24 px-4">
-        <GoogleAds />
+       {GOOGLE_ADS_ACTIVE && <GoogleAds />}
       </div>
       <div className="container mx-auto pb-16 sm:pb-24 px-4">
         <Recommended />

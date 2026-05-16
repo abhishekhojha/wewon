@@ -6,6 +6,7 @@ import GoogleMap from "./sections/GoogleMap";
 import GoogleAds from "@/components/sections/GoogleAds";
 import CallToAction from "@/components/sections/CallToAction";
 import SubHeading from "@/components/sections/SubHeading";
+import { GOOGLE_ADS_ACTIVE } from "@/data/constants";
 
 export interface FormData {
   firstName: string;
@@ -38,7 +39,7 @@ const Page = () => {
       />
       {/* <GoogleMap /> */}
       <div className="pb-18 md:pb-24">
-        <GoogleAds />
+        {GOOGLE_ADS_ACTIVE && <GoogleAds />}
       </div>
       <CallToAction />
     </div>

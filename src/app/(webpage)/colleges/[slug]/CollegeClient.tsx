@@ -42,6 +42,7 @@ import StickyBottomAd from "@/components/ads/StickyBottomAd";
 import AdRenderer from "@/components/ads/AdRenderer";
 import PopupAd from "@/components/ads/PopupAd";
 import { fetchAds } from "@/store/ads/adsSlice";
+import { GOOGLE_ADS_ACTIVE } from "@/data/constants";
 
 export default function CollegeClient() {
   const { slug } = useParams();
@@ -1130,7 +1131,7 @@ export default function CollegeClient() {
         </div>
 
         {/* Ads */}
-        <GoogleAds />
+       {GOOGLE_ADS_ACTIVE && <GoogleAds />}
 
         {/* Full-width Recommended/Nearby/Similar Sections */}
         <Recommended />

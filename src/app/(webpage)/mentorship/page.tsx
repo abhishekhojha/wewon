@@ -4,6 +4,7 @@ import Mentorship from "@/components/mentorship/Mentorship";
 import GoogleAds from "@/components/sections/GoogleAds";
 import MainHeading from "@/components/sections/MainHeading";
 import Recommended from "@/components/sections/Recommended";
+import { GOOGLE_ADS_ACTIVE } from "@/data/constants";
 import React from "react";
 
 export default function page() {
@@ -27,7 +28,7 @@ export default function page() {
         <Mentorship />
       </div>
       <div className="container mx-auto pb-16 pt-12 sm:pb-24 px-4">
-        <GoogleAds />
+        {GOOGLE_ADS_ACTIVE && <GoogleAds />}
       </div>
       <div className="container mx-auto pb-16 sm:pb-24 px-4">
         <Recommended />

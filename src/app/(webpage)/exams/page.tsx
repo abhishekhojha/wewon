@@ -4,6 +4,7 @@ import FilterExams from "./sections/FilterExams";
 import GoogleAds from "@/components/sections/GoogleAds";
 import Popular from "@/components/sections/Popular";
 import Recommended from "@/components/sections/Recommended";
+import { GOOGLE_ADS_ACTIVE } from "@/data/constants";
 
 const page = () => {
   return (
@@ -16,7 +17,7 @@ const page = () => {
         <FilterExams />
       </div>
       <div className="container mx-auto px-4">
-        <GoogleAds />
+        {GOOGLE_ADS_ACTIVE && <GoogleAds />}
       </div>
       <div className="container mx-auto px-4">
         <Popular />
