@@ -39,7 +39,7 @@ export default function IITCollegePredictor() {
     counselingType: "JoSAA", // Fixed for IIT predictor
     roundNumber: "",
     instituteType: "IIT", // Fixed for IIT predictor
-    branchGroup: "",
+    branchGroup: [],
   });
 
   const [results, setResults] = useState(null);
@@ -52,6 +52,7 @@ export default function IITCollegePredictor() {
   const [product, setProduct] = useState(null);
   const [productLoading, setProductLoading] = useState(true);
   const resultsRef = useRef(null);
+  const [branchSearchQuery, setBranchSearchQuery] = useState("");
 
   const usageStatus = (user && hasPurchased && !isCounsellor && userOrders?.length > 0)
     ? (() => {
@@ -162,6 +163,8 @@ export default function IITCollegePredictor() {
     }
   }, [results]);
 
+
+
   const handleChange = (e) => {
     const { id, value, type } = e.target;
 
@@ -239,7 +242,7 @@ export default function IITCollegePredictor() {
         counselingType: formData.counselingType,
         roundNumber: Number(formData.roundNumber),
         instituteType: formData.instituteType || undefined,
-        branchGroup: formData.branchGroup || undefined,
+        branchGroup: formData.branchGroup.length > 0 ? formData.branchGroup : undefined,
       };
 
       console.log("Sending payload:", payload);
@@ -480,28 +483,55 @@ export default function IITCollegePredictor() {
             </div>
 
             {/* Branch Group (Optional) */}
+            {/* Branch Group (Optional) */}
             <div>
-              <label
-                htmlFor="branchGroup"
-                className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
-              >
-                Branch Group (Optional)
-              </label>
-              <select
-                id="branchGroup"
-                value={formData.branchGroup}
-                onChange={handleChange}
-                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
-              >
-                <option value="">All</option>
-                {options.branchGroups
-                  .filter((group) => group !== "Mining")
-                  .map((group) => (
-                    <option key={group} value={group}>
-                      {group}
-                    </option>
-                  ))}
-              </select>
+              <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">Branch Group (Optional)</label>
+              <div className="border border-[var(--border)] rounded-lg bg-white">
+                <div className="p-2 border-b border-[var(--border)]">
+                  <input type="text" placeholder="Search branch groups..." value={branchSearchQuery} onChange={(e) => setBranchSearchQuery(e.target.value)} className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]" />
+                </div>
+                <div className="max-h-48 overflow-y-auto p-2">
+                  {options.branchGroups.filter((group) => group !== "Mining").length > 0 ? (
+                    <>
+                      <label className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer">
+                        <input type="checkbox" checked={formData.branchGroup.length === options.branchGroups.filter((group) => group !== "Mining").length} onChange={() => {
+                          const available = options.branchGroups.filter((group) => group !== "Mining");
+                          if (formData.branchGroup.length === available.length) {
+                            setFormData((prev) => ({ ...prev, branchGroup: [] }));
+                          } else {
+                            setFormData((prev) => ({ ...prev, branchGroup: available }));
+                          }
+                        }} className="mr-2 accent-[var(--primary)]" />
+                        <span className="text-xs sm:text-sm font-semibold">Select All ({options.branchGroups.filter((group) => group !== "Mining").length})</span>
+                      </label>
+                      <div className="border-t border-[var(--border)] my-1"></div>
+                      {options.branchGroups.filter((group) => group !== "Mining").filter((group) => group.toLowerCase().includes(branchSearchQuery.toLowerCase())).map((group) => (
+                        <label key={group} className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer">
+                          <input type="checkbox" checked={formData.branchGroup.includes(group)} onChange={() => {
+                            setFormData((prev) => {
+                              const current = prev.branchGroup;
+                              const next = current.includes(group)
+                                ? current.filter((g) => g !== group)
+                                : [...current, group];
+                              return { ...prev, branchGroup: next };
+                            });
+                          }} className="mr-2 accent-[var(--primary)]" />
+                          <span className="text-xs sm:text-sm flex-1">{group}</span>
+                          {formData.branchGroup.includes(group) && (
+                            <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                          )}
+                        </label>
+                      ))}
+                      {options.branchGroups.filter((group) => group !== "Mining").filter((group) => group.toLowerCase().includes(branchSearchQuery.toLowerCase())).length === 0 && (
+                        <p className="text-xs text-[var(--muted-text)] p-2">No branch groups match your search</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-xs text-[var(--muted-text)] p-2">No branch groups available</p>
+                  )}
+                </div>
+              </div>
+              {formData.branchGroup.length > 0 && (<p className="text-xs text-[var(--muted-text)] mt-1">{formData.branchGroup.length} branch group(s) selected</p>)}
             </div>
 
             {/* Submit Button */}
