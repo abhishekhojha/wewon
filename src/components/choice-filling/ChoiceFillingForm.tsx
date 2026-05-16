@@ -43,7 +43,7 @@ const mergePrefillIntoForm = (
     name?: string;
     crlRank?: number;
     jeeAdvancedRank?: number;
-    categoryRank?: number;
+    categoryRank?: number | string;
     gender?: string;
     category?: string;
     homeState?: string;
@@ -68,7 +68,7 @@ const mergePrefillIntoForm = (
         ? String(prefill.crlRank)
         : prev.crlRank,
     categoryRank:
-      typeof prefill.categoryRank === "number" &&
+      prefill.categoryRank !== undefined &&
       (!preserveExistingValues || !prev.categoryRank)
         ? String(prefill.categoryRank)
         : prev.categoryRank,
@@ -1419,7 +1419,7 @@ export default function ChoiceFillingForm({
                     Generating your list...
                   </>
                 ) : (
-                  "Generate My Choice List"
+                  "Generate My Choice Filling List"
                 )}
               </button>
             </div>
