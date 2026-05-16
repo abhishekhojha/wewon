@@ -204,7 +204,7 @@ export default function ChoiceFillingForm({
         }
 
         const isMetadataCrlPrefilled = typeof prefill?.crlRank === "number";
-        const isMetadataCategoryPrefilled = prefill?.categoryRank && (typeof prefill?.categoryRank === "number");
+        const isMetadataCategoryPrefilled = prefill?.categoryRank !== undefined && prefill?.categoryRank !== null;
         setRankLocked(
           Boolean((data.rankLocked || isOrderRankLocked || isMetadataCrlPrefilled) && !isDevelopmentMode && !isIIT),
         );
@@ -254,11 +254,44 @@ export default function ChoiceFillingForm({
         setFormData((prev) => ({ ...prev, [id]: value }));
         return;
       }
+      
+      if (id === "categoryRank" && isIIT) {
+        const allowedCategories = ["SC", "ST", "OPEN (PwD)", "EWS (PwD)", "OBC-NCL (PwD)", "ST (PwD)", "SC (PwD)"];
+        if (allowedCategories.includes(formData.category)) {
+          if (!/^\d+[Pp]?$/.test(value)) return;
+          const normalizedValue = value.replace(/p$/, "P");
+          setFormData((prev) => ({ ...prev, [id]: normalizedValue }));
+          return;
+        }
+      }
+
       if (!/^\d+$/.test(value)) return;
     }
 
     if (type === "number") {
       if (value !== "" && Number(value) < 1) return;
+    }
+
+    if (id === "category") {
+      const allowedCategories = ["SC", "ST", "OPEN (PwD)", "EWS (PwD)", "OBC-NCL (PwD)", "ST (PwD)", "SC (PwD)"];
+      const newCategory = value;
+      
+      setFormData((prev) => {
+        let updatedCategoryRank = prev.categoryRank;
+        
+        if (isIIT && !allowedCategories.includes(newCategory)) {
+          if (updatedCategoryRank.endsWith('P')) {
+            updatedCategoryRank = updatedCategoryRank.slice(0, -1);
+          }
+        }
+        
+        return {
+          ...prev,
+          category: newCategory,
+          categoryRank: updatedCategoryRank
+        };
+      });
+      return;
     }
 
     setFormData((prev) => ({ ...prev, [id]: value }));
@@ -381,7 +414,7 @@ export default function ChoiceFillingForm({
         name: formData.name.trim(),
         crlRank: formData.crlRank ? Number(formData.crlRank) : undefined,
         categoryRank: formData.categoryRank
-          ? Number(formData.categoryRank)
+          ? (formData.categoryRank.includes('P') ? formData.categoryRank : Number(formData.categoryRank))
           : undefined,
         gender: formData.gender,
         category: formData.category,
