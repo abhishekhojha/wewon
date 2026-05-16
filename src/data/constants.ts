@@ -1,0 +1,1 @@
+export const GOOGLE_ADS_ACTIVE = false;

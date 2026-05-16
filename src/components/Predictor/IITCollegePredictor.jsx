@@ -20,6 +20,11 @@ import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 const PRODUCT_SLUG = "jee-advanced-predictor";
 const RETURN_URL = "/jee-advanced-predictor";
 
+const CATEGORY_RANK_MANDATORY_CATEGORIES = [
+  "SC", "ST", "OPEN (PwD)", "EWS (PwD)", "OBC-NCL (PwD)", 
+  "ST (PwD)", "SC (PwD)", "EWS", "OBC-NCL"
+];
+
 export default function IITCollegePredictor() {
   const {
     prefill,
@@ -168,9 +173,7 @@ export default function IITCollegePredictor() {
   const handleChange = (e) => {
     const { id, value, type } = e.target;
 
-
-
-    // Validate categoryRank to accept only numbers or numbers ending with 'P'
+    // Validate categoryRank to accept only numbers or numbers ending with 'P' for specific categories
     if (id === "categoryRank") {
       if (value === "") {
         setFormData((prev) => ({
@@ -179,16 +182,30 @@ export default function IITCollegePredictor() {
         }));
         return;
       }
-      const categoryRankPattern = /^\d+[Pp]?$/;
-      if (!categoryRankPattern.test(value)) {
+      
+      const allowedCategories = ["SC", "ST", "OPEN (PwD)", "EWS (PwD)", "OBC-NCL (PwD)", "ST (PwD)", "SC (PwD)"];
+      
+      if (allowedCategories.includes(formData.category)) {
+        const categoryRankPattern = /^\d+[Pp]?$/;
+        if (!categoryRankPattern.test(value)) {
+          return;
+        }
+        const normalizedValue = value.replace(/p$/, "P");
+        setFormData((prev) => ({
+          ...prev,
+          [id]: normalizedValue,
+        }));
+        return;
+      } else {
+        if (!/^\d+$/.test(value)) {
+          return;
+        }
+        setFormData((prev) => ({
+          ...prev,
+          [id]: value,
+        }));
         return;
       }
-      const normalizedValue = value.replace(/p$/, "P");
-      setFormData((prev) => ({
-        ...prev,
-        [id]: normalizedValue,
-      }));
-      return;
     }
 
     // Validate number inputs to prevent negative values
@@ -213,6 +230,29 @@ export default function IITCollegePredictor() {
         [id]: value,
         roundNumber: 1,
       }));
+      return;
+    }
+
+    // Handle category change and strip 'P' if not allowed
+    if (id === "category") {
+      const allowedCategories = ["SC", "ST", "OPEN (PwD)", "EWS (PwD)", "OBC-NCL (PwD)", "ST (PwD)", "SC (PwD)"];
+      const newCategory = value;
+      
+      setFormData((prev) => {
+        let updatedCategoryRank = prev.categoryRank;
+        
+        if (!allowedCategories.includes(newCategory)) {
+          if (updatedCategoryRank.endsWith('P')) {
+            updatedCategoryRank = updatedCategoryRank.slice(0, -1);
+          }
+        }
+        
+        return {
+          ...prev,
+          category: newCategory,
+          categoryRank: updatedCategoryRank
+        };
+      });
       return;
     }
 
@@ -270,11 +310,24 @@ export default function IITCollegePredictor() {
       return;
     }
 
+    // Validate that Category Rank is provided for specific categories
+    if (CATEGORY_RANK_MANDATORY_CATEGORIES.includes(formData.category) && !formData.categoryRank) {
+      toast.error(`Please enter Category Rank for ${formData.category} category`);
+      return;
+    }
+
     // Validate categoryRank format if provided
     if (formData.categoryRank) {
-      const categoryRankPattern = /^\d+P?$/;
-      if (!categoryRankPattern.test(formData.categoryRank)) {
-        toast.error("Category Rank must be a number or a number ending with 'P'");
+      const allowedCategories = ["SC", "ST", "OPEN (PwD)", "EWS (PwD)", "OBC-NCL (PwD)", "ST (PwD)", "SC (PwD)"];
+      const isAllowedCategory = allowedCategories.includes(formData.category);
+      
+      const pattern = isAllowedCategory ? /^\d+P?$/ : /^\d+$/;
+      if (!pattern.test(formData.categoryRank)) {
+        toast.error(
+          isAllowedCategory
+            ? "Category Rank must be a number or a number ending with 'P'"
+            : "Category Rank must be a number"
+        );
         return;
       }
     }
@@ -380,7 +433,7 @@ export default function IITCollegePredictor() {
                 htmlFor="jeeAdvancedRank"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Enter JEE Advanced Rank
+                Enter JEE Advanced Rank {formData.category === "OPEN" ? <span className="text-red-500">*</span> : "(Optional)"}
               </label>
               <input
                 type="number"
@@ -400,7 +453,7 @@ export default function IITCollegePredictor() {
                 htmlFor="categoryRank"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Enter Category Rank (Optional)
+                Enter Category Rank {CATEGORY_RANK_MANDATORY_CATEGORIES.includes(formData.category) ? <span className="text-red-500">*</span> : "(Optional)"}
               </label>
               <input
                 type="text"
@@ -464,7 +517,7 @@ export default function IITCollegePredictor() {
                 htmlFor="roundNumber"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Round Number
+                Round Number <span className="text-red-500">*</span>
               </label>
               <select
                 required

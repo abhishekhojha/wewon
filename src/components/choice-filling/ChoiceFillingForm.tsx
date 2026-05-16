@@ -18,6 +18,7 @@ import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { useRouter } from "next/navigation";
 import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
 import Image from "next/image";
+import { GOOGLE_ADS_ACTIVE } from "@/data/constants";
 
 
 type ChoiceFillingFormState = {
@@ -89,18 +90,20 @@ const mergePrefillIntoForm = (
 
 interface ChoiceFillingFormProps {
   toolKey?: string;
-  toolLabel?: string;
+  toolDescription?: string;
   product?: ChoiceFillingProduct;
   productId?: string;
   productSlug?: string;
+  capsule?: string;
 }
 
 export default function ChoiceFillingForm({
   toolKey,
-  toolLabel = "JEE Main",
+  toolDescription = "Choice Filling",
   product,
   productId,
   productSlug,
+  capsule,
 }: ChoiceFillingFormProps) {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const user = useAppSelector(selectUser);
@@ -157,11 +160,10 @@ export default function ChoiceFillingForm({
   const [iitSearch, setIitSearch] = useState("");
   const [stateSearch, setStateSearch] = useState("");
   const [branchGroupSearch, setBranchGroupSearch] = useState("");
-  const [instituteTypeSearch, setInstituteTypeSearch] = useState("");
   const [jacInstituteSearch, setJacInstituteSearch] = useState("");
-  const [homeStateSearch, setHomeStateSearch] = useState("");
 
-  const isCategoryRankRequired = formData.category !== "OPEN" && (!isIIT || formData.category !== "OPEN (PwD)");
+  const isCrlRankRequired = !isIIT || formData.category === "OPEN";
+  const isCategoryRankRequired = formData.category !== "OPEN";
 
 
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -369,6 +371,10 @@ export default function ChoiceFillingForm({
   const availableInstituteStates =
     metadata?.instituteStates || metadata?.states || metadata?.homeStates || [];
 
+  const availableBranchGroups = (metadata?.branchGroups || []).filter(
+    (g) => g.toLowerCase() !== "all"
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -383,8 +389,6 @@ export default function ChoiceFillingForm({
       toast.error("Please enter your name.");
       return;
     }
-
-    const isCrlRankRequired = !isIIT || formData.category.startsWith("OPEN");
 
     if (isCrlRankRequired && !formData.crlRank) {
       toast.error("Please enter your CRL Rank.");
@@ -565,12 +569,12 @@ export default function ChoiceFillingForm({
         <div className="bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-6 md:p-8">
           {/* Header */}
           <div className="flex flex-col justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--primary)]">
-              {toolLabel.toUpperCase()} CHOICE FILLING
+            <h2  className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--primary)]">
+              {toolDescription}
             </h2>
             <div className="flex flex-wrap items-center gap-2">
               <span className="bg-[var(--light-blue)] text-[var(--primary)] text-[10px] sm:text-xs font-semibold px-2 sm:px-4 py-1 sm:py-2 rounded-full whitespace-nowrap w-fit">
-                Powered by real cutoff data
+                {capsule}
               </span>
             </div>
           </div>
@@ -602,7 +606,7 @@ export default function ChoiceFillingForm({
                 htmlFor="crlRank"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                CRL Rank {!isIIT || formData.category.startsWith("OPEN") ? <span className="text-red-500">*</span> : <span className="text-[var(--muted-text)] font-normal text-[10px] ml-1">(Optional)</span>}
+                CRL Rank {isCrlRankRequired ? <span className="text-red-500">*</span> : <span className="text-[var(--muted-text)] font-normal text-[10px] ml-1">(Optional)</span>}
               </label>
               <input
                 type="text"
@@ -610,7 +614,7 @@ export default function ChoiceFillingForm({
                 value={formData.crlRank}
                 onChange={handleChange}
                 placeholder="e.g. 52341"
-                required={!isIIT || formData.category.startsWith("OPEN")}
+                required={isCrlRankRequired}
                 disabled={rankLocked}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
               />
@@ -711,7 +715,7 @@ export default function ChoiceFillingForm({
                 <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
                   Include IITs{" "}
                   <span className="text-[var(--muted-text)] font-normal">
-                    (Optional – select specific IITs)
+                    (Optional – select preferred IITs)
                   </span>
                 </label>
                 <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
@@ -1000,67 +1004,26 @@ export default function ChoiceFillingForm({
                   >
                     Select Your Home State
                   </label>
-                  <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
-                    <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
-                      <input
-                        type="text"
-                        placeholder="Search home state..."
-                        value={homeStateSearch}
-                        onChange={(e) => setHomeStateSearch(e.target.value)}
-                        className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
-                      />
-                    </div>
-                    <div className="max-h-48 overflow-y-auto p-1.5">
-                      {(metadata?.homeStates || [])
-                        .filter((state) =>
-                          state.toLowerCase().includes(homeStateSearch.toLowerCase())
-                        )
-                        .map((state) => (
-                          <label
-                            key={state}
-                            className={`flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-0.5 ${
-                              formData.homeState === state
-                                ? "bg-[var(--primary)]/5 text-[var(--primary)]"
-                                : "text-[var(--muted-text)] hover:text-[var(--foreground)]"
-                            }`}
-                            onClick={() =>
-                              setFormData((prev) => ({ ...prev, homeState: state }))
-                            }
-                          >
-                            <span className="text-xs sm:text-sm flex-1 font-medium">
-                              {state}
-                            </span>
-                            {formData.homeState === state && (
-                              <svg
-                                className="w-4 h-4 text-[var(--primary)] flex-shrink-0"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            )}
-                          </label>
-                        ))}
-                      {(metadata?.homeStates || []).filter((state) =>
-                        state.toLowerCase().includes(homeStateSearch.toLowerCase())
-                      ).length === 0 && (
-                        <p className="text-[10px] sm:text-xs text-[var(--muted-text)] text-center py-4">
-                          No states match your search
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  <select
+                    id="homeState"
+                    value={formData.homeState}
+                    onChange={handleChange}
+                    className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
+                  >
+                    <option value="">Select Home State</option>
+                    {(metadata?.homeStates || []).map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Included States - Multi Select (Inclusion Filter) */}
                 {availableInstituteStates.length > 0 && (
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
-                      States (Optional – select multiple)
+                      States (Optional – College Location Preferences)
                     </label>
                     <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
                       <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
@@ -1166,15 +1129,6 @@ export default function ChoiceFillingForm({
                     Institute Type (Optional – select multiple)
                   </label>
                   <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
-                    <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
-                      <input
-                        type="text"
-                        placeholder="Search institute types..."
-                        value={instituteTypeSearch}
-                        onChange={(e) => setInstituteTypeSearch(e.target.value)}
-                        className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
-                      />
-                    </div>
                     <div className="max-h-48 overflow-y-auto p-1.5">
                       <label className="flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-1 group">
                         <input
@@ -1204,11 +1158,7 @@ export default function ChoiceFillingForm({
                         </span>
                       </label>
                       <div className="border-t border-[var(--border)] my-1.5 mx-2"></div>
-                      {(metadata?.instituteTypes || ["NIT", "IIIT", "GFTI"])
-                        .filter((type) =>
-                          type.toLowerCase().includes(instituteTypeSearch.toLowerCase())
-                        )
-                        .map((type) => (
+                      {(metadata?.instituteTypes || ["NIT", "IIIT", "GFTI"]).map((type) => (
                           <label
                             key={type}
                             className={`flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-0.5 ${
@@ -1303,9 +1253,7 @@ export default function ChoiceFillingForm({
             <div>
               <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
                 Branch Groups{" "}
-                <span className="text-[var(--muted-text)] font-normal">
-                  (Optional – select multiple)
-                </span>
+                (Optional – select preferred branches)
               </label>
               <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
                 <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
@@ -1318,17 +1266,17 @@ export default function ChoiceFillingForm({
                   />
                 </div>
                 <div className="max-h-48 overflow-y-auto p-1.5">
-                  {(metadata?.branchGroups || []).length > 0 ? (
+                  {availableBranchGroups.length > 0 ? (
                     <>
                       <label className="flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-1 group">
                         <input
                           type="checkbox"
                           checked={
                             formData.branchGroups.length ===
-                            (metadata?.branchGroups || []).length
+                            availableBranchGroups.length
                           }
                           onChange={() => {
-                            const all = metadata?.branchGroups || [];
+                            const all = availableBranchGroups;
                             if (formData.branchGroups.length === all.length) {
                               setFormData((prev) => ({
                                 ...prev,
@@ -1344,13 +1292,13 @@ export default function ChoiceFillingForm({
                           className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
                         />
                         <span className="text-xs sm:text-sm font-bold text-[var(--foreground)]">
-                          Select All ({(metadata?.branchGroups || []).length})
+                          Select All ({availableBranchGroups.length})
                         </span>
                       </label>
                       <div className="border-t border-[var(--border)] my-1.5 mx-2"></div>
-                      {(metadata?.branchGroups || [])
+                      {availableBranchGroups
                         .filter((group) =>
-                          group.toLowerCase().includes(branchGroupSearch.toLowerCase())
+                          group.toLowerCase().includes(branchGroupSearch.toLowerCase()) 
                         )
                         .map((group) => (
                           <label
@@ -1429,7 +1377,7 @@ export default function ChoiceFillingForm({
 
       {/* Results Section */}
       <div ref={resultsRef} className="mt-8 sm:mt-16">
-        <GoogleAds />
+       {GOOGLE_ADS_ACTIVE && <GoogleAds />}
         {results && lastRequest && (
           <ChoiceFillingResults
             results={results}
