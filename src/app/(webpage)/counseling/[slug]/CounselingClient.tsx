@@ -38,6 +38,17 @@ import LockedContentModal from "@/components/program/LockedContentModal";
 import CheckoutPage from "@/components/program/CheckoutPage";
 import Link from "next/link";
 
+const stripHtmlTags = (str: string | undefined) => {
+  if (!str) return "";
+  return str
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<(?:[^>"']|"[^"]*"|'[^']*')*>/g, '')
+    .replace(/&#?[a-z0-9]+;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
 export default function CounselingClient() {
   const params = useParams();
   const router = useRouter();
@@ -277,7 +288,7 @@ export default function CounselingClient() {
           <ShareButton
             title={product.title}
             url={`/counseling/${product.slug}`}
-            description={product.description?.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ') || ""}
+            description={stripHtmlTags(product.description)}
           />
         </div>
       </div>
