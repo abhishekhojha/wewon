@@ -277,7 +277,7 @@ export default function CounselingClient() {
           <ShareButton
             title={product.title}
             url={`/counseling/${product.slug}`}
-            description={product.description}
+            description={product.description?.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ') || ""}
           />
         </div>
       </div>
