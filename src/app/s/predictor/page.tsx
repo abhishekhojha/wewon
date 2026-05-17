@@ -20,7 +20,7 @@ const PredictorsPage = () => {
     }
   }, [isAuthenticated, dispatch]);
 
-  const { predictorHiddenSlugs, predictorLockedSlugs } = useJeeAdvancedGates(
+  const { predictorHiddenSlugs, predictorLockedSlugs, accessLoading } = useJeeAdvancedGates(
     isAuthenticated,
     userOrders
   );
@@ -41,6 +41,7 @@ const PredictorsPage = () => {
           withLocal={true}
           hiddenSlugs={predictorHiddenSlugs}
           lockedSlugs={predictorLockedSlugs}
+          accessLoading={accessLoading}
         />
       </div>
     </div>

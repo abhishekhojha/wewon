@@ -130,9 +130,17 @@ interface PredictorsGridProps {
   hiddenSlugs?: string[];
   /** Slugs to show with a lock overlay */
   lockedSlugs?: string[];
+  accessLoading?: boolean;
 }
 
-const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, slugs, withLocal = false, hiddenSlugs, lockedSlugs }) => {
+const PredictorsGrid: React.FC<PredictorsGridProps> = ({ 
+  onlyPurchased = false, 
+  slugs, 
+  withLocal = false, 
+  hiddenSlugs, 
+  lockedSlugs,
+  accessLoading = false,
+}) => {
   const dispatch = useAppDispatch();
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search")?.toLowerCase() || "";
@@ -232,7 +240,7 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({ onlyPurchased = false, 
     return filtered;
   }, [predictors, searchQuery, onlyPurchased, slugs, hiddenSlugs, userOrders]);
 
-  if ((loading && predictors.length === 0) || isSearching) {
+  if ((loading && predictors.length === 0) || accessLoading || isSearching) {
     return (
       <div className="w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

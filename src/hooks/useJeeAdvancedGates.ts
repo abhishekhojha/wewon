@@ -3,7 +3,7 @@ import { Order } from "@/store/types";
 import { useJeeAdvancedAccess } from "./useJeeAdvancedAccess";
 
 /** Slugs that are restricted by the JEE Advanced gates */
-const JEE_MENTORSHIP_SLUGS = ["josaa-predictor", "jee-advanced-predictor"];
+const JEE_MENTORSHIP_SLUGS = ["jee-advanced-predictor"];
 const IIT_CHOICE_FILLING_SLUG = "iit";
 
 export function useJeeAdvancedGates(
@@ -36,11 +36,19 @@ export function useJeeAdvancedGates(
     });
   }, [userOrders]);
 
+  const hasJeeMainChoiceFillingProduct = useMemo(() => {
+    return userOrders.some((order) => {
+      const allowed =
+        order.product?.features?.choiceFilling?.allowedChoiceFillers ?? [];
+      return allowed.includes("JEE_MAIN");
+    });
+  }, [userOrders]);
+
   // 3. Only fetch the access API if they have a mentorship order AND one of the gated products
   const shouldFetchAccess =
     isAuthenticated &&
     hasMentorshipOrder &&
-    (hasJosaaOrJeeAdvProduct || hasIitChoiceFillingProduct);
+    (hasJosaaOrJeeAdvProduct || hasIitChoiceFillingProduct || hasJeeMainChoiceFillingProduct);
 
   const { access, loading: accessLoading } = useJeeAdvancedAccess(shouldFetchAccess);
 
@@ -83,5 +91,7 @@ export function useJeeAdvancedGates(
     predictorLockedSlugs,
     iitChoiceFillingHidden: choiceFillingHidden,
     iitChoiceFillingLocked: choiceFillingLocked,
+    jeeMainChoiceFillingHidden: choiceFillingHidden,
+    jeeMainChoiceFillingLocked: choiceFillingLocked,
   };
 }

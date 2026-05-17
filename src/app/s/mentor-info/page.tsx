@@ -53,12 +53,51 @@ export default function MentorInfoPage() {
   // ── Loading State ──────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#073d68] mx-auto mb-4" />
-          <p className="text-gray-600 font-semibold">
-            Loading mentor details...
-          </p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-gray-200 rounded-xl w-14 h-14 animate-pulse"></div>
+              <div>
+                <div className="h-8 bg-gray-200 rounded w-48 animate-pulse mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-64 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+          <div className="h-4 bg-gray-200 rounded w-48 animate-pulse mb-8 mt-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[...Array(2)].map((_, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden animate-pulse"
+              >
+                <div className="bg-gray-200 h-20"></div>
+                <div className="p-6">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                    </div>
+                  </div>
+                  <div className="border-t border-gray-100 mb-5"></div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gray-200 rounded-lg w-8 h-8"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-3 bg-gray-200 rounded w-20"></div>
+                        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 mt-6">
+                    <div className="flex-1 h-10 bg-gray-200 rounded-xl"></div>
+                    <div className="w-24 h-10 bg-gray-200 rounded-xl"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

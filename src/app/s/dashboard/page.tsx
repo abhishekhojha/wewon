@@ -72,6 +72,58 @@ export default function Page() {
   const predictionsCount =
     user && "exams" in user ? (user as any).exams?.length || 0 : 0;
 
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Banner Skeleton */}
+          <div className="mb-8 bg-gray-200 rounded-2xl h-32 animate-pulse"></div>
+          
+          {/* Stats Grid Skeleton */}
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 animate-pulse">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gray-200 rounded-xl w-12 h-12"></div>
+                  <div className="h-8 bg-gray-200 rounded w-12"></div>
+                </div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-2 bg-gray-200 rounded-full w-full mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
+
+          {/* Quick Actions Skeleton */}
+          <div className="mb-8">
+            <div className="h-8 bg-gray-200 rounded w-48 animate-pulse mb-6"></div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="bg-gray-200 rounded-2xl h-48 animate-pulse"></div>
+              ))}
+            </div>
+          </div>
+
+          {/* Getting Started Skeleton */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-48 mb-6"></div>
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="p-2 bg-gray-200 rounded-lg w-9 h-9"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -29,6 +29,7 @@ import {
   ToolCase,
   Bell,
   Lock,
+  User,
 } from "lucide-react";
 import ShareButton from "@/components/program/ShareButton";
 import TabNavigation from "@/components/program/TabNavigation";
@@ -486,7 +487,7 @@ export default function CounselingClient() {
               <ToolCase className="w-7 h-7" />
               Tools
             </h2>
-            <div className="grid gap-6 sm:grid-cols-3 lg:grid-cols-3">
+            <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
               {/* College Predictor */}
               {product.features.collegePredictor.isEnabled && (
               <div
@@ -587,6 +588,41 @@ export default function CounselingClient() {
                   </h3>
                   <p className="text-blue-100 text-sm">
                     Get latest updates and notifications
+                  </p>
+                </div>
+                {!isPurchased && (
+                  <div className="absolute inset-0 bg-black/90 backdrop-blur-[1px] flex items-center justify-center">
+                    <div className="bg-white/90 p-2 rounded-full shadow-lg group-hover:translate-y-0 transition-transform">
+                      <Lock className="w-5 h-5 text-[var(--primary)]" />
+                    </div>
+                  </div>
+                )}
+              </div>
+              {/* Know your Mentor */}
+              <div
+                onClick={() =>
+                  !isPurchased
+                    ? handleLockedContentClick()
+                    : router.push("/s/mentor-info")
+                }
+                className="group relative h-full cursor-pointer overflow-hidden rounded-2xl shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <div className="bg-emerald-600 p-6 h-full flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <User className="w-8 h-8 text-white" />
+                    </div>
+                    {isPurchased ? (
+                      <ArrowRight className="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" />
+                    ) : (
+                      <Lock className="w-6 h-6 text-white/70" />
+                    )}
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    Know Your Mentor
+                  </h3>
+                  <p className="text-emerald-100 text-sm">
+                    Get detailed information about your assigned mentor
                   </p>
                 </div>
                 {!isPurchased && (

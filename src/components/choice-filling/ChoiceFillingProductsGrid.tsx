@@ -16,6 +16,7 @@ import { getChoiceFillingPurchaseDetails } from "@/utils/checkChoiceFillingPurch
 
 /** Slug of the IIT / JEE Advanced choice-filling tool */
 const IIT_CHOICE_FILLING_SLUG = "iit";
+const JEE_MAIN_CHOICE_FILLING_SLUG = "jee-main";
 
 interface ChoiceFillingProductsGridProps {
   onlyPurchased?: boolean;
@@ -31,7 +32,16 @@ interface ChoiceFillingProductsGridProps {
    * Takes precedence over `iitLocked`.
    */
   iitHidden?: boolean;
+  /**
+   * When true, the JEE Main choice-filling card is rendered with a lock overlay.
+   */
+  jeeMainLocked?: boolean;
+  /**
+   * When true, the JEE Main choice-filling card is completely hidden.
+   */
+  jeeMainHidden?: boolean;
   lockMessage?: string;
+  accessLoading?: boolean;
 }
 
 export default function ChoiceFillingProductsGrid({
@@ -39,7 +49,10 @@ export default function ChoiceFillingProductsGrid({
   tools,
   iitLocked = false,
   iitHidden = false,
+  jeeMainLocked = false,
+  jeeMainHidden = false,
   lockMessage = "Please Complete Mentorship Task",
+  accessLoading = false,
 }: ChoiceFillingProductsGridProps) {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
@@ -87,12 +100,27 @@ export default function ChoiceFillingProductsGrid({
     loadProducts();
   }, []);
 
-  if (loading) {
+  if (loading || accessLoading) {
     return (
-      <div className="w-full flex items-center justify-center py-16">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 animate-spin text-[#0f3a67]" />
-          <p className="text-gray-500">Loading choice-filling products...</p>
+      <div className="w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {[...Array(6)].map((_, index) => (
+            <div
+              key={index}
+              className="w-full overflow-hidden rounded-xl bg-white shadow-lg animate-pulse border border-gray-100"
+            >
+              <div className="w-full h-48 bg-gray-200"></div>
+              <div className="p-5 space-y-3">
+                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                <div className="pt-4 flex justify-between items-center">
+                  <div className="h-8 bg-gray-200 rounded w-24"></div>
+                  <div className="h-10 bg-gray-200 rounded w-32"></div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -128,6 +156,12 @@ export default function ChoiceFillingProductsGrid({
     );
   }
 
+  if (jeeMainHidden) {
+    displayProducts = displayProducts.filter(
+      (p) => p.slug !== JEE_MAIN_CHOICE_FILLING_SLUG
+    );
+  }
+
   if (displayProducts.length === 0) {
     return (
       <div className="text-center py-16 w-full col-span-full">
@@ -146,12 +180,13 @@ export default function ChoiceFillingProductsGrid({
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {displayProducts.map((product) => {
         const isIitProduct = product.slug === IIT_CHOICE_FILLING_SLUG;
+        const isJeeMainProduct = product.slug === JEE_MAIN_CHOICE_FILLING_SLUG;
         
         // Check if this specific product is locked via orders
         const matchingOrder = userOrders.find(o => o.product?.slug === product.slug);
         const isOrderLocked = matchingOrder?.choiceFillingLocked === true;
         
-        const isLocked = (isIitProduct && iitLocked) || isOrderLocked;
+        const isLocked = (isIitProduct && iitLocked) || (isJeeMainProduct && jeeMainLocked) || isOrderLocked;
 
         return (
           <div
@@ -166,7 +201,7 @@ export default function ChoiceFillingProductsGrid({
                 </div>
                 <div className="text-center px-6">
                   <p className="text-sm font-bold text-gray-800">
-                    {isIitProduct ? "IIT Choice Filling Locked" : "Tool Locked"}
+                    {isIitProduct ? "IIT Choice Filling Locked" : isJeeMainProduct ? "JEE Main Choice Filling Locked" : "Tool Locked"}
                   </p>
                   <p className="text-xs text-gray-500 mt-1 leading-relaxed">
                     {lockMessage}

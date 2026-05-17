@@ -20,7 +20,13 @@ const ChoiceFillingPage = () => {
     }
   }, [isAuthenticated, dispatch]);
 
-  const { iitChoiceFillingHidden, iitChoiceFillingLocked } = useJeeAdvancedGates(
+  const { 
+    iitChoiceFillingHidden, 
+    iitChoiceFillingLocked,
+    jeeMainChoiceFillingHidden,
+    jeeMainChoiceFillingLocked,
+    accessLoading
+  } = useJeeAdvancedGates(
     isAuthenticated,
     userOrders
   );
@@ -40,6 +46,9 @@ const ChoiceFillingPage = () => {
           onlyPurchased={true}
           iitLocked={iitChoiceFillingLocked}
           iitHidden={iitChoiceFillingHidden}
+          jeeMainLocked={jeeMainChoiceFillingLocked}
+          jeeMainHidden={jeeMainChoiceFillingHidden}
+          accessLoading={accessLoading}
         />
       </div>
     </div>
