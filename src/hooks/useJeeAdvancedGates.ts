@@ -24,7 +24,7 @@ export function useJeeAdvancedGates(
       const allowed =
         order.product?.features?.collegePredictor?.allowedPredictors ?? [];
       // JOSAA or JEE_ADVANCE predictors
-      return allowed.includes("JOSAA") || allowed.includes("JEE_ADVANCE");
+      return allowed.includes("JEE_ADVANCE");
     });
   }, [userOrders]);
 
