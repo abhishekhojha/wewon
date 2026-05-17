@@ -98,7 +98,7 @@ export default function ContactUs({
               </div>
               <div>
                 <p className="text-sm opacity-80 mb-1">
-                  Call Us (WhatsApp Only)
+                  WhatsApp Only
                 </p>
                 <span className="text-base md:text-lg font-medium">
                   {phone}

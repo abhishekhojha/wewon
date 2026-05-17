@@ -145,8 +145,6 @@ export default function IITCollegePredictor() {
       jeeAdvancedRank:
         typeof prefill.jeeAdvancedRank === "number"
           ? String(prefill.jeeAdvancedRank)
-          : typeof prefill.crlRank === "number"
-          ? String(prefill.crlRank)
           : prev.jeeAdvancedRank,
       categoryRank:
         typeof prefill.categoryRank === "number"

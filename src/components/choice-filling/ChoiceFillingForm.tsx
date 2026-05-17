@@ -713,10 +713,9 @@ export default function ChoiceFillingForm({
             {isIIT ? (
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
-                  Include IITs{" "}
-                  <span className="text-[var(--muted-text)] font-normal">
-                    (Optional – select preferred IITs)
-                  </span>
+                 
+                    Select preferred IITs (Optional)
+               
                 </label>
                 <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
                   <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
@@ -1023,7 +1022,7 @@ export default function ChoiceFillingForm({
                 {availableInstituteStates.length > 0 && (
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
-                      States (Optional – College Location Preferences)
+                      College Location Preferences (Optional)
                     </label>
                     <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
                       <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
@@ -1252,8 +1251,7 @@ export default function ChoiceFillingForm({
             {/* Branch Groups - Multi Select */}
             <div>
               <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
-                Branch Groups{" "}
-                (Optional – select preferred branches)
+                Select Preferred Branches (Optional)
               </label>
               <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
                 <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
