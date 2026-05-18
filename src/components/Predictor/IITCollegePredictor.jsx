@@ -272,8 +272,10 @@ export default function IITCollegePredictor() {
     setResults(null);
 
     try {
+      const { matchingOrder } = getPredictorPurchaseDetails(userOrders, PRODUCT_SLUG);
+      const isMentorship = matchingOrder?.product?.features?.hasMentorship === true;
+
       const payload = {
-        jeeAdvancedRank: Number(formData.jeeAdvancedRank || 1),
         categoryRank: formData.categoryRank ? formData.categoryRank : undefined,
         category: formData.category,
         gender: formData.gender,
@@ -282,6 +284,12 @@ export default function IITCollegePredictor() {
         instituteType: formData.instituteType || undefined,
         branchGroup: formData.branchGroup.length > 0 ? formData.branchGroup : undefined,
       };
+
+      if (isMentorship) {
+        payload.jeeAdvancedRank = Number(formData.jeeAdvancedRank || 1);
+      } else {
+        payload.crlRank = Number(formData.jeeAdvancedRank || 1);
+      }
 
       console.log("Sending payload:", payload);
       const response = await predict(payload);
