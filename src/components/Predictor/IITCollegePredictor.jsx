@@ -286,7 +286,7 @@ export default function IITCollegePredictor() {
       };
 
       if (isMentorship) {
-        payload.jeeAdvanceRank = Number(formData.jeeAdvancedRank || 1);
+        payload.jeeAdvancedRank = Number(formData.jeeAdvancedRank || 1);
       } else {
         payload.crlRank = Number(formData.jeeAdvancedRank || 1);
       }
