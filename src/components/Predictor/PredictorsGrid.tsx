@@ -297,7 +297,7 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({
                 predictor,
                 isPredictorPurchased(predictor.slug),
               )}
-            />
+            /> 
           )})}
 
         </div>
