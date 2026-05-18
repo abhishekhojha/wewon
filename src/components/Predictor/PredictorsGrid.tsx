@@ -286,16 +286,20 @@ const PredictorsGrid: React.FC<PredictorsGridProps> = ({
       {/* Predictors Grid */}
       {displayPredictors.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {displayPredictors.map((predictor) => (
+          {displayPredictors.map((predictor) => {
+            const isCardLocked = lockedSlugs?.includes(predictor.slug) ?? false;
+            console.log(`[PredictorsGrid] slug="${predictor.slug}" | isLocked=${isCardLocked} | lockedSlugs=`, lockedSlugs);
+            return (
             <PredictorCard
               key={predictor._id}
-              isLocked={lockedSlugs?.includes(predictor.slug)}
+              isLocked={isCardLocked}
               predictor={mapToPredictorProduct(
                 predictor,
                 isPredictorPurchased(predictor.slug),
               )}
             />
-          ))}
+          )})}
+
         </div>
       ) : (
         <div className="text-center py-16">

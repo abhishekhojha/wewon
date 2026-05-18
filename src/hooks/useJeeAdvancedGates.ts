@@ -71,7 +71,7 @@ export function useJeeAdvancedGates(
     }
     // If taskCompleted is true -> visible & usable (default false)
   }
-
+  console.log("hideJeeTools,JEE_MENTORSHIP_SLUGS", hideJeeTools,JEE_MENTORSHIP_SLUGS)
   // 5. Output structures for predictors
   const predictorHiddenSlugs = hideJeeTools ? JEE_MENTORSHIP_SLUGS : [];
   const predictorLockedSlugs = lockJeeTools ? JEE_MENTORSHIP_SLUGS : [];
