@@ -45,6 +45,7 @@ interface PredictionItem {
   branch: string;
   quota: string;
   category: string;
+  openingRank?: number;
   closingRank: number;
   confidence: number;
   probability: string;
@@ -543,6 +544,7 @@ export default function WBJEECollegePredictor() {
         branch: item.program || item.branch,
         quota: item.quota,
         category: item.category,
+        openingRank: item.opening_rank || item.openingRank,
         closingRank: item.closing_rank || item.closingRank,
         confidence: item.confidence,
         probability: probability || item.probability || "High",
@@ -1076,7 +1078,7 @@ export default function WBJEECollegePredictor() {
             results={results}
             userGender={"Male"}
             hideSeatType={true}
-            hideOpeningRank={true}
+            hideOpeningRank={false}
             hideGender={true}
             hideRound={true}
           />
