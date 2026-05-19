@@ -139,7 +139,7 @@ export default function IITCollegePredictor() {
 
   useEffect(() => {
     if (!prefill) return;
-
+ 
     setFormData((prev) => ({
       ...prev,
       jeeAdvancedRank:

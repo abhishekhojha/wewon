@@ -7,7 +7,7 @@ export const getInvoiceFilename = (
   const filenameMatch =
     /filename\*=UTF-8''([^;]+)|filename=["']?([^"';]+)["']?/i.exec(
       contentDisposition,
-    );
+    ); 
 
   const encodedFilename = filenameMatch?.[1];
   const plainFilename = filenameMatch?.[2];
