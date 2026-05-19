@@ -61,7 +61,7 @@ export const getChoiceFillingPurchaseDetails = (
   userOrders: any[],
   productSlug: string
 ) => {
-  console.log("userOrders", userOrders, "productSlug", productSlug);
+  console.log("userOrders1", userOrders, "productSlug", productSlug);
   if (!userOrders || userOrders.length === 0) {
     return { hasPurchased: false, prefillData: null, allowedChoiceFillersList: [], matchingOrder: null };
   }
@@ -78,31 +78,31 @@ export const getChoiceFillingPurchaseDetails = (
     const choiceFillingFeature = order.product?.features?.choiceFilling;
     if (choiceFillingFeature?.isEnabled) {
       const allowedChoiceFillers = choiceFillingFeature.allowedChoiceFillers || [];
-    for (const toolKey of allowedChoiceFillers) {
-      if (toolKey.toLowerCase() === "all") {
-        grantsAccessToRequested = true;
-        Object.values(choiceFillingKeySlugMap).forEach((slug) => {
-          allowedChoiceFillersSet.add(slug);
-        });
-        break;
-      } else {
-        const mappedSlug = choiceFillingKeySlugMap[toolKey as keyof typeof choiceFillingKeySlugMap];
-        if (mappedSlug) {
-          console.log("mappedSlug", mappedSlug, productSlug)
-          allowedChoiceFillersSet.add(mappedSlug);
-          if (mappedSlug === productSlug) grantsAccessToRequested = true;
+      for (const toolKey of allowedChoiceFillers) {
+        if (toolKey.toLowerCase() === "all") {
+          grantsAccessToRequested = true;
+          Object.values(choiceFillingKeySlugMap).forEach((slug) => {
+            allowedChoiceFillersSet.add(slug);
+          });
+          break;
+        } else {
+          const mappedSlug = choiceFillingKeySlugMap[toolKey as keyof typeof choiceFillingKeySlugMap];
+          if (mappedSlug) {
+            console.log("mappedSlug", mappedSlug, productSlug)
+            allowedChoiceFillersSet.add(mappedSlug);
+            if (mappedSlug === productSlug) grantsAccessToRequested = true;
+          }
         }
       }
+
     }
-   
-    }
-    
+
     if (grantsAccessToRequested) {
       matchingOrders.push(order);
     }
-     
+
   });
-  
+
   console.log("matchingOrders", matchingOrders);
   const hasPurchased = matchingOrders.length > 0;
   console.log("hasPurchased", hasPurchased);
