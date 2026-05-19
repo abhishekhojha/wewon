@@ -12,5 +12,7 @@ export default function Test() {
     alert("RUNNING");
   }, []);
 
-  return <>hello</>;
+  return <>hello
+    <img src="./og-image.png" alt="" />
+  </>;
 }
