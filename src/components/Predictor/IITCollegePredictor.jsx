@@ -38,7 +38,7 @@ export default function IITCollegePredictor() {
 
   const [formData, setFormData] = useState({
     jeeAdvancedRank: "",
-    categoryRank: "",
+    jeeAdvancedCategoryRank: "",
     category: "OPEN", // Default to OPEN (General)
     gender: "Male",
     counselingType: "JoSAA", // Fixed for IIT predictor
@@ -146,10 +146,10 @@ export default function IITCollegePredictor() {
         typeof prefill.jeeAdvancedRank === "number"
           ? String(prefill.jeeAdvancedRank)
           : prev.jeeAdvancedRank,
-      categoryRank:
-        typeof prefill.categoryRank === "number"
-          ? String(prefill.categoryRank)
-          : prev.categoryRank,
+      jeeAdvancedCategoryRank:
+        typeof prefill.jeeAdvancedCategoryRank === "number"
+          ? String(prefill.jeeAdvancedCategoryRank)
+          : prev.jeeAdvancedCategoryRank,
       category: prefill.category || prev.category,
       gender: prefill.gender || prev.gender,
     }));
@@ -172,7 +172,7 @@ export default function IITCollegePredictor() {
     const { id, value, type } = e.target;
 
     // Validate categoryRank to accept only numbers or numbers ending with 'P' for specific categories
-    if (id === "categoryRank") {
+    if (id === "jeeAdvancedCategoryRank") {
       if (value === "") {
         setFormData((prev) => ({
           ...prev,
@@ -184,8 +184,8 @@ export default function IITCollegePredictor() {
       const allowedCategories = ["SC", "ST", "OPEN (PwD)", "EWS (PwD)", "OBC-NCL (PwD)", "ST (PwD)", "SC (PwD)"];
       
       if (allowedCategories.includes(formData.category)) {
-        const categoryRankPattern = /^\d+[Pp]?$/;
-        if (!categoryRankPattern.test(value)) {
+        const jeeAdvancedCategoryRankPattern = /^\d+[Pp]?$/;
+        if (!jeeAdvancedCategoryRankPattern.test(value)) {
           return;
         }
         const normalizedValue = value.replace(/p$/, "P");
@@ -237,7 +237,7 @@ export default function IITCollegePredictor() {
       const newCategory = value;
       
       setFormData((prev) => {
-        let updatedCategoryRank = prev.categoryRank;
+        let updatedCategoryRank = prev.jeeAdvancedCategoryRank;
         
         if (!allowedCategories.includes(newCategory)) {
           if (updatedCategoryRank.endsWith('P')) {
@@ -248,7 +248,7 @@ export default function IITCollegePredictor() {
         return {
           ...prev,
           category: newCategory,
-          categoryRank: updatedCategoryRank
+          jeeAdvancedCategoryRank: updatedCategoryRank
         };
       });
       return;
@@ -276,7 +276,6 @@ export default function IITCollegePredictor() {
       const isMentorship = matchingOrder?.product?.features?.hasMentorship === true;
 
       const payload = {
-        categoryRank: formData.categoryRank ? formData.categoryRank : undefined,
         category: formData.category,
         gender: formData.gender,
         counselingType: formData.counselingType,
@@ -287,8 +286,10 @@ export default function IITCollegePredictor() {
 
       if (isMentorship) {
         payload.jeeAdvancedRank = Number(formData.jeeAdvancedRank || 1);
+        payload.jeeAdvancedCategoryRank = Number(formData.jeeAdvancedCategoryRank || 1);
       } else {
         payload.crlRank = Number(formData.jeeAdvancedRank || 1);
+        payload.categoryRank = Number(formData.jeeAdvancedCategoryRank || 1);
       }
 
       console.log("Sending payload:", payload);
@@ -317,18 +318,18 @@ export default function IITCollegePredictor() {
     }
 
     // Validate that Category Rank is provided for specific categories
-    if (CATEGORY_RANK_MANDATORY_CATEGORIES.includes(formData.category) && !formData.categoryRank) {
+    if (CATEGORY_RANK_MANDATORY_CATEGORIES.includes(formData.category) && !formData.jeeAdvancedCategoryRank) {
       toast.error(`Please enter Category Rank for ${formData.category} category`);
       return;
     }
 
     // Validate categoryRank format if provided
-    if (formData.categoryRank) {
+    if (formData.jeeAdvancedCategoryRank) {
       const allowedCategories = ["SC", "ST", "OPEN (PwD)", "EWS (PwD)", "OBC-NCL (PwD)", "ST (PwD)", "SC (PwD)"];
       const isAllowedCategory = allowedCategories.includes(formData.category);
       
       const pattern = isAllowedCategory ? /^\d+P?$/ : /^\d+$/;
-      if (!pattern.test(formData.categoryRank)) {
+      if (!pattern.test(formData.jeeAdvancedCategoryRank)) {
         toast.error(
           isAllowedCategory
             ? "Category Rank must be a number or a number ending with 'P'"
@@ -456,15 +457,15 @@ export default function IITCollegePredictor() {
             {/* Category Rank */}
             <div>
               <label
-                htmlFor="categoryRank"
+                htmlFor="jeeAdvancedCategoryRank"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
                 Enter Category Rank {CATEGORY_RANK_MANDATORY_CATEGORIES.includes(formData.category) ? <span className="text-red-500">*</span> : "(Optional)"}
               </label>
               <input
                 type="text"
-                id="categoryRank"
-                value={formData.categoryRank}
+                id="jeeAdvancedCategoryRank"
+                value={formData.jeeAdvancedCategoryRank}
                 onChange={handleChange}
                 placeholder="2000 or 2000P"
                 onWheel={(e) => e.currentTarget.blur()}
@@ -618,7 +619,7 @@ export default function IITCollegePredictor() {
           <PredictionResults
             results={results}
             userGender={formData.gender}
-            isPreparatoryRank={!!formData.categoryRank}
+            isPreparatoryRank={!!formData.jeeAdvancedCategoryRank}
             hideCategory={true}
           />
         )}
