@@ -133,11 +133,11 @@ export default function Home() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <HeroSection />
       </div>
-      <CollegesSlider />
       <div className="container mx-auto">
         <FeatureCounselling />
         <FeaturePredictor />
       </div>
+      <CollegesSlider />
       <div className="container mx-auto">
         <FeaturesSection />
         <WhyChooseUs />
