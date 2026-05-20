@@ -162,8 +162,8 @@ export default function ChoiceFillingForm({
   const [branchGroupSearch, setBranchGroupSearch] = useState("");
   const [jacInstituteSearch, setJacInstituteSearch] = useState("");
 
-  const isCrlRankRequired = !isIIT || formData.category === "OPEN";
-  const isCategoryRankRequired = formData.category !== "OPEN";
+  const isCrlRankRequired = isJACDelhi || !isIIT || formData.category === "OPEN";
+  const isCategoryRankRequired = !isJACDelhi && formData.category !== "OPEN";
 
 
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -300,7 +300,22 @@ export default function ChoiceFillingForm({
   };
 
   const handleGenderChange = (gender: string) => {
-    setFormData((prev) => ({ ...prev, gender }));
+    setFormData((prev) => {
+      let updatedIncludedInstitutes = prev.includedInstitutes;
+      if (isJACDelhi && gender === "Male") {
+        updatedIncludedInstitutes = prev.includedInstitutes.filter(
+          (inst) =>
+            inst !== "IGDTUW" &&
+            inst !== "Indira Gandhi Delhi Technical University for Women (IGDTUW)" &&
+            !inst.includes("IGDTUW")
+        );
+      }
+      return {
+        ...prev,
+        gender,
+        includedInstitutes: updatedIncludedInstitutes,
+      };
+    });
   };
 
   const handleInstituteTypeToggle = (type: string) => {
@@ -407,6 +422,11 @@ export default function ChoiceFillingForm({
 
     if (isJACDelhi && !formData.region) {
       toast.error("Please select your Region.");
+      return;
+    }
+
+    if (isJACDelhi && formData.subCategory.toLowerCase().includes("girl") && formData.gender === "Male") {
+      toast.error("Male candidates cannot select girl-only subcategories.");
       return;
     }
 
@@ -519,9 +539,9 @@ export default function ChoiceFillingForm({
 
   return (
     <div className="container mx-auto px-2 sm:px-4 my-6 sm:my-10">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 items-start">
         {/* Left Column: Info Steps */}
-        <div className="flex flex-col justify-center space-y-3 sm:space-y-6">
+        <div className="flex flex-col space-y-3 sm:space-y-6">
           {product?.thumbnail && (
             <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg mb-4 sm:mb-6">
               <Image
@@ -672,6 +692,12 @@ export default function ChoiceFillingForm({
                   </button>
                 ))}
               </div>
+               { isJACDelhi && formData.gender === "Male" && (
+                <p className="text-xs text-amber-600 mt-1">
+                  Note: IGDTUW is a women-only college and is excluded for male
+                  candidates.
+                </p>
+              )}
             </div>
 
             {/* Category */}
@@ -701,7 +727,7 @@ export default function ChoiceFillingForm({
                     "SC (PwD)",
                     "ST (PwD)",
                   ]
-                ).map((cat) => (isJACDelhi && cat === "GEN" ? "OPEN" : cat)).map((cat) => (
+                ).filter((cat) => (isJACDelhi && cat !== "GEN") || !isJACDelhi).map((cat) => (
                   <option key={cat} value={cat}>
                     {cat}
                   </option>
@@ -876,14 +902,23 @@ export default function ChoiceFillingForm({
                     id="subCategory"
                     value={formData.subCategory}
                     onChange={handleChange}
-                    className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
+                    className={`w-full p-2 sm:p-3 text-sm sm:text-base border rounded-lg shadow-sm bg-white outline-none transition ${
+                      formData.subCategory.toLowerCase().includes("girl") && formData.gender === "Male"
+                        ? "border-red-500 text-[var(--foreground)] focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                        : "border-[var(--border)] text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                    }`}
                   >
                     {(metadata?.subCategories || ["None", "Girl Candidate", "Single Girl Child", "Defence", "Kashmiri Migrant", "Persons with Disabilities"]).map((sub) => (
-                      <option key={sub} value={sub}>
+                      <option key={sub} value={sub} className="text-black bg-white">
                         {sub}
                       </option>
                     ))}
                   </select>
+                  {formData.subCategory.toLowerCase().includes("girl") && formData.gender === "Male" && (
+                    <p className="text-xs text-red-500 mt-1.5 font-medium">
+                      Male candidates cannot select girl-only subcategories.
+                    </p>
+                  )}
                 </div>
 
                 {/* Institutes Picker */}
@@ -905,79 +940,93 @@ export default function ChoiceFillingForm({
                       />
                     </div>
                     <div className="max-h-48 overflow-y-auto p-1.5">
-                      {(metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"]).length > 0 ? (
-                        <>
-                          <label className="flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-1 group">
-                            <input
-                              type="checkbox"
-                              checked={
-                                formData.includedInstitutes.length ===
-                                (metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"]).length
-                              }
-                              onChange={() => {
-                                const all = metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"];
-                                if (formData.includedInstitutes.length === all.length) {
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    includedInstitutes: [],
-                                  }));
-                                } else {
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    includedInstitutes: [...all],
-                                  }));
-                                }
-                              }}
-                              className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
-                            />
-                            <span className="text-xs sm:text-sm font-bold text-[var(--foreground)]">
-                              Select All ({(metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"]).length})
-                            </span>
-                          </label>
-                          <div className="border-t border-[var(--border)] my-1.5 mx-2"></div>
-                          {(metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"])
-                            .filter((inst) =>
-                              inst.toLowerCase().includes(jacInstituteSearch.toLowerCase())
+                      {(() => {
+                        const rawInstitutes = metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"];
+                        const displayedInstitutes = isJACDelhi && formData.gender === "Male"
+                          ? rawInstitutes.filter(
+                              (inst) =>
+                                inst !== "IGDTUW" &&
+                                inst !== "Indira Gandhi Delhi Technical University for Women (IGDTUW)" &&
+                                !inst.includes("IGDTUW")
                             )
-                            .map((inst) => (
-                              <label
-                                key={inst}
-                                className={`flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-0.5 ${
-                                  formData.includedInstitutes.includes(inst)
-                                    ? "bg-[var(--primary)]/5"
-                                    : ""
-                                }`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={formData.includedInstitutes.includes(inst)}
-                                  onChange={() => handleInstituteToggle(inst)}
-                                  className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
-                                />
-                                <span className="text-xs sm:text-sm flex-1 text-[var(--muted-text)] font-medium group-hover:text-[var(--foreground)]">
-                                  {inst}
-                                </span>
-                                {formData.includedInstitutes.includes(inst) && (
-                                  <svg
-                                    className="w-4 h-4 text-[var(--primary)] flex-shrink-0"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                )}
-                              </label>
-                            ))}
-                        </>
-                      ) : (
-                        <p className="text-[10px] sm:text-xs text-[var(--muted-text)] text-center py-4">
-                          No institutes available
-                        </p>
-                      )}
+                          : rawInstitutes;
+
+                        if (displayedInstitutes.length === 0) {
+                          return (
+                            <p className="text-[10px] sm:text-xs text-[var(--muted-text)] text-center py-4">
+                              No institutes available
+                            </p>
+                          );
+                        }
+
+                        return (
+                          <>
+                            <label className="flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-1 group">
+                              <input
+                                type="checkbox"
+                                checked={
+                                  formData.includedInstitutes.length === displayedInstitutes.length
+                                }
+                                onChange={() => {
+                                  if (formData.includedInstitutes.length === displayedInstitutes.length) {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      includedInstitutes: [],
+                                    }));
+                                  } else {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      includedInstitutes: [...displayedInstitutes],
+                                    }));
+                                  }
+                                }}
+                                className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
+                              />
+                              <span className="text-xs sm:text-sm font-bold text-[var(--foreground)]">
+                                Select All ({displayedInstitutes.length})
+                              </span>
+                            </label>
+                            <div className="border-t border-[var(--border)] my-1.5 mx-2"></div>
+                            {displayedInstitutes
+                              .filter((inst) =>
+                                inst.toLowerCase().includes(jacInstituteSearch.toLowerCase())
+                              )
+                              .map((inst) => (
+                                <label
+                                  key={inst}
+                                  className={`flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-0.5 ${
+                                    formData.includedInstitutes.includes(inst)
+                                      ? "bg-[var(--primary)]/5"
+                                      : ""
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={formData.includedInstitutes.includes(inst)}
+                                    onChange={() => handleInstituteToggle(inst)}
+                                    className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
+                                  />
+                                  <span className="text-xs sm:text-sm flex-1 text-[var(--muted-text)] font-medium group-hover:text-[var(--foreground)]">
+                                    {inst}
+                                  </span>
+                                  {formData.includedInstitutes.includes(inst) && (
+                                    <svg
+                                      className="w-4 h-4 text-[var(--primary)] flex-shrink-0"
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                    >
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                        clipRule="evenodd"
+                                      />
+                                    </svg>
+                                  )}
+                                </label>
+                              ))}
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                   {formData.includedInstitutes.length === 0 && (
