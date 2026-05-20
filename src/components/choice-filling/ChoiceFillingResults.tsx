@@ -113,7 +113,7 @@ export default function ChoiceFillingResults({
     { label: "Sub-Category", value: results.user?.subCategory },
     {
       label: "Search Rank",
-      value: hasValue(results.searchRank)
+      value: !isStudent && hasValue(results.searchRank)
         ? results.searchRank?.toLocaleString()
         : undefined,
     },
