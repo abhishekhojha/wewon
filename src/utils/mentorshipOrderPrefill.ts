@@ -23,6 +23,7 @@ export interface ResolvedMentorshipToolPrefill {
   categoryRankLocked: boolean;
   lockMessage?: string;
   sourceOrderId: string;
+  choiceFillingLocked?: boolean;
 }
 
 const normalizeText = (value: unknown): string | undefined => {
@@ -242,5 +243,6 @@ export const resolveMentorshipToolPrefill = (
     categoryRankLocked,
     lockMessage: buildLockMessage(hasCrlRankOverride, hasMentorshipCrlField),
     sourceOrderId: matchingOrder._id,
+    choiceFillingLocked: matchingOrder.choiceFillingLocked === true,
   };
 };

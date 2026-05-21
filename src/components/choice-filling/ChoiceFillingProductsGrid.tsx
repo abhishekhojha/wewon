@@ -32,14 +32,6 @@ interface ChoiceFillingProductsGridProps {
    * Takes precedence over `iitLocked`.
    */
   iitHidden?: boolean;
-  /**
-   * When true, the JEE Main choice-filling card is rendered with a lock overlay.
-   */
-  jeeMainLocked?: boolean;
-  /**
-   * When true, the JEE Main choice-filling card is completely hidden.
-   */
-  jeeMainHidden?: boolean;
   lockMessage?: string;
   accessLoading?: boolean;
 }
@@ -49,8 +41,6 @@ export default function ChoiceFillingProductsGrid({
   tools,
   iitLocked = false,
   iitHidden = false,
-  jeeMainLocked = false,
-  jeeMainHidden = false,
   lockMessage = "Please Complete Mentorship Task",
   accessLoading = false,
 }: ChoiceFillingProductsGridProps) {
@@ -156,12 +146,6 @@ export default function ChoiceFillingProductsGrid({
     );
   }
 
-  if (jeeMainHidden) {
-    displayProducts = displayProducts.filter(
-      (p) => p.slug !== JEE_MAIN_CHOICE_FILLING_SLUG
-    );
-  }
-
   if (displayProducts.length === 0) {
     return (
       <div className="text-center py-16 w-full col-span-full">
@@ -183,10 +167,13 @@ export default function ChoiceFillingProductsGrid({
         const isJeeMainProduct = product.slug === JEE_MAIN_CHOICE_FILLING_SLUG;
         
         // Check if this specific product is locked via orders
-        const matchingOrder = userOrders.find(o => o.product?.slug === product.slug);
+        const { matchingOrder } = getChoiceFillingPurchaseDetails(
+          userOrders,
+          product.slug
+        );
         const isOrderLocked = matchingOrder?.choiceFillingLocked === true;
         
-        const isLocked = (isIitProduct && iitLocked) || (isJeeMainProduct && jeeMainLocked) || isOrderLocked;
+        const isLocked = isIitProduct ? iitLocked : isOrderLocked;
 
         return (
           <div

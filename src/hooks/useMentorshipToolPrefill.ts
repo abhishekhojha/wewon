@@ -61,5 +61,6 @@ export const useMentorshipToolPrefill = (
     categoryRankLocked: Boolean(resolvedPrefill?.categoryRankLocked),
     lockMessage: resolvedPrefill?.lockMessage,
     sourceOrderId: resolvedPrefill?.sourceOrderId,
+    choiceFillingLocked: Boolean(resolvedPrefill?.choiceFillingLocked),
   };
 };

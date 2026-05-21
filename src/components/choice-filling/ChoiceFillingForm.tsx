@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 import GoogleAds from "../sections/GoogleAds";
 import ChoiceFillingResults from "./ChoiceFillingResults";
 import {
@@ -17,6 +17,8 @@ import { useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { useRouter } from "next/navigation";
 import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
+import { selectUserOrders } from "@/store/order/orderSlice";
+import { useJeeAdvancedGates } from "@/hooks/useJeeAdvancedGates";
 import Image from "next/image";
 import { GOOGLE_ADS_ACTIVE } from "@/data/constants";
 
@@ -107,24 +109,33 @@ export default function ChoiceFillingForm({
 }: ChoiceFillingFormProps) {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const user = useAppSelector(selectUser);
+  const userOrders = useAppSelector(selectUserOrders);
   const router = useRouter();
 
   const isIIT = toolKey === "iit";
   const isUPTAC = toolKey === "uptac";
   const isJACDelhi = toolKey === "jac-delhi";
 
-  
-
+  const {
+    iitChoiceFillingLocked,
+    accessLoading: gatesLoading,
+  } = useJeeAdvancedGates(
+    isAuthenticated,
+    userOrders
+  );
 
   const {
     prefill: orderPrefill,
     crlRankLocked: isOrderRankLocked,
     categoryRankLocked: isOrderCategoryRankLocked,
     lockMessage: orderRankLockMessage,
+    choiceFillingLocked: isOrderChoiceFillingLocked,
   } = useMentorshipToolPrefill({
     productId,
     productSlug,
   });
+
+  const isChoiceFillingLocked = isIIT ? iitChoiceFillingLocked : isOrderChoiceFillingLocked;
   const isDevelopmentMode = process.env.NODE_ENV === "development";
   console.log("isDevelopmentMode", isDevelopmentMode);
   const [metadata, setMetadata] = useState<ChoiceFillingMetadata | null>(null);
@@ -526,7 +537,9 @@ export default function ChoiceFillingForm({
     }
   };
 
-  if (metaLoading) {
+  const showLoading = metaLoading || (isIIT && gatesLoading);
+
+  if (showLoading) {
     return (
       <div className="w-full flex items-center justify-center py-16">
         <div className="flex flex-col items-center gap-4">
@@ -586,7 +599,23 @@ export default function ChoiceFillingForm({
         </div>
 
         {/* Right Column: Form */}
-        <div className="bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-6 md:p-8">
+        <div className="bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-6 md:p-8 relative">
+          {/* Lock overlay */}
+          {isChoiceFillingLocked && (
+            <div className="absolute inset-0 z-10 rounded-lg sm:rounded-xl bg-white/80 backdrop-blur-[3px] flex flex-col items-center justify-center gap-4 border-2 border-orange-200">
+              <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center shadow-md animate-pulse">
+                <Lock className="w-8 h-8 text-orange-500 animate-none" />
+              </div>
+              <div className="text-center px-6 max-w-md">
+                <h3 className="text-lg font-bold text-gray-800">
+                  Choice Filling Locked
+                </h3>
+                <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+                  Choice filling is locked until your mentor completes your assigned task. Contact your mentor or ask them to force-enable access.
+                </p>
+              </div>
+            </div>
+          )}
           {/* Header */}
           <div className="flex flex-col justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
             <h2  className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--primary)]">
