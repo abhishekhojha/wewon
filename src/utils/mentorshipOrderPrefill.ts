@@ -221,16 +221,20 @@ export const resolveMentorshipToolPrefill = (
   const hasCategoryRankFromForm = categoryRankFromForm != null;
 
   const crlRankLocked = Boolean(
-    hasMentorshipCrlField ||
-    hasCrlRankOverride ||
-    hasCrlRankFromForm ||
-    rankOverrides.lockedByAdmin,
+    (hasMentorshipCrlField ||
+      hasCrlRankOverride ||
+      hasCrlRankFromForm ||
+      rankOverrides.lockedByAdmin) &&
+    ((typeof prefill.crlRank === "number" && prefill.crlRank > 0) ||
+      (typeof prefill.jeeAdvancedRank === "number" && prefill.jeeAdvancedRank > 0))
   );
   const categoryRankLocked = Boolean(
-    hasMentorshipCategoryField ||
-    hasCategoryRankOverride ||
-    hasCategoryRankFromForm ||
-    rankOverrides.lockedByAdmin,
+    (hasMentorshipCategoryField ||
+      hasCategoryRankOverride ||
+      hasCategoryRankFromForm ||
+      rankOverrides.lockedByAdmin) &&
+    typeof prefill.categoryRank === "number" &&
+    prefill.categoryRank > 0
   );
 
   if (!hasAnyPrefillValue(prefill) && !crlRankLocked && !categoryRankLocked) {
@@ -241,7 +245,7 @@ export const resolveMentorshipToolPrefill = (
     prefill,
     crlRankLocked,
     categoryRankLocked,
-    lockMessage: buildLockMessage(hasCrlRankOverride, hasMentorshipCrlField),
+    lockMessage: crlRankLocked ? buildLockMessage(hasCrlRankOverride, hasMentorshipCrlField) : undefined,
     sourceOrderId: matchingOrder._id,
     choiceFillingLocked: matchingOrder.choiceFillingLocked === true,
   };

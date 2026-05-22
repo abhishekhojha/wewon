@@ -9,6 +9,7 @@ export interface ToolAutoFillData {
   gender?: string;
   category?: string;
   homeState?: string;
+  jeeAdvancedRank?: number;
 }
 
 export interface ChoiceFillingProduct {

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Loader2, Lock } from "lucide-react";
+import { Loader2, Lock, LockOpen } from "lucide-react";
 import GoogleAds from "../sections/GoogleAds";
 import ChoiceFillingResults from "./ChoiceFillingResults";
 import {
@@ -90,6 +90,31 @@ const mergePrefillIntoForm = (
   };
 };
 
+const isValidRank = (val: any): boolean => {
+  if (val === undefined || val === null) return false;
+  if (typeof val === "number") return val > 0;
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (!trimmed) return false;
+    const num = Number(trimmed);
+    return !isNaN(num) && num > 0;
+  }
+  return false;
+};
+
+const isValidCategoryRank = (val: any): boolean => {
+  if (val === undefined || val === null) return false;
+  if (typeof val === "number") return val > 0;
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (!trimmed) return false;
+    const normalized = trimmed.replace(/[Pp]$/, "");
+    const num = Number(normalized);
+    return !isNaN(num) && num > 0;
+  }
+  return false;
+};
+
 interface ChoiceFillingFormProps {
   toolKey?: string;
   toolDescription?: string;
@@ -135,8 +160,8 @@ export default function ChoiceFillingForm({
     productSlug,
   });
 
+  const [isDevelopmentMode, setIsDevelopmentMode] = useState(process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_API_URL === "https://wewon-backend-dev.vercel.app/");
   const isChoiceFillingLocked = isIIT ? iitChoiceFillingLocked : isOrderChoiceFillingLocked;
-  const isDevelopmentMode = process.env.NODE_ENV === "development";
   console.log("isDevelopmentMode", isDevelopmentMode);
   const [metadata, setMetadata] = useState<ChoiceFillingMetadata | null>(null);
   const [metaLoading, setMetaLoading] = useState(true);
@@ -185,10 +210,13 @@ export default function ChoiceFillingForm({
       setFormData((prev) => mergePrefillIntoForm(prev, orderPrefill, false, isJACDelhi, isIIT));
     }
 
-    if (isOrderRankLocked && !isDevelopmentMode && !isIIT) {
+    const hasPrefilledCrl = isValidRank(orderPrefill?.crlRank) || (isIIT && isValidRank(orderPrefill?.jeeAdvancedRank));
+    const hasPrefilledCategory = isValidCategoryRank(orderPrefill?.categoryRank);
+
+    if (isOrderRankLocked && hasPrefilledCrl && !isDevelopmentMode && !isIIT) {
       setRankLocked(true);
     }
-    if (isOrderCategoryRankLocked && !isDevelopmentMode && !isIIT) {
+    if (isOrderCategoryRankLocked && hasPrefilledCategory && !isDevelopmentMode && !isIIT) {
       setCategoryRankLocked(true);
     }
     if (orderRankLockMessage) {
@@ -200,6 +228,8 @@ export default function ChoiceFillingForm({
     orderPrefill,
     orderRankLockMessage,
     isDevelopmentMode,
+    isIIT,
+    isJACDelhi,
   ]);
 
   // Fetch metadata on mount
@@ -216,16 +246,20 @@ export default function ChoiceFillingForm({
           setFormData((prev) => mergePrefillIntoForm(prev, prefill, true, isJACDelhi, isIIT));
         }
 
-        const isMetadataCrlPrefilled = typeof prefill?.crlRank === "number";
-        const isMetadataCategoryPrefilled = prefill?.categoryRank !== undefined && prefill?.categoryRank !== null;
+        const isMetadataCrlPrefilled = isValidRank(prefill?.crlRank) || (isIIT && isValidRank(prefill?.jeeAdvancedRank));
+        const isMetadataCategoryPrefilled = isValidCategoryRank(prefill?.categoryRank);
+
+        const hasPrefilledCrl = isMetadataCrlPrefilled || isValidRank(orderPrefill?.crlRank) || (isIIT && isValidRank(orderPrefill?.jeeAdvancedRank));
+        const hasPrefilledCategory = isMetadataCategoryPrefilled || isValidCategoryRank(orderPrefill?.categoryRank);
+
         setRankLocked(
-          Boolean((data.rankLocked || isOrderRankLocked || isMetadataCrlPrefilled) && !isDevelopmentMode && !isIIT),
+          Boolean((data.rankLocked || isOrderRankLocked || isMetadataCrlPrefilled) && hasPrefilledCrl && !isDevelopmentMode && !isIIT),
         );
         setCategoryRankLocked(
           Boolean(
             (data.rankLocked ||
               isOrderCategoryRankLocked ||
-              isMetadataCategoryPrefilled) && !isDevelopmentMode && !isIIT,
+              isMetadataCategoryPrefilled) && hasPrefilledCategory && !isDevelopmentMode && !isIIT,
           ),
         );
         if (data.lockMessage && !isOrderRankLocked) {
@@ -485,8 +519,12 @@ export default function ChoiceFillingForm({
       setLastRequest(payload);
 
       if (response.rankLocked && !isDevelopmentMode) {
-        setRankLocked(true);
-        setCategoryRankLocked(true);
+        if (isValidRank(formData.crlRank) || (isIIT && isValidRank(formData.crlRank))) {
+          setRankLocked(true);
+        }
+        if (isValidCategoryRank(formData.categoryRank)) {
+          setCategoryRankLocked(true);
+        }
       }
       if (response.lockMessage) {
         setRankLockMessage(response.lockMessage);
@@ -496,10 +534,10 @@ export default function ChoiceFillingForm({
       const prefill = response.prefill;
       if (prefill) {
         setFormData((prev) => mergePrefillIntoForm(prev, prefill, false, isJACDelhi, isIIT));
-        if (typeof prefill.crlRank === "number" && !isDevelopmentMode) {
+        if (isValidRank(prefill.crlRank) && !isDevelopmentMode) {
           setRankLocked(true);
         }
-        if (typeof prefill.categoryRank === "number" && !isDevelopmentMode) {
+        if (isValidCategoryRank(prefill.categoryRank) && !isDevelopmentMode) {
           setCategoryRankLocked(true);
         }
       }
@@ -600,7 +638,20 @@ export default function ChoiceFillingForm({
 
         {/* Right Column: Form */}
         <div className="bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-6 md:p-8 relative">
-          {/* Lock overlay */}
+          {/* rank lock toggle button for development */}
+            {(process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_API_URL === "https://wewon-backend-dev.vercel.app/") && (
+          <button
+              className="absolute top-3 right-3 rounded-full p-2 hover:text-[var(--primary)] hover:bg-[var(--muted-text)/10] transition-colors"
+            onClick={() => {
+              setIsDevelopmentMode(!isDevelopmentMode);
+            }}
+          >
+            {isDevelopmentMode ? <Lock className="mr-2 h-4 w-4 text-red-500"/> : <LockOpen className="mr-2 h-4 w-4 text-green-500"/>}
+          </button>
+        )}
+
+          
+          {/* Lock overlay */}       
           {isChoiceFillingLocked && (
             <div className="absolute inset-0 z-10 rounded-lg sm:rounded-xl bg-white/80 backdrop-blur-[3px] flex flex-col items-center justify-center gap-4 border-2 border-orange-200">
               <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center shadow-md animate-pulse">
