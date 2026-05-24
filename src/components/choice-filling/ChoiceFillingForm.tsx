@@ -135,6 +135,13 @@ interface ChoiceFillingFormProps {
   productId?: string;
   productSlug?: string;
   capsule?: string;
+  labels?: {
+    heading: string;
+    subHeading: string;
+    formHeading: string;
+    capsule: string;
+    colleges: string[];
+  };
 }
 
 export default function ChoiceFillingForm({
@@ -144,6 +151,7 @@ export default function ChoiceFillingForm({
   productId,
   productSlug,
   capsule,
+  labels,
 }: ChoiceFillingFormProps) {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const user = useAppSelector(selectUser);
@@ -1535,6 +1543,7 @@ export default function ChoiceFillingForm({
             results={results}
             requestData={lastRequest}
             toolKey={toolKey}
+            labels={labels}
           />
         )}
       </div>

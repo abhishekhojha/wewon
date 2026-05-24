@@ -25,6 +25,13 @@ interface ChoiceFillingResultsProps {
   results: ChoiceFillingResponse;
   requestData: ChoiceFillingRequest;
   toolKey?: string;
+  labels?: {
+    heading: string;
+    subHeading: string;
+    formHeading: string;
+    capsule: string;
+    colleges: string[];
+  };
 }
 
 const hasValue = (value: unknown): boolean => {
@@ -53,6 +60,7 @@ export default function ChoiceFillingResults({
   results,
   requestData,
   toolKey,
+  labels,
 }: ChoiceFillingResultsProps) {
   const [showAll, setShowAll] = useState(false);
   const user = useAppSelector(selectUser);
@@ -130,7 +138,7 @@ export default function ChoiceFillingResults({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.xlsx`;
+      a.download = `Personalised_${labels?.colleges?.join("_")}_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf` || `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -150,7 +158,7 @@ export default function ChoiceFillingResults({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf`;
+      a.download = `Personalised_${labels?.colleges?.join("_")}_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf` || `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
