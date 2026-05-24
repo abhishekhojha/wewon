@@ -195,7 +195,7 @@ export default function ChoiceFillingResults({
       {results.disclaimer && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4">
           <p className="text-xs sm:text-sm text-amber-800">
-            <strong>Disclaimer:</strong> {results.disclaimer}
+            <strong>Disclaimer:</strong> Please watch the Choice Filling video carefully and fill all relevant choices wisely, as choice filling cannot be modified in later rounds. For any doubt or support, please contact your mentor.
           </p>
         </div>
       )}
