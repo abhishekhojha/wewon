@@ -95,14 +95,32 @@ export default function ChoiceFillingResults({
       ? results.user.includedStates
       : normalizeToList(requestData.includedStates);
   const showIncludedStates = toolKey !== "iit";
-
+  
   const summaryItems = [
     { label: "Name", value: results.user?.name },
     {
       label: "CRL Rank",
-      value: hasValue(results.user?.crlRank)
-        ? results.user.crlRank?.toLocaleString()
-        : undefined,
+      value: (() => {
+        const val = hasValue(results.user?.crlRank)
+          ? results.user.crlRank
+          : hasValue(requestData.crlRank)
+            ? requestData.crlRank
+            : undefined;
+        if (val === undefined || val === null) return undefined;
+        return typeof val === "number" ? val.toLocaleString() : val;
+      })(),
+    },
+    {
+      label: "Category Rank",
+      value: (() => {
+        const val = hasValue(results.user?.categoryRank)
+          ? results.user.categoryRank
+          : hasValue(requestData.categoryRank)
+            ? requestData.categoryRank
+            : undefined;
+        if (val === undefined || val === null) return undefined;
+        return typeof val === "number" ? val.toLocaleString() : val;
+      })(),
     },
     { label: "Category", value: results.user?.category },
     {
