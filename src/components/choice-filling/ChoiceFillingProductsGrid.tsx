@@ -18,6 +18,19 @@ import { getChoiceFillingPurchaseDetails } from "@/utils/checkChoiceFillingPurch
 const IIT_CHOICE_FILLING_SLUG = "iit";
 const JEE_MAIN_CHOICE_FILLING_SLUG = "jee-main";
 
+const isYouTubeLink = (url: string): boolean => {
+  if (!url) return false;
+  return url.includes("youtube.com") || url.includes("youtu.be");
+};
+
+const getYouTubeEmbedUrl = (url: string): string | null => {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  const videoId = (match && match[2].length === 11) ? match[2] : null;
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+};
+
 interface ChoiceFillingProductsGridProps {
   onlyPurchased?: boolean;
   tools?: string[];
@@ -199,13 +212,23 @@ export default function ChoiceFillingProductsGrid({
 
             <div className="relative w-full aspect-video overflow-hidden">
               {product.thumbnail ? (
-                <Image
-                  src={product.thumbnail}
-                  alt={product.title}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
+                isYouTubeLink(product.thumbnail) ? (
+                  <iframe
+                    className="absolute inset-0 w-full h-full border-0"
+                    src={getYouTubeEmbedUrl(product.thumbnail) || ""}
+                    title={product.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <Image
+                    src={product.thumbnail}
+                    alt={product.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                )
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-[#0f3a67] to-[#1a5490]" />
               )}

@@ -115,6 +115,19 @@ const isValidCategoryRank = (val: any): boolean => {
   return false;
 };
 
+const isYouTubeLink = (url: string): boolean => {
+  if (!url) return false;
+  return url.includes("youtube.com") || url.includes("youtu.be");
+};
+
+const getYouTubeEmbedUrl = (url: string): string | null => {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  const videoId = (match && match[2].length === 11) ? match[2] : null;
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+};
+
 interface ChoiceFillingFormProps {
   toolKey?: string;
   toolDescription?: string;
@@ -595,15 +608,27 @@ export default function ChoiceFillingForm({
         <div className="flex flex-col space-y-3 sm:space-y-6">
           {product?.thumbnail && (
             <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg mb-4 sm:mb-6">
-              <Image
-                src={product.thumbnail}
-                alt={product.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              {isYouTubeLink(product.thumbnail) ? (
+                <iframe
+                  className="absolute inset-0 w-full h-full border-0"
+                  src={getYouTubeEmbedUrl(product.thumbnail) || ""}
+                  title={product.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <>
+                  <Image
+                    src={product.thumbnail}
+                    alt={product.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    priority
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                </>
+              )}
             </div>
           )}
           <div className="p-3 sm:p-6 bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-sm">
