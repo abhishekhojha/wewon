@@ -156,7 +156,7 @@ export default function ChoiceFillingResults({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Personalised_${labels?.colleges?.join("_")}_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf` || `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf`;
+      a.download = `Personalised_${labels?.colleges?.join("_")}_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.xlsx` || `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
