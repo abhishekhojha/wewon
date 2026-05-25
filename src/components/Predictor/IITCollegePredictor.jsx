@@ -284,12 +284,17 @@ export default function IITCollegePredictor() {
         branchGroup: formData.branchGroup.length > 0 ? formData.branchGroup : undefined,
       };
 
+      const rawCategoryRank = formData.jeeAdvancedCategoryRank ? String(formData.jeeAdvancedCategoryRank) : "";
+      const categoryRankVal = rawCategoryRank
+        ? (rawCategoryRank.includes('P') ? rawCategoryRank : Number(rawCategoryRank))
+        : 1;
+
       if (isMentorship) {
         payload.jeeAdvancedRank = Number(formData.jeeAdvancedRank || 1);
-        payload.jeeAdvancedCategoryRank = Number(formData.jeeAdvancedCategoryRank || 1);
+        payload.jeeAdvancedCategoryRank = categoryRankVal;
       } else {
         payload.crlRank = Number(formData.jeeAdvancedRank || 1);
-        payload.categoryRank = Number(formData.jeeAdvancedCategoryRank || 1);
+        payload.categoryRank = categoryRankVal;
       }
 
       console.log("Sending payload:", payload);
