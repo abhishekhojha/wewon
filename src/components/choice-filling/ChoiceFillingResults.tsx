@@ -25,6 +25,13 @@ interface ChoiceFillingResultsProps {
   results: ChoiceFillingResponse;
   requestData: ChoiceFillingRequest;
   toolKey?: string;
+  labels?: {
+    heading: string;
+    subHeading: string;
+    formHeading: string;
+    capsule: string;
+    colleges: string[];
+  };
 }
 
 const hasValue = (value: unknown): boolean => {
@@ -53,6 +60,7 @@ export default function ChoiceFillingResults({
   results,
   requestData,
   toolKey,
+  labels,
 }: ChoiceFillingResultsProps) {
   const [showAll, setShowAll] = useState(false);
   const user = useAppSelector(selectUser);
@@ -87,14 +95,32 @@ export default function ChoiceFillingResults({
       ? results.user.includedStates
       : normalizeToList(requestData.includedStates);
   const showIncludedStates = toolKey !== "iit";
-
+  
   const summaryItems = [
     { label: "Name", value: results.user?.name },
     {
       label: "CRL Rank",
-      value: hasValue(results.user?.crlRank)
-        ? results.user.crlRank?.toLocaleString()
-        : undefined,
+      value: (() => {
+        const val = hasValue(results.user?.crlRank)
+          ? results.user.crlRank
+          : hasValue(requestData.crlRank)
+            ? requestData.crlRank
+            : undefined;
+        if (val === undefined || val === null) return undefined;
+        return typeof val === "number" ? val.toLocaleString() : val;
+      })(),
+    },
+    {
+      label: "Category Rank",
+      value: (() => {
+        const val = hasValue(results.user?.categoryRank)
+          ? results.user.categoryRank
+          : hasValue(requestData.categoryRank)
+            ? requestData.categoryRank
+            : undefined;
+        if (val === undefined || val === null) return undefined;
+        return typeof val === "number" ? val.toLocaleString() : val;
+      })(),
     },
     { label: "Category", value: results.user?.category },
     {
@@ -113,7 +139,7 @@ export default function ChoiceFillingResults({
     { label: "Sub-Category", value: results.user?.subCategory },
     {
       label: "Search Rank",
-      value: hasValue(results.searchRank)
+      value: !isStudent && hasValue(results.searchRank)
         ? results.searchRank?.toLocaleString()
         : undefined,
     },
@@ -130,7 +156,7 @@ export default function ChoiceFillingResults({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.xlsx`;
+      a.download = `Personalised_${labels?.colleges?.join("_")}_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.xlsx` || `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -150,7 +176,7 @@ export default function ChoiceFillingResults({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf`;
+      a.download = `Personalised_${labels?.colleges?.join("_")}_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf` || `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -195,7 +221,7 @@ export default function ChoiceFillingResults({
       {results.disclaimer && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4">
           <p className="text-xs sm:text-sm text-amber-800">
-            <strong>Disclaimer:</strong> {results.disclaimer}
+            <strong>Disclaimer:</strong> Please watch the Choice Filling video carefully and fill all relevant choices wisely, as choice filling cannot be modified in later rounds. For any doubt or support, please contact your mentor.
           </p>
         </div>
       )}

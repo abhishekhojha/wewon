@@ -17,6 +17,15 @@ import {
 //   description:
 //     "View detailed information about choice-filling products before using the tool.",
 // };
+interface Labels {
+  [slug: string]: {
+    heading: string;
+    subHeading: string;
+    formHeading: string;
+    capsule: string;
+    colleges: string[];
+  }
+}
 export default function ChoiceFillingProductDetailPage() {
   const params = useParams<{ slug: string }>();
   const slug = useMemo(() => params.slug as string, [params.slug]);
@@ -75,9 +84,10 @@ export default function ChoiceFillingProductDetailPage() {
 
   const resolvedToolKey = resolveChoiceFillingToolKey(product);
   const toolLabel =  product.title || "Choice Filling";
-  const labels ={
-    "iit" : {heading : "Personalised IIT Choice Filling" ,subHeading : "", formHeading : "Generate a personalised IIT choice list based on your rank", capsule :"IIT"},
-    "jee-main" : {heading : "Personalised NIT, IIIT & GFTI Choice Filling" ,subHeading : "", formHeading : "Generate a personalised JOSAA choice list based on your rank", capsule : "NIT · IIIT · GFTI"}
+  const labels : Labels ={
+    "iit" : {heading : "Personalised IIT Choice Filling" ,subHeading : "", formHeading : "Generate a personalised IIT choice list based on your rank", capsule :"IIT" , colleges : ["IIT"]},
+    "jee-main" : {heading : "Personalised NIT, IIIT & GFTI Choice Filling" ,subHeading : "", formHeading : "Generate a personalised JOSAA choice list based on your rank", capsule : "NIT • IIIT • GFTI" , colleges : ["NIT","IIIT","GFTI"]},
+    "jac-delhi" : {heading : "Personalised DTU, NSUT, IIIT-D & IGDTUW Choice Filling" ,subHeading : "", formHeading : " Generate a personalised JAC Delhi choice list based on your rank", capsule : "DTU • NSUT • IIIT-D • IGDTUW" , colleges : ["DTU","NSUT","IIIT-D","IGDTUW"]}
   }
   const toolDescription =  labels[resolvedToolKey as keyof typeof labels]?.formHeading || resolvedToolKey.toUpperCase() + " Choice Filling";
   const toolCapsule =  labels[resolvedToolKey as keyof typeof labels]?.capsule || "Powered by real cutoff data";
@@ -100,6 +110,7 @@ export default function ChoiceFillingProductDetailPage() {
         <ChoiceFillingForm
           toolKey={resolvedToolKey}
           toolDescription={toolDescription}
+          labels={labels[resolvedToolKey as keyof typeof labels]}
           capsule={toolCapsule}
           product={product}
           productId={product._id}

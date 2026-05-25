@@ -41,11 +41,8 @@ export function useJeeAdvancedGates(
   const predictorLockedSlugs = lockJeeTools ? JEE_MENTORSHIP_SLUGS : [];
 
   // 6. Output structures for choice filling
-  // Combine with any general order-level locks
-  const isAnyToolLockedViaOrder = userOrders.some(
-    (o) => o.choiceFillingLocked === true
-  );
-  const finalChoiceFillingLocked = choiceFillingLocked || isAnyToolLockedViaOrder;
+  // IIT Choice is locked/unlocked based on jeeAdvanceAccess (access.choiceFillingLocked) only
+  const finalChoiceFillingLocked = choiceFillingLocked;
 
   return {
     hasMentorshipOrder,
@@ -54,7 +51,6 @@ export function useJeeAdvancedGates(
     predictorLockedSlugs,
     iitChoiceFillingHidden: choiceFillingHidden,
     iitChoiceFillingLocked: finalChoiceFillingLocked,
-    jeeMainChoiceFillingHidden: choiceFillingHidden,
-    jeeMainChoiceFillingLocked: finalChoiceFillingLocked,
+    jeeAdvanceAccess: access,
   };
 }

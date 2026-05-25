@@ -18,6 +18,19 @@ import { getChoiceFillingPurchaseDetails } from "@/utils/checkChoiceFillingPurch
 const IIT_CHOICE_FILLING_SLUG = "iit";
 const JEE_MAIN_CHOICE_FILLING_SLUG = "jee-main";
 
+const isYouTubeLink = (url: string): boolean => {
+  if (!url) return false;
+  return url.includes("youtube.com") || url.includes("youtu.be");
+};
+
+const getYouTubeEmbedUrl = (url: string): string | null => {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  const videoId = (match && match[2].length === 11) ? match[2] : null;
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+};
+
 interface ChoiceFillingProductsGridProps {
   onlyPurchased?: boolean;
   tools?: string[];
@@ -32,14 +45,6 @@ interface ChoiceFillingProductsGridProps {
    * Takes precedence over `iitLocked`.
    */
   iitHidden?: boolean;
-  /**
-   * When true, the JEE Main choice-filling card is rendered with a lock overlay.
-   */
-  jeeMainLocked?: boolean;
-  /**
-   * When true, the JEE Main choice-filling card is completely hidden.
-   */
-  jeeMainHidden?: boolean;
   lockMessage?: string;
   accessLoading?: boolean;
 }
@@ -49,8 +54,6 @@ export default function ChoiceFillingProductsGrid({
   tools,
   iitLocked = false,
   iitHidden = false,
-  jeeMainLocked = false,
-  jeeMainHidden = false,
   lockMessage = "Please Complete Mentorship Task",
   accessLoading = false,
 }: ChoiceFillingProductsGridProps) {
@@ -156,12 +159,6 @@ export default function ChoiceFillingProductsGrid({
     );
   }
 
-  if (jeeMainHidden) {
-    displayProducts = displayProducts.filter(
-      (p) => p.slug !== JEE_MAIN_CHOICE_FILLING_SLUG
-    );
-  }
-
   if (displayProducts.length === 0) {
     return (
       <div className="text-center py-16 w-full col-span-full">
@@ -183,10 +180,13 @@ export default function ChoiceFillingProductsGrid({
         const isJeeMainProduct = product.slug === JEE_MAIN_CHOICE_FILLING_SLUG;
         
         // Check if this specific product is locked via orders
-        const matchingOrder = userOrders.find(o => o.product?.slug === product.slug);
+        const { matchingOrder } = getChoiceFillingPurchaseDetails(
+          userOrders,
+          product.slug
+        );
         const isOrderLocked = matchingOrder?.choiceFillingLocked === true;
         
-        const isLocked = (isIitProduct && iitLocked) || (isJeeMainProduct && jeeMainLocked) || isOrderLocked;
+        const isLocked = isIitProduct ? iitLocked : isOrderLocked;
 
         return (
           <div
@@ -212,13 +212,23 @@ export default function ChoiceFillingProductsGrid({
 
             <div className="relative w-full aspect-video overflow-hidden">
               {product.thumbnail ? (
-                <Image
-                  src={product.thumbnail}
-                  alt={product.title}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
+                isYouTubeLink(product.thumbnail) ? (
+                  <iframe
+                    className="absolute inset-0 w-full h-full border-0"
+                    src={getYouTubeEmbedUrl(product.thumbnail) || ""}
+                    title={product.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <Image
+                    src={product.thumbnail}
+                    alt={product.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                )
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-[#0f3a67] to-[#1a5490]" />
               )}
