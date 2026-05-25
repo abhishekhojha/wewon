@@ -10,6 +10,7 @@ export interface ToolAutoFillData {
   category?: string;
   homeState?: string;
   jeeAdvancedRank?: number;
+  jeeAdvancedCategoryRank?: number;
 }
 
 export interface ChoiceFillingProduct {

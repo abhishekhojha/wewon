@@ -46,6 +46,7 @@ const mergePrefillIntoForm = (
     name?: string;
     crlRank?: number;
     jeeAdvancedRank?: number;
+    jeeAdvancedCategoryRank?: number;
     categoryRank?: number | string;
     gender?: string;
     category?: string;
@@ -64,15 +65,19 @@ const mergePrefillIntoForm = (
         ? prefill.name
         : prev.name,
     crlRank:
-      isIIT && typeof prefill.jeeAdvancedRank === "number" && (!preserveExistingValues || !prev.crlRank)
-        ? String(prefill.jeeAdvancedRank)
-        : typeof prefill.crlRank === "number" &&
-          (!preserveExistingValues || !prev.crlRank)
+      isIIT
+        ? typeof prefill.jeeAdvancedRank === "number" && (!preserveExistingValues || !prev.crlRank)
+          ? String(prefill.jeeAdvancedRank)
+          : prev.crlRank
+        : typeof prefill.crlRank === "number" && (!preserveExistingValues || !prev.crlRank)
         ? String(prefill.crlRank)
         : prev.crlRank,
     categoryRank:
-      prefill.categoryRank !== undefined &&
-      (!preserveExistingValues || !prev.categoryRank)
+      isIIT
+        ? typeof prefill.jeeAdvancedCategoryRank === "number" && (!preserveExistingValues || !prev.categoryRank)
+          ? String(prefill.jeeAdvancedCategoryRank)
+          : prev.categoryRank
+        : prefill.categoryRank !== undefined && (!preserveExistingValues || !prev.categoryRank)
         ? String(prefill.categoryRank)
         : prev.categoryRank,
     gender:
@@ -165,6 +170,7 @@ export default function ChoiceFillingForm({
   const {
     iitChoiceFillingLocked,
     accessLoading: gatesLoading,
+    jeeAdvanceAccess,
   } = useJeeAdvancedGates(
     isAuthenticated,
     userOrders
@@ -228,11 +234,21 @@ export default function ChoiceFillingForm({
 
   useEffect(() => {
     if (orderPrefill) {
-      setFormData((prev) => mergePrefillIntoForm(prev, orderPrefill, false, isJACDelhi, isIIT));
+      const mergedPrefill = {
+        ...orderPrefill,
+        ...(isIIT && jeeAdvanceAccess && typeof jeeAdvanceAccess.jeeAdvancedRank === "number"
+          ? { jeeAdvancedRank: jeeAdvanceAccess.jeeAdvancedRank }
+          : {}),
+      };
+      setFormData((prev) => mergePrefillIntoForm(prev, mergedPrefill, false, isJACDelhi, isIIT));
     }
 
-    const hasPrefilledCrl = isValidRank(orderPrefill?.crlRank) || (isIIT && isValidRank(orderPrefill?.jeeAdvancedRank));
-    const hasPrefilledCategory = isValidCategoryRank(orderPrefill?.categoryRank);
+    const hasPrefilledCrl = isIIT
+      ? (isValidRank(orderPrefill?.jeeAdvancedRank) || isValidRank(jeeAdvanceAccess?.jeeAdvancedRank))
+      : isValidRank(orderPrefill?.crlRank);
+    const hasPrefilledCategory = isIIT
+      ? isValidCategoryRank(orderPrefill?.jeeAdvancedCategoryRank)
+      : isValidCategoryRank(orderPrefill?.categoryRank);
 
     if (isOrderRankLocked && hasPrefilledCrl && !isDevelopmentMode && !isIIT) {
       setRankLocked(true);
@@ -251,7 +267,23 @@ export default function ChoiceFillingForm({
     isDevelopmentMode,
     isIIT,
     isJACDelhi,
+    jeeAdvanceAccess,
   ]);
+
+  // Prefill CRL Rank for IIT using jeeAdvancedRank from jeeAdvanceAccess
+  useEffect(() => {
+    if (isIIT && jeeAdvanceAccess && typeof jeeAdvanceAccess.jeeAdvancedRank === "number") {
+      setFormData((prev) => {
+        if (!prev.crlRank) {
+          return {
+            ...prev,
+            crlRank: String(jeeAdvanceAccess.jeeAdvancedRank),
+          };
+        }
+        return prev;
+      });
+    }
+  }, [isIIT, jeeAdvanceAccess]);
 
   // Fetch metadata on mount
   useEffect(() => {
@@ -264,14 +296,32 @@ export default function ChoiceFillingForm({
         const prefill = data.prefill;
         
         if (prefill) {
-          setFormData((prev) => mergePrefillIntoForm(prev, prefill, true, isJACDelhi, isIIT));
+          const mergedPrefill = {
+            ...prefill,
+            ...(isIIT && jeeAdvanceAccess && typeof jeeAdvanceAccess.jeeAdvancedRank === "number"
+              ? { jeeAdvancedRank: jeeAdvanceAccess.jeeAdvancedRank }
+              : {}),
+          };
+          setFormData((prev) => mergePrefillIntoForm(prev, mergedPrefill, true, isJACDelhi, isIIT));
         }
 
-        const isMetadataCrlPrefilled = isValidRank(prefill?.crlRank) || (isIIT && isValidRank(prefill?.jeeAdvancedRank));
-        const isMetadataCategoryPrefilled = isValidCategoryRank(prefill?.categoryRank);
+        const isMetadataCrlPrefilled = isIIT
+          ? (isValidRank(prefill?.jeeAdvancedRank) || isValidRank(jeeAdvanceAccess?.jeeAdvancedRank))
+          : isValidRank(prefill?.crlRank);
+        const isMetadataCategoryPrefilled = isIIT
+          ? isValidCategoryRank(prefill?.jeeAdvancedCategoryRank)
+          : isValidCategoryRank(prefill?.categoryRank);
 
-        const hasPrefilledCrl = isMetadataCrlPrefilled || isValidRank(orderPrefill?.crlRank) || (isIIT && isValidRank(orderPrefill?.jeeAdvancedRank));
-        const hasPrefilledCategory = isMetadataCategoryPrefilled || isValidCategoryRank(orderPrefill?.categoryRank);
+        const hasPrefilledCrl =
+          isMetadataCrlPrefilled ||
+          (isIIT
+            ? (isValidRank(orderPrefill?.jeeAdvancedRank) || isValidRank(jeeAdvanceAccess?.jeeAdvancedRank))
+            : isValidRank(orderPrefill?.crlRank));
+        const hasPrefilledCategory =
+          isMetadataCategoryPrefilled ||
+          (isIIT
+            ? isValidCategoryRank(orderPrefill?.jeeAdvancedCategoryRank)
+            : isValidCategoryRank(orderPrefill?.categoryRank));
 
         setRankLocked(
           Boolean((data.rankLocked || isOrderRankLocked || isMetadataCrlPrefilled) && hasPrefilledCrl && !isDevelopmentMode && !isIIT),

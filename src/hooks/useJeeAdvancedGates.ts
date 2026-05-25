@@ -51,5 +51,6 @@ export function useJeeAdvancedGates(
     predictorLockedSlugs,
     iitChoiceFillingHidden: choiceFillingHidden,
     iitChoiceFillingLocked: finalChoiceFillingLocked,
+    jeeAdvanceAccess: access,
   };
 }
