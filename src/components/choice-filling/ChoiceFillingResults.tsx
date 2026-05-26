@@ -202,33 +202,35 @@ export default function ChoiceFillingResults({
   return (
     <div className="mt-8 sm:mt-12 space-y-6">
       {/* User Summary Card */}
-      <div className="bg-gradient-to-r from-[#0e3a66] to-[#1a5490] rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-lg">
-        <h3 className="text-lg sm:text-xl font-bold mb-4">
-          Choice List Summary
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-          {summaryItems.map((item) => (
-            <div key={item.label}>
-              <p className="text-white/70 text-xs sm:text-sm">{item.label}</p>
-              <p className="font-semibold text-sm sm:text-base">
-                {String(item.value)}
+      {hasChoices && (
+        <div className="bg-gradient-to-r from-[#0e3a66] to-[#1a5490] rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-lg">
+          <h3 className="text-lg sm:text-xl font-bold mb-4">
+            Choice List Summary
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            {summaryItems.map((item) => (
+              <div key={item.label}>
+                <p className="text-white/70 text-xs sm:text-sm">{item.label}</p>
+                <p className="font-semibold text-sm sm:text-base">
+                  {String(item.value)}
+                </p>
+              </div>
+            ))}
+          </div>
+          {!isStudent &&(hasValue(results.minRange) || hasValue(results.maxRange)) && (
+            <div className="mt-3 pt-3 border-t border-white/20">
+              <p className="text-white/70 text-xs sm:text-sm">
+                Rank Range:{" "}
+                {hasValue(results.minRange) ? results.minRange?.toLocaleString() : "-"}{" "}
+                –{" "}
+                {hasValue(results.maxRange) ? results.maxRange?.toLocaleString() : "-"}
               </p>
             </div>
-          ))}
+          )}
         </div>
-        {!isStudent &&(hasValue(results.minRange) || hasValue(results.maxRange)) && (
-          <div className="mt-3 pt-3 border-t border-white/20">
-            <p className="text-white/70 text-xs sm:text-sm">
-              Rank Range:{" "}
-              {hasValue(results.minRange) ? results.minRange?.toLocaleString() : "-"}{" "}
-              –{" "}
-              {hasValue(results.maxRange) ? results.maxRange?.toLocaleString() : "-"}
-            </p>
-          </div>
-        )}
-      </div>
+      )}
    {/* Disclaimer */}
-      {results.disclaimer && (
+      {hasChoices && results.disclaimer && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4">
           <p className="text-xs sm:text-sm text-amber-800">
             <strong>Disclaimer:</strong> Please watch the Choice Filling video carefully and fill all relevant choices wisely, as choice filling cannot be modified in later rounds. For any doubt or support, please contact your mentor.
@@ -237,37 +239,39 @@ export default function ChoiceFillingResults({
       )}
 
       {!hasChoices ? (
-        isPreparatoryRank ? (
-          <div className="p-6 sm:p-8 text-center bg-gray-50 rounded-lg border border-[var(--border)]">
-            <div className="space-y-3">
-              <p className="text-base sm:text-lg font-bold text-[var(--foreground)]">
-                This is a Preparatory Rank under JEE Advanced.
-              </p>
-              <p className="text-xs sm:text-sm text-[var(--muted-text)]">
-                Based on last year's JEE Advanced counselling data, no
-                seat allotment was recorded for this rank.
-              </p>
-              <p className="text-xs sm:text-sm text-[var(--muted-text)]">
-                Therefore, no colleges are being displayed for this
-                category.
-              </p>
+        <div className="bg-white border border-[var(--border)] rounded-xl shadow-lg p-3 sm:p-6">
+          {isPreparatoryRank ? (
+            <div className="p-6 sm:p-8 text-center bg-gray-50 rounded-lg border border-[var(--border)]">
+              <div className="space-y-3">
+                <p className="text-base sm:text-lg font-bold text-[var(--foreground)]">
+                  This is a Preparatory Rank under JEE Advanced.
+                </p>
+                <p className="text-xs sm:text-sm text-[var(--muted-text)]">
+                  Based on last year's JEE Advanced counselling data, no
+                  seat allotment was recorded for this rank.
+                </p>
+                <p className="text-xs sm:text-sm text-[var(--muted-text)]">
+                  Therefore, no colleges are being displayed for this
+                  category.
+                </p>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="p-6 sm:p-8 text-center bg-gray-50 rounded-lg border border-[var(--border)]">
-            <div className="space-y-3">
-              <p className="text-base sm:text-lg font-bold text-[var(--foreground)]">
-                No Choices Available
-              </p>
-              <p className="text-xs sm:text-sm text-[var(--muted-text)]">
-                Based on your rank and preferences, no choices are available.
-              </p>
-              <p className="text-xs sm:text-sm text-[var(--muted-text)]">
-                Please check your rank details or adjust your selected filters/branches.
-              </p>
+          ) : (
+            <div className="p-6 sm:p-8 text-center bg-gray-50 rounded-lg border border-[var(--border)]">
+              <div className="space-y-3">
+                <p className="text-base sm:text-lg font-bold text-[var(--foreground)]">
+                  No Choices Available
+                </p>
+                <p className="text-xs sm:text-sm text-[var(--muted-text)]">
+                  Based on your rank and preferences, no choices are available.
+                </p>
+                <p className="text-xs sm:text-sm text-[var(--muted-text)]">
+                  Please check your rank details or adjust your selected filters/branches.
+                </p>
+              </div>
             </div>
-          </div>
-        )
+          )}
+        </div>
       ) : (
         <>
           {/* Download Reminder */}
