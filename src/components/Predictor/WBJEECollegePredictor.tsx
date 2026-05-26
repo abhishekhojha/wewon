@@ -49,6 +49,7 @@ interface PredictionItem {
   closingRank: number;
   confidence: number;
   probability: string;
+  round: string;
 }
 
 interface PredictionResultsData {
@@ -548,6 +549,7 @@ export default function WBJEECollegePredictor() {
         closingRank: item.closing_rank || item.closingRank,
         confidence: item.confidence,
         probability: probability || item.probability || "High",
+        round: item.round,
       });
 
       let allPredictions: PredictionItem[] = [];
@@ -1080,7 +1082,7 @@ export default function WBJEECollegePredictor() {
             hideSeatType={true}
             hideOpeningRank={false}
             hideGender={true}
-            hideRound={true}
+            hideRound={false}
           />
         )}
       </div>

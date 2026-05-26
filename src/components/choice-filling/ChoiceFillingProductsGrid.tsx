@@ -31,6 +31,14 @@ const getYouTubeEmbedUrl = (url: string): string | null => {
   return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
 };
 
+const getYouTubeThumbnailUrl = (url: string): string | null => {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  const videoId = (match && match[2].length === 11) ? match[2] : null;
+  return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
+};
+
 interface ChoiceFillingProductsGridProps {
   onlyPurchased?: boolean;
   tools?: string[];
@@ -212,23 +220,17 @@ export default function ChoiceFillingProductsGrid({
 
             <div className="relative w-full aspect-video overflow-hidden">
               {product.thumbnail ? (
-                isYouTubeLink(product.thumbnail) ? (
-                  <iframe
-                    className="absolute inset-0 w-full h-full border-0"
-                    src={getYouTubeEmbedUrl(product.thumbnail) || ""}
-                    title={product.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                ) : (
-                  <Image
-                    src={product.thumbnail}
-                    alt={product.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                )
+                <Image
+                  src={
+                    isYouTubeLink(product.thumbnail)
+                      ? (getYouTubeThumbnailUrl(product.thumbnail) || product.thumbnail)
+                      : product.thumbnail
+                  }
+                  alt={product.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-[#0f3a67] to-[#1a5490]" />
               )}
