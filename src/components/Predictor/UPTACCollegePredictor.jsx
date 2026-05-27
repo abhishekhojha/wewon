@@ -86,6 +86,11 @@ export default function UPTACCollegePredictor() {
   useEffect(() => {
     if (!prefill) return;
 
+    let mappedCategory = prefill.category;
+    if (mappedCategory && mappedCategory.toUpperCase() === "OBC" ) {
+      mappedCategory = "BC";
+    }
+
     setFormData((prev) => ({
       ...prev,
       crlRank:
@@ -94,7 +99,7 @@ export default function UPTACCollegePredictor() {
         typeof prefill.categoryRank === "number"
           ? String(prefill.categoryRank)
           : prev.categoryRank,
-      category: prefill.category || prev.category,
+      category: mappedCategory || prev.category,
       gender: prefill.gender || prev.gender,
       homeState: prefill.homeState || prev.homeState,
     }));

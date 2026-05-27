@@ -87,7 +87,7 @@ export default function ChoiceFillingProductDetailPage() {
   const labels : Labels ={
     "iit" : {heading : "Personalised IIT Choice Filling" ,subHeading : "", formHeading : "Generate a personalised IIT choice list based on your rank", capsule :"IIT" , colleges : ["IIT"]},
     "jee-main" : {heading : "Personalised NIT, IIIT & GFTI Choice Filling" ,subHeading : "", formHeading : "Generate a personalised JOSAA choice list based on your rank", capsule : "NIT • IIIT • GFTI" , colleges : ["NIT","IIIT","GFTI"]},
-    "jac-delhi" : {heading : "Personalised DTU, NSUT, IIIT-D & IGDTUW Choice Filling" ,subHeading : "", formHeading : " Generate a personalised JAC Delhi choice list based on your rank", capsule : "DTU • NSUT • IIIT-D • IGDTUW" , colleges : ["DTU","NSUT","IIIT-D","IGDTUW"]}
+    "jac-delhi" : {heading : "Personalised DTU, NSUT, IIIT-D, DSEU & IGDTUW Choice Filling" ,subHeading : "", formHeading : " Generate a personalised JAC Delhi choice list based on your rank", capsule : "DTU • NSUT • IIIT-D • IGDTUW • DSEU" , colleges : ["DTU","NSUT","IIIT-D","IGDTUW","DSEU"]}
   }
   const toolDescription =  labels[resolvedToolKey as keyof typeof labels]?.formHeading || resolvedToolKey.toUpperCase() + " Choice Filling";
   const toolCapsule =  labels[resolvedToolKey as keyof typeof labels]?.capsule || "Powered by real cutoff data";
