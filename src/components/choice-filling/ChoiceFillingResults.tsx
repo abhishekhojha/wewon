@@ -64,7 +64,7 @@ export default function ChoiceFillingResults({
 }: ChoiceFillingResultsProps) {
   const [showAll, setShowAll] = useState(false);
   const user = useAppSelector(selectUser);
-  const isStudent = user?.userId?.role?.toLowerCase() === "student";
+  const isStudent = user?.userId?.role?.toLowerCase() === "student" || requestData.exportAs === "student";
   const [exportingExcel, setExportingExcel] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
 
@@ -166,7 +166,8 @@ export default function ChoiceFillingResults({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Personalised_${labels?.colleges?.join("_")}_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.xlsx` || `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.xlsx`;
+  
+      a.download = `Personalised_${ labels ? labels?.colleges?.join("_") :"" }_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.xlsx` || `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -186,7 +187,7 @@ export default function ChoiceFillingResults({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Personalised_${labels?.colleges?.join("_")}_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf` || `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf`;
+      a.download = `Personalised_${labels ? labels?.colleges?.join("_") : ""}_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf` || `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

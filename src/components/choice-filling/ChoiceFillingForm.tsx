@@ -163,6 +163,9 @@ export default function ChoiceFillingForm({
   const userOrders = useAppSelector(selectUserOrders);
   const router = useRouter();
 
+  const isStudent = user?.userId?.role?.toLowerCase() === "student";
+  const [exportAsStudent, setExportAsStudent] = useState(false);
+
   const isIIT = toolKey === "iit";
   const isUPTAC = toolKey === "uptac";
   const isJACDelhi = toolKey === "jac-delhi";
@@ -559,6 +562,10 @@ export default function ChoiceFillingForm({
         gender: formData.gender,
         category: formData.category,
       };
+
+      if (exportAsStudent && !isJACDelhi) {
+        payload.exportAs = "student";
+      }
 
       if (isJACDelhi) {
         payload.region = formData.region;
@@ -1563,6 +1570,23 @@ export default function ChoiceFillingForm({
                 </p>
               )}
             </div>
+
+            {/* Export as Student Toggle for Counsellors */}
+            {!isStudent && !isJACDelhi && (
+              <div className="pt-2">
+                <label className="flex items-center gap-2.5 px-3 py-2.5 border border-[var(--border)] rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer hover:bg-[var(--muted-background)]/50 bg-white">
+                  <input
+                    type="checkbox"
+                    checked={exportAsStudent}
+                    onChange={(e) => setExportAsStudent(e.target.checked)}
+                    className="w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)] cursor-pointer"
+                  />
+                  <span className="text-[var(--foreground)] select-none">
+                    Generate / Export choice list as student (Removes counsellor columns)
+                  </span>
+                </label>
+              </div>
+            )}
 
             {/* Submit Button */}
             <div className="pt-2 sm:pt-4">

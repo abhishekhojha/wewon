@@ -60,7 +60,7 @@ const getOrderTimestamp = (order: Order): number => {
 };
 
 const isCompletedOrder = (order: Order): boolean => {
-  const status = (order.status || order.paymentStatus || "").toLowerCase();
+  const status = (order.status ?? order.paymentStatus ?? "").toLowerCase();
   return status === "completed";
 };
 
@@ -164,7 +164,7 @@ export const resolveMentorshipToolPrefill = (
     matchingOrder = [...orders]
       .filter(isCompletedOrder)
       .filter((order) => {
-        const orderProductId = order.product?._id || order.productId;
+        const orderProductId = order.product?._id ?? order.productId;
         return orderProductId === params.productId;
       })
       .sort((a, b) => getOrderTimestamp(b) - getOrderTimestamp(a))[0];
@@ -198,7 +198,7 @@ export const resolveMentorshipToolPrefill = (
       "studentName",
       "candidateName",
     ]),
-    crlRank: crlRankFromOverride || isJeeAdvancePredictor ? pickNumberValue(formData, ["jeeadvancedrank", "crlRank", "crl_rank", "rank"]) :  crlRankFromForm,
+    crlRank: crlRankFromOverride ?? (isJeeAdvancePredictor ? pickNumberValue(formData, ["jeeadvancedrank", "crlRank", "crl_rank", "rank"]) : crlRankFromForm),
     categoryRank: categoryRankFromOverride ?? categoryRankFromForm,
     gender: pickTextValue(formData, ["gender", "sex"]),
     category: pickTextValue(formData, ["category", "studentCategory"]),
