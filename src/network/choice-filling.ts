@@ -97,6 +97,7 @@ export interface ChoiceFillingRequest {
   region?: string;
   instituteName?: string[];
   programName?: string[];
+  exportAs?: "student";
 }
 
 export interface ChoiceRow {
@@ -189,8 +190,9 @@ export const exportChoiceListExcel = async (
   data: ChoiceFillingRequest,
   toolKey: string = DEFAULT_CHOICE_FILLING_TOOL_KEY,
 ): Promise<Blob> => {
+  const queryParam = data.exportAs === "student" ? "?exportAs=student" : "";
   const response = await apiClient.post(
-    choiceFillingToolPath(toolKey, "export/excel"),
+    choiceFillingToolPath(toolKey, `export/excel${queryParam}`),
     data,
     { responseType: "blob" },
   );
@@ -201,8 +203,9 @@ export const exportChoiceListPDF = async (
   data: ChoiceFillingRequest,
   toolKey: string = DEFAULT_CHOICE_FILLING_TOOL_KEY,
 ): Promise<Blob> => {
+  const queryParam = data.exportAs === "student" ? "?exportAs=student" : "";
   const response = await apiClient.post(
-    choiceFillingToolPath(toolKey, "export/pdf"),
+    choiceFillingToolPath(toolKey, `export/pdf${queryParam}`),
     data,
     { responseType: "blob" },
   );
