@@ -223,6 +223,14 @@ export default function ChoiceFillingForm({
     null,
   );
   const [loading, setLoading] = useState(false);
+  const [useCompletePreference, setUseCompletePreference] = useState(false);
+  const [submittedToolKey, setSubmittedToolKey] = useState<string>(toolKey || "jee-main");
+
+  useEffect(() => {
+    if (toolKey) {
+      setSubmittedToolKey(toolKey);
+    }
+  }, [toolKey]);
   const [iitSearch, setIitSearch] = useState("");
   const [stateSearch, setStateSearch] = useState("");
   const [branchGroupSearch, setBranchGroupSearch] = useState("");
@@ -592,9 +600,14 @@ export default function ChoiceFillingForm({
 
       payload.branchGroup = formData.branchGroups.length > 0 ? formData.branchGroups : undefined;
 
-      const response = await generateChoiceList(payload, toolKey);
+      const effectiveToolKey = (useCompletePreference && toolKey === "jee-main")
+        ? "jee-main/complete-preference"
+        : (toolKey || "jee-main");
+
+      const response = await generateChoiceList(payload, effectiveToolKey);
       setResults(response);
       setLastRequest(payload);
+      setSubmittedToolKey(effectiveToolKey);
 
       if (response.rankLocked && !isDevelopmentMode) {
         if (isValidRank(formData.crlRank) || (isIIT && isValidRank(formData.crlRank))) {
@@ -876,12 +889,13 @@ export default function ChoiceFillingForm({
                 htmlFor="category"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Select Your Category
+                Select Your Category <span className="text-red-500">*</span>
               </label>
               <select
                 id="category"
                 value={formData.category}
                 onChange={handleChange}
+                required
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
                 {(
@@ -1220,11 +1234,12 @@ export default function ChoiceFillingForm({
                     htmlFor="homeState"
                     className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
                   >
-                    Select Your Home State
+                    Select Your Home State <span className="text-red-500">*</span>
                   </label>
                   <select
                     id="homeState"
                     value={formData.homeState}
+                    required
                     onChange={handleChange}
                     className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
                   >
@@ -1588,6 +1603,23 @@ export default function ChoiceFillingForm({
               </div>
             )}
 
+            {/* Complete Preference Toggle for Counsellors (JEE Main only) */}
+            {!isStudent && toolKey === "jee-main" && (
+              <div className="pt-2">
+                <label className="flex items-center gap-2.5 px-3 py-2.5 border border-[var(--border)] rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer hover:bg-[var(--muted-background)]/50 bg-white">
+                  <input
+                    type="checkbox"
+                    checked={useCompletePreference}
+                    onChange={(e) => setUseCompletePreference(e.target.checked)}
+                    className="w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)] cursor-pointer"
+                  />
+                  <span className="text-[var(--foreground)] select-none">
+                    Generate Complete Exhaustive List (Counsellor Mode - bypasses rank limits)
+                  </span>
+                </label>
+              </div>
+            )}
+
             {/* Submit Button */}
             <div className="pt-2 sm:pt-4">
               <button
@@ -1616,7 +1648,7 @@ export default function ChoiceFillingForm({
           <ChoiceFillingResults
             results={results}
             requestData={lastRequest}
-            toolKey={toolKey}
+            toolKey={submittedToolKey}
             labels={labels}
           />
         )}
