@@ -135,11 +135,11 @@ export default function Home() {
         <HeroSection />
       </div>
       <CountDown />
-      <CollegesSlider />
       <div className="container mx-auto">
         <FeatureCounselling />
         <FeaturePredictor />
       </div>
+      <CollegesSlider />
       <div className="container mx-auto">
         <FeaturesSection />
         <WhyChooseUs />
