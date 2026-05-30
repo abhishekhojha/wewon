@@ -10,8 +10,23 @@ import { Timer } from "lucide-react";
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 const COUNTDOWN_CONFIG = {
-    targetDate: new Date("2026-06-01T00:00:01+05:30"), // IST deadline
+    targets: [
+        new Date("2026-06-01T00:00:01+05:30"), // June 1st deadline
+        new Date("2026-07-01T00:00:01+05:30"), // July 1st deadline
+        new Date("2026-08-01T00:00:01+05:30"), // August 1st deadline
+    ],
 };
+
+function getTargetDate(): Date {
+    const now = Date.now();
+    for (const target of COUNTDOWN_CONFIG.targets) {
+        if (target.getTime() > now) {
+            return target;
+        }
+    }
+    // Default to the last target if all are in the past
+    return COUNTDOWN_CONFIG.targets[COUNTDOWN_CONFIG.targets.length - 1];
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TimeLeft {
@@ -23,7 +38,8 @@ interface TimeLeft {
 }
 
 // ─── Compute remaining time ───────────────────────────────────────────────────
-function computeTimeLeft(target: Date): TimeLeft {
+function computeTimeLeft(): TimeLeft {
+    const target = getTargetDate();
     const diff = Math.max(0, target.getTime() - Date.now());
     const total = Math.floor(diff / 1000);
     const days = Math.floor(total / 86400);
@@ -35,17 +51,17 @@ function computeTimeLeft(target: Date): TimeLeft {
 }
 
 // ─── Hook: countdown ticker ───────────────────────────────────────────────────
-function useCountdown(target: Date) {
-    const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => computeTimeLeft(target));
+function useCountdown() {
+    const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => computeTimeLeft());
 
     useEffect(() => {
         const id = setInterval(() => {
             if (document.visibilityState !== "hidden") {
-                setTimeLeft(computeTimeLeft(target));
+                setTimeLeft(computeTimeLeft());
             }
         }, 1000);
         return () => clearInterval(id);
-    }, [target]);
+    }, []);
 
     return timeLeft;
 }
@@ -99,7 +115,7 @@ function NumberDisplay({ value, className = "" }: NumberDisplayProps) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 const CountDown = () => {
-    const timeLeft = useCountdown(COUNTDOWN_CONFIG.targetDate);
+    const timeLeft = useCountdown();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => { setMounted(true); }, []);
@@ -114,13 +130,13 @@ const CountDown = () => {
     if (!mounted) return null;
 
     return (
-        <section className="w-full bg-transparent px-3 py-2 mb-[-3rem] flex justify-center items-center">
-            <div className="relative bg-white border border-[#ffe5e5] rounded-[24px] sm:rounded-[32px] shadow-lg px-3 py-5 min-[360px]:px-4 min-[390px]:px-6 sm:px-10 sm:py-8 mx-auto flex flex-col items-center gap-5 sm:gap-8 w-fit max-w-[95%] sm:max-w-none">
+        <section className="w-full bg-transparent px-2 py-1.5 mb-[-2.25rem] flex justify-center items-center">
+            <div className="relative bg-white border border-[#ffe5e5] rounded-[18px] sm:rounded-[24px] shadow-md px-2.5 py-4 min-[360px]:px-3 min-[390px]:px-4.5 sm:px-8 sm:py-6 mx-auto flex flex-col items-center gap-4 sm:gap-6 w-fit max-w-[95%] sm:max-w-none">
 
                 {/* Top Banner / Badge */}
-                <div className="flex items-center gap-2 sm:gap-4 w-full">
+                <div className="flex items-center gap-1.5 sm:gap-3 w-full">
                     <div className="h-px bg-gradient-to-r from-transparent to-red-100 flex-1"></div>
-                    <div className="flex items-center gap-1.5 text-[#ff3b30] font-extrabold tracking-[0.08em] min-[360px]:tracking-[0.12em] sm:tracking-[0.18em] text-[9px] min-[360px]:text-[10px] sm:text-[13px] whitespace-nowrap">
+                    <div className="flex items-center gap-1.5 text-[#ff3b30] font-extrabold tracking-[0.06em] min-[360px]:tracking-[0.09em] sm:tracking-[0.14em] text-[9.5px] min-[360px]:text-[11px] sm:text-[14px] whitespace-nowrap">
                         <Timer className="w-3 h-3 min-[360px]:w-3.5 min-[360px]:h-3.5 sm:w-4 sm:h-4 text-[#ff3b30] shrink-0" />
                         <span>COUNSELLING PRICES INCREASE IN</span>
                     </div>
@@ -128,22 +144,22 @@ const CountDown = () => {
                 </div>
 
                 {/* Cards row */}
-                <div className="flex items-center justify-center gap-[1.5vw] sm:gap-4 md:gap-6 w-full">
+                <div className="flex items-center justify-center gap-[1.1vw] sm:gap-3 md:gap-4.5 w-full">
                     {units.map((u, i) => (
                         <React.Fragment key={u.label}>
                             {i > 0 && (
-                                <span className="text-[#ff3b30] text-[5.5vw] sm:text-4xl md:text-5xl font-bold self-center -translate-y-[0.5vw] sm:-translate-y-3 px-0.5 sm:px-2">
+                                <span className="text-[#ff3b30] text-[4.2vw] sm:text-3xl md:text-4xl font-bold self-center -translate-y-[0.4vw] sm:-translate-y-2.5 px-0.5 sm:px-1.5">
                                     :
                                 </span>
                             )}
-                            <div className="flex flex-col items-center justify-center rounded-[12px] sm:rounded-[20px] bg-gradient-to-b from-[#ffe6e57d] to-[#fff5f5] border border-[#ffdbdb]/80 w-[18vw] h-[18vw] min-w-[52px] min-h-[52px] max-sm:max-w-[80px] max-sm:max-h-[80px] sm:w-[105px] sm:h-[105px] md:w-[120px] md:h-[120px] shadow-[inset_0_2px_10px_rgba(255,255,255,0.6),0_4px_12px_rgba(255,59,48,0.15)] transition-transform duration-300 hover:scale-[1.03] gap-[0.5vw] sm:gap-1.5 shrink-0">
+                            <div className="flex flex-col items-center justify-center rounded-[9px] sm:rounded-[15px] bg-gradient-to-b from-[#ffe6e57d] to-[#fff5f5] border border-[#ffdbdb]/80 w-[14vw] h-[14vw] min-w-[40px] min-h-[40px] max-sm:max-w-[62px] max-sm:max-h-[62px] sm:w-[80px] sm:h-[80px] md:w-[92px] md:h-[92px] shadow-[inset_0_1.5px_8px_rgba(255,255,255,0.6),0_3px_9px_rgba(255,59,48,0.15)] transition-transform duration-300 hover:scale-[1.03] gap-[0.4vw] sm:gap-1 shrink-0">
                                 <div className="flex items-center justify-center">
                                     <NumberDisplay 
                                         value={u.value} 
-                                        className="text-[5.5vw] sm:text-[2.8rem] md:text-[3.2rem] lg:text-[3.5rem]" 
+                                        className="text-[4.2vw] sm:text-[2.1rem] md:text-[2.4rem] lg:text-[2.6rem]" 
                                     />
                                 </div>
-                                <span className="text-[2.5vw] sm:text-[14px] md:text-[15px] font-bold text-primary tracking-wider uppercase">
+                                <span className="text-[1.9vw] sm:text-[11px] md:text-[12px] font-bold text-primary tracking-wider uppercase">
                                     {u.label}
                                 </span>
                             </div>
