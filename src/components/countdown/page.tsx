@@ -114,7 +114,7 @@ const CountDown = () => {
     if (!mounted) return null;
 
     return (
-        <section className="w-full bg-transparent px-3 py-6 md:py-12 flex justify-center items-center">
+        <section className="w-full bg-transparent px-3 py-2 mb-[-3rem] flex justify-center items-center">
             <div className="relative bg-white border border-[#ffe5e5] rounded-[24px] sm:rounded-[32px] shadow-lg px-3 py-5 min-[360px]:px-4 min-[390px]:px-6 sm:px-10 sm:py-8 mx-auto flex flex-col items-center gap-5 sm:gap-8 w-fit max-w-[95%] sm:max-w-none">
 
                 {/* Top Banner / Badge */}
