@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { Instagram, Youtube, MessageCircle, Send, Mail, Phone, ExternalLink } from "lucide-react";
+import Link from "next/link";
 
 const footerSections = [
   {
@@ -22,9 +23,9 @@ const footerSections = [
   {
     title: "College Guide",
     links: [
-      { label: "IITs List", href: "/colleges" },
-      { label: "NITs List", href: "/colleges" },
-      { label: "IIITs List", href: "/colleges" },
+      { label: "IITs List", href: "/colleges?type=IIT" },
+      { label: "NITs List", href: "/colleges?type=NIT" },
+      { label: "IIITs List", href: "/colleges?type=IIIT" },
       { label: "Other Colleges", href: "/colleges" },
     ],
   },
@@ -103,13 +104,13 @@ const Footer = () => {
               <ul className="space-y-2.5">
                 {section.links.map((link) => (
                   <li key={link.label}>
-                    <a
+                    <Link
                       href={link.href}
                       className="text-sm text-white hover:text-[var(--accent)] transition-colors flex items-center group gap-1"
                     >
                       {link.label}
                       <ExternalLink size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
