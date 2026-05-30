@@ -16,6 +16,7 @@ import Recommended from "@/components/sections/Recommended";
 import WhyChooseUs from "@/components/home/WhyChooseUs";
 import PopupAd from "@/components/ads/PopupAd";
 import Script from "next/script";
+import CountDown from "@/components/countdown/page";
 
 // Organization Schema for We Won Academy
 const organizationSchema = {
@@ -133,6 +134,7 @@ export default function Home() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <HeroSection />
       </div>
+      <CountDown />
       <div className="container mx-auto">
         <FeatureCounselling />
         <FeaturePredictor />
