@@ -299,13 +299,21 @@ export default function MPDTECollegePredictor() {
     setFormData((prev) => {
       let newTypes = [...prev.instituteType];
       if (type === "Private Colleges") {
-        newTypes = ["Private Colleges"];
-        return {
-          ...prev,
-          instituteType: newTypes,
-          seatClass: "Regular Seat",
-          domicile: "Outside Madhya Pradesh", // Assuming "All India" maps to this or backend handles it
-        };
+        if (newTypes.includes("Private Colleges")) {
+          newTypes = newTypes.filter((t) => t !== "Private Colleges");
+          return {
+            ...prev,
+            instituteType: newTypes,
+          };
+        } else {
+          newTypes = ["Private Colleges"];
+          return {
+            ...prev,
+            instituteType: newTypes,
+            seatClass: "Regular Seat",
+            domicile: "Outside Madhya Pradesh", // Assuming "All India" maps to this or backend handles it
+          };
+        }
       } else {
         newTypes = newTypes.filter(t => t !== "Private Colleges");
         const isSelected = newTypes.includes(type);
