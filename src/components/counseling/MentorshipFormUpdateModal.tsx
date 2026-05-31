@@ -26,14 +26,16 @@ interface SuggestedField {
   options?: string;
 }
 
-const SUGGESTED_MENTORSHIP_FIELDS: SuggestedField[] = [
+const SUGGESTED_MENTORSHIP_FIELDS:SuggestedField[] = [
   { key: "name", title: "Full Name", placeholder: "Enter your full name", type: "text" },
   { key: "phone", title: "Phone Number", placeholder: "Enter Your Phone Number ", type: "number" },
   { key: "crlRank", title: "CRL Rank", placeholder: "e.g. 52341", type: "number" },
-  { key: "categoryRank", title: "Category Rank", placeholder: "e.g. 14211", type: "number" },
+  { key: "jeeAdvancedRank", title: "JEE Advanced CRL Rank", placeholder: "e.g. 52341", type: "number" },
+  { key: "categoryRank", title: "Category Rank", placeholder: "e.g. 14211", type: "text" },
+  { key: "jeeAdvancedCategoryRank", title: "JEE Advanced Category Rank", placeholder: "e.g. 14211", type: "text" },
   { key: "percentile", title: "JEE Main Percentile", placeholder: "e.g. 98.54321", type: "number" },
   { key: "gender", title: "Gender", placeholder: "Select Gender", type: "radio", options: "Male, Female" },
-  { key: "category", title: "Category", placeholder: "Select Category", type: "radio", options: "OPEN, EWS, OBC-NCL, SC, ST, OPEN (PwD), EWS (PwD), OBC-NCL (PwD), SC (PwD), ST (PwD)" },
+  { key: "category", title: "Category", placeholder: "Select Category", type: "radio", options: "OPEN, EWS, OBC, OBC-NCL, SC, ST, OPEN (PwD), EWS (PwD), OBC-NCL (PwD), SC (PwD), ST (PwD)" },
   { key: "subCategory", title: "Sub-Category", placeholder: "Select Sub-Category", type: "radio", options: "NOT APPLICABLE, PH, FF, AF" },
   { key: "homeState", title: "Home State", placeholder: "Select Home State", type: "radio", options: "Andaman and Nicobar Islands, Andhra Pradesh, Arunachal Pradesh, Assam, Bihar, Chandigarh, Chhattisgarh, Dadra and Nagar Haveli and Daman and Diu, Delhi, Goa, Gujarat, Haryana, Himachal Pradesh, Jammu and Kashmir, Jharkhand, Karnataka, Kerala, Ladakh, Lakshadweep, Madhya Pradesh, Maharashtra, Manipur, Meghalaya, Mizoram, Nagaland, Odisha, Puducherry, Punjab, Rajasthan, Sikkim, Tamil Nadu, Telangana, Tripura, Uttar Pradesh, Uttarakhand, West Bengal" },
   { key: "region", title: "Region", placeholder: "Delhi / Outside Delhi", type: "radio", options: "Delhi, Outside Delhi" },
