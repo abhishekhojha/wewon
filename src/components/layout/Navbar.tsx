@@ -155,7 +155,7 @@ const Navbar = () => {
         <div className="xl:hidden flex items-center gap-3">
           <Link
             href="/predictor"
-            className="text-[10px] sm:text-xs font-bold text-white bg-[var(--primary)] px-2.5 sm:px-4 py-2 rounded-lg sm:rounded-xl border border-[var(--primary)]/100 whitespace-nowrap transition-all active:scale-95 hover:bg-[var(--primary)]/20"
+            className="bg-[var(--primary)] text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-sm hover:scale-105 transition-all"
           >
             Predictors
           </Link>
