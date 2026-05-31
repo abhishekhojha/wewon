@@ -13,6 +13,7 @@ import { selectIsAuthenticated } from "@/store/auth/authSlice";
 import { selectUserOrders } from "@/store/order/orderSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
 import { getChoiceFillingPurchaseDetails } from "@/utils/checkChoiceFillingPurchase";
+import { useRouter } from "next/navigation";
 
 /** Slug of the IIT / JEE Advanced choice-filling tool */
 const IIT_CHOICE_FILLING_SLUG = "iit";
@@ -68,7 +69,7 @@ export default function ChoiceFillingProductsGrid({
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const userOrders = useAppSelector(selectUserOrders);
-
+  const router = useRouter();
   const [products, setProducts] = useState<ChoiceFillingProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -181,6 +182,10 @@ export default function ChoiceFillingProductsGrid({
     );
   }
 
+  const redirectToTool = (slug: string) =>{
+    router.push(`/choice-filling/${slug}`);
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {displayProducts.map((product) => {
@@ -199,7 +204,8 @@ export default function ChoiceFillingProductsGrid({
         return (
           <div
             key={product._id}
-            className="bg-white rounded-2xl shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col h-full hover:shadow-xl relative"
+            onClick={()=> !isLocked && redirectToTool(product.slug)}
+            className="bg-white rounded-2xl shadow-lg transition-all cursor-pointer duration-300 overflow-hidden border border-gray-100 flex flex-col h-full hover:shadow-xl relative"
           >
             {/* Lock overlay for choice-filling when access is pending */}
             {isLocked && (
