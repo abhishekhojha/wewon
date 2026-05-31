@@ -12,8 +12,8 @@ import { Timer } from "lucide-react";
 const COUNTDOWN_CONFIG = {
     targets: [
         new Date("2026-06-01T00:00:01+05:30"), // June 1st deadline
-        new Date("2026-07-01T00:00:01+05:30"), // July 1st deadline
-        new Date("2026-08-01T00:00:01+05:30"), // August 1st deadline
+        new Date("2026-06-02T00:00:01+05:30"), // June 2nd deadline
+        new Date("2026-06-03T00:00:01+05:30"), // June 3rd deadline
     ],
 };
 
