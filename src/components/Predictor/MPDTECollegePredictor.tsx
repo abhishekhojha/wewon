@@ -415,6 +415,7 @@ export default function MPDTECollegePredictor() {
         category: item.category,
         gender: item.gender,
         seatType: item.seat_class,
+        openingRank: item.opening_rank,
         closingRank: item.closing_rank,
         confidence: item.confidence,
         probability: probability,
