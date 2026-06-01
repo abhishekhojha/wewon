@@ -292,6 +292,18 @@ export default function MPDTECollegePredictor() {
       if (Number(value) < 1) return;
     }
     
+    if (id === "round") {
+      setFormData((prev) => ({
+        ...prev,
+        round: value,
+        institutes: [],
+        branches: [],
+      }));
+      setInstituteSearch("");
+      setBranchSearch("");
+      return;
+    }
+    
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
@@ -333,6 +345,32 @@ export default function MPDTECollegePredictor() {
       const isSelected = current.includes(value);
       const updated = isSelected ? current.filter(v => v !== value) : [...current, value];
       return { ...prev, [field]: updated };
+    });
+  };
+
+  const handleSelectAllInstitutes = () => {
+    const filtered = availableInstitutes.filter((i) =>
+      i.toLowerCase().includes(instituteSearch.toLowerCase())
+    );
+    const allSelected = filtered.length > 0 && filtered.every((i) => formData.institutes.includes(i));
+    setFormData((prev) => {
+      const newInstitutes = allSelected
+        ? prev.institutes.filter((i) => !filtered.includes(i))
+        : Array.from(new Set([...prev.institutes, ...filtered]));
+      return { ...prev, institutes: newInstitutes };
+    });
+  };
+
+  const handleSelectAllBranches = () => {
+    const filtered = availableBranches.filter((b) =>
+      b.toLowerCase().includes(branchSearch.toLowerCase())
+    );
+    const allSelected = filtered.length > 0 && filtered.every((b) => formData.branches.includes(b));
+    setFormData((prev) => {
+      const newBranches = allSelected
+        ? prev.branches.filter((b) => !filtered.includes(b))
+        : Array.from(new Set([...prev.branches, ...filtered]));
+      return { ...prev, branches: newBranches };
     });
   };
 
@@ -506,6 +544,208 @@ export default function MPDTECollegePredictor() {
                 {metadata.rounds.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
+
+            {formData.round && (
+              <>
+                {/* Institutes Multi-select */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">
+                    Institute Name (Optional)
+                  </label>
+                  <div className="border border-[var(--border)] rounded-lg bg-white">
+                    <div className="p-2 border-b border-[var(--border)]">
+                      <input
+                        type="text"
+                        placeholder="Search institutes..."
+                        value={instituteSearch}
+                        onChange={(e) => setInstituteSearch(e.target.value)}
+                        className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto p-2">
+                      {loadingInstitutes ? (
+                        <p className="text-xs text-[var(--muted-text)] p-2">
+                          Loading institutes...
+                        </p>
+                      ) : availableInstitutes.length > 0 ? (
+                        <>
+                          <label className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={
+                                availableInstitutes.filter((i) =>
+                                  i
+                                    .toLowerCase()
+                                    .includes(instituteSearch.toLowerCase())
+                                ).length > 0 &&
+                                availableInstitutes
+                                  .filter((i) =>
+                                    i
+                                      .toLowerCase()
+                                      .includes(instituteSearch.toLowerCase())
+                                  )
+                                  .every((i) => formData.institutes.includes(i))
+                              }
+                              onChange={handleSelectAllInstitutes}
+                              className="mr-2 accent-[var(--primary)]"
+                            />
+                            <span className="text-xs sm:text-sm font-semibold text-[var(--foreground)]">
+                              Select All (
+                              {
+                                availableInstitutes.filter((i) =>
+                                  i
+                                    .toLowerCase()
+                                    .includes(instituteSearch.toLowerCase())
+                                ).length
+                              }
+                              )
+                            </span>
+                          </label>
+                          <div className="border-t border-[var(--border)] my-1"></div>
+                          {availableInstitutes
+                            .filter((i) =>
+                              i
+                                .toLowerCase()
+                                .includes(instituteSearch.toLowerCase())
+                            )
+                            .map((institute) => (
+                              <label
+                                key={institute}
+                                className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer text-[var(--foreground)]"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={formData.institutes.includes(institute)}
+                                  onChange={() => handleMultiSelect("institutes", institute)}
+                                  className="mr-2 accent-[var(--primary)]"
+                                />
+                                <span className="text-xs sm:text-sm flex-1">
+                                  {institute}
+                                </span>
+                              </label>
+                            ))}
+                          {availableInstitutes.filter((i) =>
+                            i.toLowerCase().includes(instituteSearch.toLowerCase())
+                          ).length === 0 && (
+                            <p className="text-xs text-[var(--muted-text)] p-2">
+                              No institutes match your search
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-xs text-[var(--muted-text)] p-2">
+                          No institutes available
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {formData.institutes.length > 0 && (
+                    <p className="text-xs text-[var(--muted-text)] mt-1">
+                      {formData.institutes.length} institute(s) selected
+                    </p>
+                  )}
+                </div>
+
+                {/* Branches Multi-select */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">
+                    Branch Name (Optional)
+                  </label>
+                  <div className="border border-[var(--border)] rounded-lg bg-white">
+                    <div className="p-2 border-b border-[var(--border)]">
+                      <input
+                        type="text"
+                        placeholder="Search branches..."
+                        value={branchSearch}
+                        onChange={(e) => setBranchSearch(e.target.value)}
+                        className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto p-2">
+                      {loadingBranches ? (
+                        <p className="text-xs text-[var(--muted-text)] p-2">
+                          Loading branches...
+                        </p>
+                      ) : availableBranches.length > 0 ? (
+                        <>
+                          <label className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={
+                                availableBranches.filter((b) =>
+                                  b
+                                    .toLowerCase()
+                                    .includes(branchSearch.toLowerCase())
+                                ).length > 0 &&
+                                availableBranches
+                                  .filter((b) =>
+                                    b
+                                      .toLowerCase()
+                                      .includes(branchSearch.toLowerCase())
+                                  )
+                                  .every((b) => formData.branches.includes(b))
+                              }
+                              onChange={handleSelectAllBranches}
+                              className="mr-2 accent-[var(--primary)]"
+                            />
+                            <span className="text-xs sm:text-sm font-semibold text-[var(--foreground)]">
+                              Select All (
+                              {
+                                availableBranches.filter((b) =>
+                                  b
+                                    .toLowerCase()
+                                    .includes(branchSearch.toLowerCase())
+                                ).length
+                              }
+                              )
+                            </span>
+                          </label>
+                          <div className="border-t border-[var(--border)] my-1"></div>
+                          {availableBranches
+                            .filter((b) =>
+                              b
+                                .toLowerCase()
+                                .includes(branchSearch.toLowerCase())
+                            )
+                            .map((branch) => (
+                              <label
+                                key={branch}
+                                className="flex items-center p-2 hover:bg-[var(--muted-background)] rounded cursor-pointer text-[var(--foreground)]"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={formData.branches.includes(branch)}
+                                  onChange={() => handleMultiSelect("branches", branch)}
+                                  className="mr-2 accent-[var(--primary)]"
+                                />
+                                <span className="text-xs sm:text-sm flex-1">
+                                  {branch}
+                                </span>
+                              </label>
+                            ))}
+                          {availableBranches.filter((b) =>
+                            b.toLowerCase().includes(branchSearch.toLowerCase())
+                          ).length === 0 && (
+                            <p className="text-xs text-[var(--muted-text)] p-2">
+                              No branches match your search
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-xs text-[var(--muted-text)] p-2">
+                          No branches available
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {formData.branches.length > 0 && (
+                    <p className="text-xs text-[var(--muted-text)] mt-1">
+                      {formData.branches.length} branch(es) selected
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
 
             {/* Submit */}
             <button type="submit" disabled={loading} className="w-full bg-[var(--primary)] text-white p-3 rounded-lg font-semibold">
