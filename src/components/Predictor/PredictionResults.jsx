@@ -41,11 +41,12 @@ export default function PredictionResults({
 
   const filteredData = currentData.filter((item) => {
     if (genderFilter === "All") return true;
+    const g = item.gender?.toLowerCase() || "";
     if (genderFilter === "Female-only") {
-      return item.gender?.toLowerCase().includes("female");
+      return g.includes("female") && !g.includes("both");
     }
     if (genderFilter === "Gender-Neutral") {
-      return item.gender?.toLowerCase().includes("neutral");
+      return g.includes("neutral") || g.includes("both");
     }
     return true;
   });
