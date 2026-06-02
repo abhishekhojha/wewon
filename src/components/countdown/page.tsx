@@ -15,6 +15,8 @@ const COUNTDOWN_CONFIG = {
         new Date("2026-06-02T00:00:01+05:30"), // June 2nd deadline
         new Date("2026-06-02T17:00:00+05:30"), // June 3rd 5pm deadline
         new Date("2026-06-03T00:00:01+05:30"), // June 4th deadline
+        new Date("2026-06-04T00:00:01+05:30"), // June 5th deadline
+        new Date("2026-06-05T00:00:01+05:30"), // June 5th deadline
     ],
 };
 

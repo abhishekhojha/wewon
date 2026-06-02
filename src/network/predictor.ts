@@ -110,8 +110,12 @@ export const getMPDTEMetadata = () => {
   return apiClient.get("/api/mpdte/metadata");
 };
 
-export const getMPDTEInstitutes = (round: string) => {
-  return apiClient.get("/api/mpdte/institutes", { params: { round } });
+export const getMPDTEInstitutes = (instituteType: string[]) => {
+  return apiClient.get("/api/mpdte/institutes", {
+    params: {
+      institute_type: instituteType,
+    },
+  });
 };
 
 export const getMPDTEBranches = (
