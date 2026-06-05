@@ -612,7 +612,7 @@ export default function MPDTECollegePredictor() {
             </div>
 
             {/* Fee Waiver */}
-            {/* <div>
+            <div>
               <label className="block text-xs sm:text-sm font-medium mb-1">Fee Waiver Seat (Optional)</label>
               <div className="flex gap-2">
                 {(["Yes", "No"] as const).map((fw) => (
@@ -629,7 +629,7 @@ export default function MPDTECollegePredictor() {
                 ))}
               </div>
               <p className="text-xs text-[var(--muted-text)] mt-1">Leave unselected to show all seats</p>
-            </div> */}
+            </div>
 
             {/* Round */}
             <div>
