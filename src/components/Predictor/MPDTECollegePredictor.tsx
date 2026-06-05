@@ -569,12 +569,58 @@ export default function MPDTECollegePredictor() {
               {isPrivateSelected && <p className="text-xs text-amber-700 mt-1">Private Colleges cannot be combined with others.</p>}
             </div>
 
+            {/* Fee Waiver */}
+            <div>
+              <label className="block text-xs sm:text-sm font-medium mb-1">Fee Waiver Seat (Optional)</label>
+              <div className="flex gap-2">
+                {(["Yes", "No"] as const).map((fw) => (
+                  <button
+                    key={fw}
+                    type="button"
+                    onClick={() => {
+                      setFormData(p => {
+                        const newFw = p.fee_waiver === fw ? "" : fw;
+                        if (newFw === "Yes") {
+                          return {
+                            ...p,
+                            fee_waiver: "Yes",
+                            category: "OPEN",
+                            seatClass: "Regular Seat",
+                            domicile: "Madhya Pradesh"
+                          };
+                        }
+                        return {
+                          ...p,
+                          fee_waiver: newFw
+                        };
+                      });
+                    }}
+                    className={`p-2 text-xs border rounded-lg flex-1 ${
+                      formData.fee_waiver === fw ? "bg-[var(--primary)] text-white" : "bg-white"
+                    }`}
+                  >
+                    {fw === "Yes" ? "FW Seats Only" : "No FW Seats"}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-[var(--muted-text)] mt-1">Leave unselected to show all seats</p>
+            </div>
+
             {/* Category */}
             <div>
               <label htmlFor="category" className="block text-xs sm:text-sm font-medium mb-1">Category</label>
-              <select id="category" value={formData.category} onChange={handleChange} className="w-full p-2 border rounded-lg">
+              <select
+                id="category"
+                value={formData.category}
+                onChange={handleChange}
+                disabled={formData.fee_waiver === "Yes"}
+                className="w-full p-2 border rounded-lg disabled:bg-gray-100 disabled:text-gray-500"
+              >
                 {metadata.categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
               </select>
+              {formData.fee_waiver === "Yes" && (
+                <p className="text-xs text-amber-700 mt-1">Locked for Fee Waiver eligibility.</p>
+              )}
             </div>
 
             {/* Gender */}
@@ -592,15 +638,28 @@ export default function MPDTECollegePredictor() {
             {/* Seat Class */}
             <div>
               <label htmlFor="seatClass" className="block text-xs sm:text-sm font-medium mb-1">Class</label>
-              <select id="seatClass" value={formData.seatClass} onChange={handleChange} className="w-full p-2 border rounded-lg">
+              <select
+                id="seatClass"
+                value={formData.seatClass}
+                onChange={handleChange}
+                disabled={formData.fee_waiver === "Yes"}
+                className="w-full p-2 border rounded-lg disabled:bg-gray-100 disabled:text-gray-500"
+              >
                 {activeSeatClasses.map((sc) => <option key={sc} value={sc}>{sc}</option>)}
               </select>
+              {formData.fee_waiver === "Yes" && (
+                <p className="text-xs text-amber-700 mt-1">Locked for Fee Waiver eligibility.</p>
+              )}
             </div>
 
             {/* Domicile */}
             <div>
               <label htmlFor="domicile" className="block text-xs sm:text-sm font-medium mb-1">Domicile</label>
-              {isPrivateSelected ? (
+              {formData.fee_waiver === "Yes" ? (
+                <div className="w-full p-2 border rounded-lg bg-gray-50 text-[var(--muted-text)] text-sm">
+                  Madhya Pradesh <span className="text-xs">(locked for Fee Waiver eligibility)</span>
+                </div>
+              ) : isPrivateSelected ? (
                 <div className="w-full p-2 border rounded-lg bg-gray-50 text-[var(--muted-text)] text-sm">
                   {metadata.private_domicile || "All India"} <span className="text-xs">(locked for Private Colleges)</span>
                 </div>
@@ -611,25 +670,6 @@ export default function MPDTECollegePredictor() {
               )}
             </div>
 
-            {/* Fee Waiver */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium mb-1">Fee Waiver Seat (Optional)</label>
-              <div className="flex gap-2">
-                {(["Yes", "No"] as const).map((fw) => (
-                  <button
-                    key={fw}
-                    type="button"
-                    onClick={() => setFormData(p => ({ ...p, fee_waiver: p.fee_waiver === fw ? "" : fw }))}
-                    className={`p-2 text-xs border rounded-lg flex-1 ${
-                      formData.fee_waiver === fw ? "bg-[var(--primary)] text-white" : "bg-white"
-                    }`}
-                  >
-                    {fw === "Yes" ? "FW Seats Only" : "No FW Seats"}
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-[var(--muted-text)] mt-1">Leave unselected to show all seats</p>
-            </div>
 
             {/* Round */}
             <div>
