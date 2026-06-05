@@ -14,13 +14,14 @@ export default function PredictionResults({
   hideGender = false,
   hideCategory = false,
   counselingType = "",
+  showFeeWaiver = false,
 }) {
   const [activeTab, setActiveTab] = useState("JoSAA");
   const [activeProbabilityTab, setActiveProbabilityTab] = useState("High");
   const [genderFilter, setGenderFilter] = useState("All");
 
   if (!results) return null;
-
+  console.log(results)
   const tabs = [
     { id: "JoSAA", label: "JoSAA", data: results.josaaPredictions },
     { id: "CSAB", label: "CSAB", data: results.csabPredictions },
@@ -29,6 +30,11 @@ export default function PredictionResults({
       id: "HomeState",
       label: "Home State",
       data: results.homestatePredictions,
+    },
+    {
+      id: "Predictions",
+      label: "Predictions",
+      data: results.predictions,
     },
   ].filter((tab) => tab.data && tab.data.length > 0);
 
@@ -293,6 +299,12 @@ export default function PredictionResults({
                           Round
                         </th>
                       )}
+                      {showFeeWaiver && (
+                        <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                          Fee Waiver
+                        </th>
+                      )}
+
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border)]">
@@ -362,6 +374,14 @@ export default function PredictionResults({
                             {item.round}
                           </td>
                         )}
+                        {showFeeWaiver && (
+                          <td className="px-2 sm:px-4 py-3 sm:py-4 text-[var(--muted-text)] whitespace-nowrap">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-semibold ${item.feeWaiver === "Yes" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
+                              {item.feeWaiver || "No"}
+                            </span>
+                          </td>
+                        )}
+             
                       </tr>
                     ))}
                   </tbody>
