@@ -477,7 +477,7 @@ export default function MPDTECollegePredictor() {
         ...(apiData.low || []).map((item: any) => mapItem(item, "Low")),
       ];
 
-      setResults({ homestatePredictions: allPredictions, isFallback: apiData.isFallback });
+      setResults({ predictions: allPredictions, isFallback: apiData.isFallback });
     } catch (error: any) {
       console.error("MPDTE prediction error:", error);
       toast.error(error.message || "Failed to get prediction.");
@@ -581,12 +581,13 @@ export default function MPDTECollegePredictor() {
                       setFormData(p => {
                         const newFw = p.fee_waiver === fw ? "" : fw;
                         if (newFw === "Yes") {
+                          const isPrivate = p.instituteType.includes("Private Colleges");
                           return {
                             ...p,
                             fee_waiver: "Yes",
                             category: "OPEN",
                             seatClass: "Regular Seat",
-                            domicile: "Madhya Pradesh"
+                            domicile: isPrivate ? (metadata.private_domicile || "All India") : "Madhya Pradesh"
                           };
                         }
                         return {
@@ -655,13 +656,13 @@ export default function MPDTECollegePredictor() {
             {/* Domicile */}
             <div>
               <label htmlFor="domicile" className="block text-xs sm:text-sm font-medium mb-1">Domicile</label>
-              {formData.fee_waiver === "Yes" ? (
+              {isPrivateSelected ? (
+                <div className="w-full p-2 border rounded-lg bg-gray-50 text-[var(--muted-text)] text-sm">
+                  All India <span className="text-xs">(locked for Private Colleges)</span>
+                </div>
+              ) : formData.fee_waiver === "Yes" ? (
                 <div className="w-full p-2 border rounded-lg bg-gray-50 text-[var(--muted-text)] text-sm">
                   Madhya Pradesh <span className="text-xs">(locked for Fee Waiver eligibility)</span>
-                </div>
-              ) : isPrivateSelected ? (
-                <div className="w-full p-2 border rounded-lg bg-gray-50 text-[var(--muted-text)] text-sm">
-                  {metadata.private_domicile || "All India"} <span className="text-xs">(locked for Private Colleges)</span>
                 </div>
               ) : (
                 <select id="domicile" value={formData.domicile} onChange={handleChange} className="w-full p-2 border rounded-lg">
@@ -897,7 +898,7 @@ export default function MPDTECollegePredictor() {
             ℹ️ Showing extended matching colleges based on previous counselling trends.
           </div>
         )}
-        {results && <PredictionResults hideQuota results={results} userGender={formData.gender} />}
+        {results && <PredictionResults  showFeeWaiver results={results} userGender={formData.gender} />}
       </div>
 
       {product && <PredictorPaymentModal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} onPaymentSuccess={handlePaymentSuccess} product={product as PredictorProduct} />}
