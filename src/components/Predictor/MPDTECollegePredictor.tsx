@@ -28,7 +28,7 @@ const RETURN_URL = "/mpdte-predictor";
 
 interface MPDTEFormData {
   jeeMainRank: string;
-  categoryRank: string;
+  jee_category_rank: string;
   instituteType: string[];
   category: string;
   gender: string;
@@ -37,6 +37,7 @@ interface MPDTEFormData {
   round: string;
   institutes: string[];
   branches: string[];
+  fee_waiver: "" | "Yes" | "No";
 }
 
 interface MetadataOption {
@@ -48,9 +49,13 @@ interface MPDTEMetadata {
   institute_types: string[];
   categories: string[];
   genders: string[];
+  govt_seat_classes: string[];
+  private_seat_classes: string[];
   seat_classes: string[];
   domiciles: string[];
+  private_domicile: string;
   rounds: string[];
+  fee_waiver_options: string[];
 }
 
 export default function MPDTECollegePredictor() {
@@ -69,7 +74,7 @@ export default function MPDTECollegePredictor() {
 
   const [formData, setFormData] = useState<MPDTEFormData>({
     jeeMainRank: "",
-    categoryRank: "",
+    jee_category_rank: "",
     instituteType: [],
     category: "OPEN",
     gender: "MALE",
@@ -78,15 +83,20 @@ export default function MPDTECollegePredictor() {
     round: "",
     institutes: [],
     branches: [],
+    fee_waiver: "",
   });
 
   const [metadata, setMetadata] = useState<MPDTEMetadata>({
     institute_types: [],
     categories: [],
     genders: [],
+    govt_seat_classes: [],
+    private_seat_classes: [],
     seat_classes: [],
     domiciles: [],
+    private_domicile: "All India",
     rounds: [],
+    fee_waiver_options: [],
   });
   const [loadingMetadata, setLoadingMetadata] = useState(true);
 
@@ -124,6 +134,11 @@ export default function MPDTECollegePredictor() {
 
   const isPrivateSelected = formData.instituteType.includes("Private Colleges");
 
+  // Seat classes to show based on current institute type selection
+  const activeSeatClasses = isPrivateSelected
+    ? (metadata.private_seat_classes.length > 0 ? metadata.private_seat_classes : metadata.seat_classes)
+    : (metadata.govt_seat_classes.length > 0 ? metadata.govt_seat_classes : metadata.seat_classes);
+
   // Fetch Metadata
   useEffect(() => {
     const fetchMetadata = async () => {
@@ -131,16 +146,32 @@ export default function MPDTECollegePredictor() {
       try {
         const response = await getMPDTEMetadata();
         if (response.data?.success && response.data?.data) {
-          setMetadata(response.data.data);
+          const d = response.data.data;
+          setMetadata({
+            institute_types: d.institute_types || [],
+            categories: d.categories || [],
+            genders: d.genders || [],
+            govt_seat_classes: d.govt_seat_classes || d.seat_classes || [],
+            private_seat_classes: d.private_seat_classes || [],
+            seat_classes: d.seat_classes || [],
+            domiciles: d.domiciles || [],
+            private_domicile: d.private_domicile || "All India",
+            rounds: d.rounds || [],
+            fee_waiver_options: d.fee_waiver_options || [],
+          });
         } else {
           // Fallback
           setMetadata({
             institute_types: mpdteFallbackOptions.institute_types.map(o => o.value),
             categories: mpdteFallbackOptions.categories.map(o => o.value),
             genders: mpdteFallbackOptions.genders.map(o => o.value),
+            govt_seat_classes: mpdteFallbackOptions.govt_seat_classes.map(o => o.value),
+            private_seat_classes: mpdteFallbackOptions.private_seat_classes.map(o => o.value),
             seat_classes: mpdteFallbackOptions.seat_classes.map(o => o.value),
             domiciles: mpdteFallbackOptions.domiciles.map(o => o.value),
+            private_domicile: mpdteFallbackOptions.private_domicile,
             rounds: mpdteFallbackOptions.rounds.map(o => o.value),
+            fee_waiver_options: mpdteFallbackOptions.fee_waiver_options.map(o => o.value),
           });
         }
       } catch (e) {
@@ -149,9 +180,13 @@ export default function MPDTECollegePredictor() {
           institute_types: mpdteFallbackOptions.institute_types.map(o => o.value),
           categories: mpdteFallbackOptions.categories.map(o => o.value),
           genders: mpdteFallbackOptions.genders.map(o => o.value),
+          govt_seat_classes: mpdteFallbackOptions.govt_seat_classes.map(o => o.value),
+          private_seat_classes: mpdteFallbackOptions.private_seat_classes.map(o => o.value),
           seat_classes: mpdteFallbackOptions.seat_classes.map(o => o.value),
           domiciles: mpdteFallbackOptions.domiciles.map(o => o.value),
+          private_domicile: mpdteFallbackOptions.private_domicile,
           rounds: mpdteFallbackOptions.rounds.map(o => o.value),
+          fee_waiver_options: mpdteFallbackOptions.fee_waiver_options.map(o => o.value),
         });
       } finally {
         setLoadingMetadata(false);
@@ -185,13 +220,17 @@ export default function MPDTECollegePredictor() {
     fetchInstitutes();
   }, [formData.instituteType, metadata.institute_types, loadingMetadata]);
 
-  // Fetch Branches when round or institutes change
+  // Fetch Branches when round, institutes, or instituteType changes
   useEffect(() => {
     const fetchBranches = async () => {
       if (!formData.round) return;
       setLoadingBranches(true);
       try {
-        const response = await getMPDTEBranches(formData.round, formData.institutes);
+        const response = await getMPDTEBranches(
+          formData.round,
+          formData.institutes,
+          formData.instituteType.length > 0 ? formData.instituteType : undefined,
+        );
         if (response.data?.success) {
           setAvailableBranches(response.data.data || []);
         }
@@ -203,7 +242,7 @@ export default function MPDTECollegePredictor() {
       }
     };
     fetchBranches();
-  }, [formData.round, formData.institutes]);
+  }, [formData.round, formData.institutes, formData.instituteType]);
 
   // Prefill from mentorship
   useEffect(() => {
@@ -211,7 +250,7 @@ export default function MPDTECollegePredictor() {
     setFormData((prev) => ({
       ...prev,
       jeeMainRank: typeof prefill.crlRank === "number" ? String(prefill.crlRank) : prev.jeeMainRank,
-      categoryRank: typeof prefill.categoryRank === "number" ? String(prefill.categoryRank) : prev.categoryRank,
+      jee_category_rank: typeof prefill.categoryRank === "number" ? String(prefill.categoryRank) : prev.jee_category_rank,
       category: prefill.category || prev.category,
     }));
     if (lockMessage) {
@@ -287,7 +326,7 @@ export default function MPDTECollegePredictor() {
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value, type } = e.target;
     if (id === "jeeMainRank" && crlRankLocked) return;
-    if (id === "categoryRank" && categoryRankLocked) return;
+    if (id === "jee_category_rank" && categoryRankLocked) return;
     
     if (type === "number") {
       if (value === "") {
@@ -317,20 +356,24 @@ export default function MPDTECollegePredictor() {
       let newTypes = [...prev.instituteType];
       if (type === "Private Colleges") {
         if (newTypes.includes("Private Colleges")) {
+          // Deselect Private Colleges → restore domicile default
           newTypes = newTypes.filter((t) => t !== "Private Colleges");
           return {
             ...prev,
             instituteType: newTypes,
+            seatClass: "Regular Seat",
+            domicile: "Madhya Pradesh",
             institutes: [],
             branches: [],
           };
         } else {
+          // Select Private Colleges exclusively → lock domicile to "All India"
           newTypes = ["Private Colleges"];
           return {
             ...prev,
             instituteType: newTypes,
             seatClass: "Regular Seat",
-            domicile: "Outside Madhya Pradesh", // Assuming "All India" maps to this or backend handles it
+            domicile: metadata.private_domicile || "All India",
             institutes: [],
             branches: [],
           };
@@ -346,6 +389,8 @@ export default function MPDTECollegePredictor() {
         return {
           ...prev,
           instituteType: newTypes,
+          // Reset domicile to default when switching away from private
+          domicile: prev.domicile === (metadata.private_domicile || "All India") ? "Madhya Pradesh" : prev.domicile,
           institutes: [],
           branches: [],
         };
@@ -394,15 +439,16 @@ export default function MPDTECollegePredictor() {
     try {
       const payload = {
         jee_main_rank: Number(formData.jeeMainRank),
-        categoryRank: formData.categoryRank ? Number(formData.categoryRank) : undefined,
+        jee_category_rank: formData.jee_category_rank ? Number(formData.jee_category_rank) : undefined,
         institute_type: formData.instituteType,
         category: formData.category,
         gender: formData.gender,
-        seat_class: formData.seatClass === "Not Applicable" ? "Regular Seat" : formData.seatClass,
-        domicile: formData.domicile,
+        seat_class: formData.seatClass,
+        domicile: isPrivateSelected ? (metadata.private_domicile || "All India") : formData.domicile,
         round: formData.round,
         institutes: formData.institutes.length > 0 ? formData.institutes : undefined,
         branches: formData.branches.length > 0 ? formData.branches : undefined,
+        fee_waiver: formData.fee_waiver || undefined,
       };
 
       const response = await predictMPDTE(payload);
@@ -420,18 +466,16 @@ export default function MPDTECollegePredictor() {
         confidence: item.confidence,
         probability: probability,
         round: item.round,
+        feeWaiver: item.fee_waiver,
+        instituteType: item.institute_type,
       });
 
-      let allPredictions: any[] = [];
-      if (apiData.results && Array.isArray(apiData.results)) {
-         allPredictions = apiData.results.map((item: any) => mapItem(item, item.probability || "High"));
-      } else {
-        allPredictions = [
-          ...(apiData.high || []).map((item: any) => mapItem(item, "High")),
-          ...(apiData.medium || []).map((item: any) => mapItem(item, "Medium")),
-          ...(apiData.low || []).map((item: any) => mapItem(item, "Low")),
-        ];
-      }
+      // API always returns high/medium/low buckets
+      const allPredictions: any[] = [
+        ...(apiData.high || []).map((item: any) => mapItem(item, "High")),
+        ...(apiData.medium || []).map((item: any) => mapItem(item, "Medium")),
+        ...(apiData.low || []).map((item: any) => mapItem(item, "Low")),
+      ];
 
       setResults({ homestatePredictions: allPredictions, isFallback: apiData.isFallback });
     } catch (error: any) {
@@ -501,8 +545,8 @@ export default function MPDTECollegePredictor() {
 
             {/* Category Rank */}
             <div>
-              <label htmlFor="categoryRank" className="block text-xs sm:text-sm font-medium mb-1">Category Rank (Optional)</label>
-              <input type="number" id="categoryRank" value={formData.categoryRank} onChange={handleChange} disabled={categoryRankLocked} className="w-full p-2 border rounded-lg" placeholder="e.g. 12345" />
+              <label htmlFor="jee_category_rank" className="block text-xs sm:text-sm font-medium mb-1">Category Rank (Optional)</label>
+              <input type="number" id="jee_category_rank" value={formData.jee_category_rank} onChange={handleChange} disabled={categoryRankLocked} className="w-full p-2 border rounded-lg" placeholder="e.g. 12345" />
               {categoryRankLocked && <p className="text-xs text-amber-700 mt-1">{rankLockMessage}</p>}
             </div>
 
@@ -548,17 +592,43 @@ export default function MPDTECollegePredictor() {
             {/* Seat Class */}
             <div>
               <label htmlFor="seatClass" className="block text-xs sm:text-sm font-medium mb-1">Class</label>
-              <select id="seatClass" value={formData.seatClass} onChange={handleChange} disabled={isPrivateSelected} className="w-full p-2 border rounded-lg">
-                {metadata.seat_classes.map((sc) => <option key={sc} value={sc}>{sc}</option>)}
+              <select id="seatClass" value={formData.seatClass} onChange={handleChange} className="w-full p-2 border rounded-lg">
+                {activeSeatClasses.map((sc) => <option key={sc} value={sc}>{sc}</option>)}
               </select>
             </div>
 
             {/* Domicile */}
             <div>
               <label htmlFor="domicile" className="block text-xs sm:text-sm font-medium mb-1">Domicile</label>
-              <select id="domicile" value={formData.domicile} onChange={handleChange} disabled={isPrivateSelected} className="w-full p-2 border rounded-lg">
-                {metadata.domiciles.map((d) => <option key={d} value={d}>{d}</option>)}
-              </select>
+              {isPrivateSelected ? (
+                <div className="w-full p-2 border rounded-lg bg-gray-50 text-[var(--muted-text)] text-sm">
+                  {metadata.private_domicile || "All India"} <span className="text-xs">(locked for Private Colleges)</span>
+                </div>
+              ) : (
+                <select id="domicile" value={formData.domicile} onChange={handleChange} className="w-full p-2 border rounded-lg">
+                  {metadata.domiciles.map((d) => <option key={d} value={d}>{d}</option>)}
+                </select>
+              )}
+            </div>
+
+            {/* Fee Waiver */}
+            <div>
+              <label className="block text-xs sm:text-sm font-medium mb-1">Fee Waiver Seat (Optional)</label>
+              <div className="flex gap-2">
+                {(["Yes", "No"] as const).map((fw) => (
+                  <button
+                    key={fw}
+                    type="button"
+                    onClick={() => setFormData(p => ({ ...p, fee_waiver: p.fee_waiver === fw ? "" : fw }))}
+                    className={`p-2 text-xs border rounded-lg flex-1 ${
+                      formData.fee_waiver === fw ? "bg-[var(--primary)] text-white" : "bg-white"
+                    }`}
+                  >
+                    {fw === "Yes" ? "FW Seats Only" : "No FW Seats"}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-[var(--muted-text)] mt-1">Leave unselected to show all seats</p>
             </div>
 
             {/* Round */}

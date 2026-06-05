@@ -121,18 +121,20 @@ export const getMPDTEInstitutes = (instituteType: string[]) => {
 export const getMPDTEBranches = (
   round: string,
   institutes?: string[],
+  instituteTypes?: string[],
 ) => {
   return apiClient.get("/api/mpdte/branches", {
     params: {
       round,
-      institutes: institutes?.join(","),
+      institutes: institutes?.length ? institutes : undefined,
+      institute_type: instituteTypes?.length ? instituteTypes : undefined,
     },
   });
 };
 
 export const predictMPDTE = (data: {
   jee_main_rank: number;
-  categoryRank?: number;
+  jee_category_rank?: number;
   institute_type: string[];
   category: string;
   gender: string;
@@ -141,6 +143,7 @@ export const predictMPDTE = (data: {
   round: string;
   institutes?: string[];
   branches?: string[];
+  fee_waiver?: "Yes" | "No";
 }) => {
   return apiClient.post("/api/mpdte/predict", data);
 };

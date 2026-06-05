@@ -2,7 +2,6 @@
   "institute_types": [
     { "label": "Government Autonomous", "value": "Government Autonomous" },
     { "label": "Government Aided", "value": "Government Aided" },
-    { "label": "University Owned", "value": "University Owned" },
     { "label": "Self Finance", "value": "Self Finance" },
     { "label": "Private Colleges", "value": "Private Colleges" }
   ],
@@ -17,7 +16,7 @@
     { "label": "Male", "value": "MALE" },
     { "label": "Female", "value": "FEMALE" }
   ],
-  "seat_classes": [
+  "govt_seat_classes": [
     { "label": "Not Applicable", "value": "Not Applicable" },
     { "label": "Regular Seat", "value": "Regular Seat" },
     { "label": "Freedom Fighter Quota", "value": "Freedom Fighter Quota" },
@@ -25,13 +24,32 @@
     { "label": "NCC Quota", "value": "NCC Quota" },
     { "label": "Special Quota", "value": "Special Quota" }
   ],
+  "private_seat_classes": [
+    { "label": "Not Applicable", "value": "Not Applicable" },
+    { "label": "Regular Seat", "value": "Regular Seat" },
+    { "label": "Management Quota", "value": "Management Quota" }
+  ],
+  "seat_classes": [
+    { "label": "Not Applicable", "value": "Not Applicable" },
+    { "label": "Regular Seat", "value": "Regular Seat" },
+    { "label": "Freedom Fighter Quota", "value": "Freedom Fighter Quota" },
+    { "label": "Home State Quota", "value": "Home State Quota" },
+    { "label": "NCC Quota", "value": "NCC Quota" },
+    { "label": "Special Quota", "value": "Special Quota" },
+    { "label": "Management Quota", "value": "Management Quota" }
+  ],
   "domiciles": [
     { "label": "Madhya Pradesh", "value": "Madhya Pradesh" },
     { "label": "Outside Madhya Pradesh", "value": "Outside Madhya Pradesh" }
   ],
+  "private_domicile": "All India",
   "rounds": [
     { "label": "Round 1", "value": "Round 1" },
-    { "label": "Round 2", "value": "Round 2" },
-    { "label": "Upgrade Round", "value": "Upgrade Round" }
+    { "label": "Round 1 Upgrade", "value": "Round 1 Upgrade" },
+    { "label": "Round 2", "value": "Round 2" }
+  ],
+  "fee_waiver_options": [
+    { "label": "Yes", "value": "Yes" },
+    { "label": "No", "value": "No" }
   ]
 }
