@@ -220,7 +220,7 @@ export default function MPDTECollegePredictor() {
     fetchInstitutes();
   }, [formData.instituteType, metadata.institute_types, loadingMetadata]);
 
-  // Fetch Branches when round, institutes, or instituteType changes
+  // Fetch Branches when round or instituteType changes
   useEffect(() => {
     const fetchBranches = async () => {
       if (!formData.round) return;
@@ -228,7 +228,7 @@ export default function MPDTECollegePredictor() {
       try {
         const response = await getMPDTEBranches(
           formData.round,
-          formData.institutes,
+          undefined,
           formData.instituteType.length > 0 ? formData.instituteType : undefined,
         );
         if (response.data?.success) {
@@ -242,7 +242,7 @@ export default function MPDTECollegePredictor() {
       }
     };
     fetchBranches();
-  }, [formData.round, formData.institutes, formData.instituteType]);
+  }, [formData.round, formData.instituteType]);
 
   // Prefill from mentorship
   useEffect(() => {
