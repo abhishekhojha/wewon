@@ -893,11 +893,6 @@ export default function MPDTECollegePredictor() {
 
       {/* Results */}
       <div ref={resultsRef} className="mt-8">
-        {results?.isFallback && (
-          <div className="p-4 mb-4 bg-blue-50 text-blue-700 rounded-lg border border-blue-200">
-            ℹ️ Showing extended matching colleges based on previous counselling trends.
-          </div>
-        )}
         {results && <PredictionResults  showFeeWaiver results={results} userGender={formData.gender} />}
       </div>
 
