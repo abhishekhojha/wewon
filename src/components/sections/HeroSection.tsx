@@ -8,7 +8,7 @@ const HeroSection = () => {
   return (
     <section className="text-white">
       {/* Headline */}
-      <h1 className="font-bold text-[var(--primary)] leading-tight pt-8 md:pt-14 pb-1 md:pb-2 text-center flex flex-col items-center select-none">
+      <h1 className="font-bold text-[var(--primary)] leading-tight pb-8 pt-8 md:pt-14  text-center flex flex-col items-center select-none">
         <span className="block text-[4.5vw] md:text-[4.5vw] lg:text-[3.65vw] xl:text-[3.45rem] whitespace-nowrap">
           Find Your Dream Engineering College
         </span>
