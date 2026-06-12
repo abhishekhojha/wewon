@@ -206,7 +206,7 @@ export default function ChoiceFillingForm({
     crlRank: "",
     categoryRank: "",
     gender: "Male",
-    category: "OPEN",
+    category: toolKey === "uptac" ? "" : "OPEN",
     homeState: "",
     includedStates: [] as string[],
     instituteTypes: [] as string[],
@@ -889,15 +889,20 @@ export default function ChoiceFillingForm({
                 htmlFor="category"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Select Your Category <span className="text-red-500">*</span>
+                Select Your Category {isUPTAC ? "(Optional)" : <span className="text-red-500">*</span>}
               </label>
               <select
                 id="category"
                 value={formData.category}
                 onChange={handleChange}
-                required
+                required={!isUPTAC}
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
+                {isUPTAC && (
+                  <option value="">
+                    Select Category (Optional)
+                  </option>
+                )}
                 {(
                   metadata?.categories || [
                     "OPEN",
@@ -1253,7 +1258,7 @@ export default function ChoiceFillingForm({
                 </div>
 
                 {/* Included States - Multi Select (Inclusion Filter) */}
-                {availableInstituteStates.length > 0 && (
+                {!isUPTAC &&  availableInstituteStates.length > 0 && (
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
                       College Location Preferences (Optional)
