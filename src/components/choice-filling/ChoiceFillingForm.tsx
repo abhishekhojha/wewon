@@ -237,7 +237,7 @@ export default function ChoiceFillingForm({
   const [jacInstituteSearch, setJacInstituteSearch] = useState("");
 
   const isCrlRankRequired = isJACDelhi || !isIIT || formData.category === "OPEN";
-  const isCategoryRankRequired = !isJACDelhi && formData.category !== "OPEN";
+  const isCategoryRankRequired = !isUPTAC && !isJACDelhi && formData.category !== "OPEN";
 
 
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -529,6 +529,11 @@ export default function ChoiceFillingForm({
 
     if (!formData.name.trim()) {
       toast.error("Please enter your name.");
+      return;
+    }
+
+    if (!formData.category) {
+      toast.error("Please select your Category.");
       return;
     }
 
@@ -889,18 +894,18 @@ export default function ChoiceFillingForm({
                 htmlFor="category"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Select Your Category {isUPTAC ? "(Optional)" : <span className="text-red-500">*</span>}
+                Select Your Category <span className="text-red-500">*</span>
               </label>
               <select
                 id="category"
                 value={formData.category}
                 onChange={handleChange}
-                required={!isUPTAC}
+                required
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
                 {isUPTAC && (
                   <option value="">
-                    Select Category (Optional)
+                    Select Category
                   </option>
                 )}
                 {(
