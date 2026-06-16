@@ -90,6 +90,7 @@ export default function ChoiceFillingResults({
   const showOpeningRank = allChoices.some((c) => hasValue(c.openingRank));
   const showClosingRank = allChoices.some((c) => hasValue(c.closingRank));
   const showOrigin = allChoices.some((c) => hasValue(c.origin));
+  const showDistrict = allChoices.some((c) => hasValue(c.district));
   const selectedIncludedStates =
     results.user?.includedStates && results.user.includedStates.length > 0
       ? results.user.includedStates
@@ -136,6 +137,16 @@ export default function ChoiceFillingResults({
     {
       label: "Home State",
       value: results.user?.homeState,
+    },
+    {
+      label: "Districts",
+      value: toolKey === "uptac"
+        ? results.user?.districts && results.user.districts.length > 0
+          ? results.user.districts.join(", ")
+          : requestData.districts && requestData.districts.length > 0
+            ? requestData.districts.join(", ")
+            : "All"
+        : undefined,
     },
     {
       label: "Included States",
@@ -347,6 +358,11 @@ export default function ChoiceFillingResults({
                     <th className="px-2 sm:px-4 py-2 sm:py-3 min-w-[180px]">
                       Program
                     </th>
+                    {showDistrict && (
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                        District
+                      </th>
+                    )}
                     {showQuota && (
                       <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
                         Quota
@@ -415,6 +431,11 @@ export default function ChoiceFillingResults({
                         <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] break-words max-w-[280px]">
                           {choice.program}
                         </td>
+                        {showDistrict && (
+                          <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap">
+                            {choice.district || "-"}
+                          </td>
+                        )}
                         {showQuota && (
                           <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap">
                             {hasValue(choice.quota) ? choice.quota : "-"}

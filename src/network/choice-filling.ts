@@ -11,6 +11,7 @@ export interface ToolAutoFillData {
   homeState?: string;
   jeeAdvancedRank?: number;
   jeeAdvancedCategoryRank?: number;
+  districts?: string[];
 }
 
 export interface ChoiceFillingProduct {
@@ -76,6 +77,7 @@ export interface ChoiceFillingMetadata {
   rankLocked?: boolean;
   lockMessage?: string;
   prefill?: ToolAutoFillData;
+  districts?: string[];
 }
 
 export interface ChoiceFillingRequest {
@@ -98,6 +100,7 @@ export interface ChoiceFillingRequest {
   instituteName?: string[];
   programName?: string[];
   exportAs?: "student";
+  districts?: string[];
 }
 
 export interface ChoiceRow {
@@ -112,6 +115,7 @@ export interface ChoiceRow {
   closingRank?: number;
   origin?: string;
   isHomeState?: boolean;
+  district?: string;
 }
 
 export interface ChoiceFillingResponse {
@@ -129,6 +133,7 @@ export interface ChoiceFillingResponse {
     /** JAC Delhi specific */
     region?: string;
     subCategory?: string;
+    districts?: string[];
   };
   searchRank: number;
   minRange: number;
