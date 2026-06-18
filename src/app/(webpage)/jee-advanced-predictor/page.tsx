@@ -1,6 +1,7 @@
 
 import React from "react";
-import IITCollegePredictor from "@/components/Predictor/IITCollegePredictor";
+// import IITCollegePredictor from "@/components/Predictor/IITCollegePredictor";
+import IITCollegePredictorV2 from "@/components/Predictor/v2/IITCollegePredictorV2";
 import TrustSection from "@/components/common/TrustSection";
 import MainHeading from "@/components/sections/MainHeading";
 import Recommended from "@/components/sections/Recommended";
@@ -13,7 +14,8 @@ export default function page() {
         <MainHeading top="IIT's College Predictor" bottom="(Round 1 - 6)" />
       </div>
       <div className="container mx-auto px-4">
-        <IITCollegePredictor />
+        <IITCollegePredictorV2 />
+        {/* <IITCollegePredictor /> */}
         {/* <div className="mb-16">
           <Recommended />
         </div> */}

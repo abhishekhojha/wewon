@@ -1,5 +1,6 @@
 import React from "react";
-import JoSAAPredictor from "@/components/Predictor/JoSAAPredictor";
+// import JoSAAPredictor from "@/components/Predictor/JoSAAPredictor";
+import JoSAAPredictorV2 from "@/components/Predictor/v2/JoSAAPredictorV2";
 import TrustSection from "@/components/common/TrustSection";
 import MainHeading from "@/components/sections/MainHeading";
 import PredictorGuard from "@/components/Predictor/PredictorGuard";
@@ -19,7 +20,8 @@ export default function page() {
         <MainHeading top="JoSAA College Predictor" bottom="Rounds 1 – 6" />
       </div>
       <div className="container mx-auto px-4">
-        <JoSAAPredictor />
+        <JoSAAPredictorV2 />
+        {/* <JoSAAPredictor /> */}
       </div>
       <div className="container mx-auto mt-10 mb-16 px-4">
         <TrustSection />
