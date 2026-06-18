@@ -18,7 +18,7 @@ import { limitLeft } from "@/utils/helpers";
 import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 
 
-const PRODUCT_SLUG = "jee-advanced-predictor";
+const PRODUCT_SLUG = "jee-advanced-predictor-v2";
 const RETURN_URL = "/jee-advanced-predictor-v2";
 
 const CATEGORY_RANK_MANDATORY_CATEGORIES = [

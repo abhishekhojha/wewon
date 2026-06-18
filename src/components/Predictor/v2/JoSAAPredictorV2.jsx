@@ -26,7 +26,7 @@ import { limitLeft } from "@/utils/helpers";
 import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 
 
-const PRODUCT_SLUG = "josaa-predictor";
+const PRODUCT_SLUG = "josaa-predictor-v2";
 const RETURN_URL = "/josaa-predictor-v2";
 
 export default function JoSAAPredictorV2() {

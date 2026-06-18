@@ -25,7 +25,7 @@ import { limitLeft } from "@/utils/helpers";
 import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 
 
-const PRODUCT_SLUG = "csab-predictor";
+const PRODUCT_SLUG = "csab-predictor-v2";
 const RETURN_URL = "/csab-predictor-v2";
 
 export default function CSABPredictorV2() {
