@@ -27,7 +27,7 @@ import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 
 
 const PRODUCT_SLUG = "josaa-predictor";
-const RETURN_URL = "/josaa-predictor";
+const RETURN_URL = "/josaa-predictor-v2";
 
 export default function JoSAAPredictorV2() {
   const dispatch = useAppDispatch();

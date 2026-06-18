@@ -1,6 +1,5 @@
 import React from "react";
-// import CollegePredictor from "@/components/Predictor/CollegePredictor";
-import CollegePredictorV2 from "@/components/Predictor/v2/CollegePredictorV2";
+import CollegePredictor from "@/components/Predictor/CollegePredictor";
 import TrustSection from "@/components/common/TrustSection";
 import MainHeading from "@/components/sections/MainHeading";
 import PredictorGuard from "@/components/Predictor/PredictorGuard";
@@ -20,8 +19,7 @@ export default function page() {
         <MainHeading top="Find Your Perfect College" bottom="With Our Tool" />
       </div>
       <div className="container mx-auto px-4">
-        <CollegePredictorV2 />
-        {/* <CollegePredictor /> */}
+        <CollegePredictor />
       </div>
       <div className="container mx-auto mt-10 mb-16 px-4">
         <TrustSection />

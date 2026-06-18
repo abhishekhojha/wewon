@@ -19,7 +19,7 @@ import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 
 
 const PRODUCT_SLUG = "jee-advanced-predictor";
-const RETURN_URL = "/jee-advanced-predictor";
+const RETURN_URL = "/jee-advanced-predictor-v2";
 
 const CATEGORY_RANK_MANDATORY_CATEGORIES = [
   "SC", "ST", "OPEN (PwD)", "EWS (PwD)", "OBC-NCL (PwD)", 

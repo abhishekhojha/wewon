@@ -26,7 +26,7 @@ import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 
 
 const PRODUCT_SLUG = "csab-predictor";
-const RETURN_URL = "/csab-predictor";
+const RETURN_URL = "/csab-predictor-v2";
 
 export default function CSABPredictorV2() {
   const dispatch = useAppDispatch();
