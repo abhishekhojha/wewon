@@ -94,6 +94,13 @@ export const getPredictorPurchaseDetails = (
     if (order.status !== "completed") return;
 
     let grantsAccessToRequested = false;
+    const orderProductSlug = order.product?.slug || "";
+
+    // Direct match check (e.g. they purchased the individual predictor product directly)
+    if (orderProductSlug && orderProductSlug === productSlug) {
+      grantsAccessToRequested = true;
+    }
+
     const isCombo =
       order.product?.features?.collegePredictor.isEnabled &&
       !order.product?.features?.choiceFilling.isEnabled &&
@@ -103,7 +110,7 @@ export const getPredictorPurchaseDetails = (
     //isCombo Predictor
     if (isCombo) {
       // allowedPredictorsSet.add(productSlug);
-      if (order.product?.slug === productSlug) grantsAccessToRequested = true;
+      if (orderProductSlug === productSlug) grantsAccessToRequested = true;
       // console.log(count,"isCombo",Array.from(allowedPredictorsSet))
     }
     const allowedPredictors =
