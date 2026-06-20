@@ -42,7 +42,6 @@ export default function IITCollegePredictorV2() {
     jeeAdvancedCategoryRank: "",
     category: "OPEN", // Default to OPEN (General)
     gender: "Male",
-    homeState: "",
     counselingType: "JoSAA", // Fixed for IIT predictor
     roundNumber: "",
     instituteType: "IIT", // Fixed for IIT predictor
@@ -283,7 +282,6 @@ export default function IITCollegePredictorV2() {
           : undefined,
         category: formData.category,
         gender: formData.gender,
-        homeState: formData.homeState,
         counselingType: formData.counselingType,
         roundNumber: Number(formData.roundNumber),
         instituteType: formData.instituteType || undefined,
@@ -394,7 +392,7 @@ export default function IITCollegePredictorV2() {
               Add your preferences
             </h3>
             <p className="text-xs sm:text-sm text-[var(--muted-text)] mt-1">
-              Category, gender, and home state
+              Category and gender
             </p>
           </div>
           <div className="p-3 sm:p-6 bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-sm">
@@ -516,29 +514,7 @@ export default function IITCollegePredictorV2() {
               </select>
             </div>
 
-            {/* Select Home State */}
-            <div>
-              <label
-                htmlFor="homeState"
-                className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
-              >
-                Select Your Home State <span className="text-red-500">*</span>
-              </label>
-              <select
-                required
-                id="homeState"
-                value={formData.homeState}
-                onChange={handleChange}
-                className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
-              >
-                <option value="">Select Your Home State</option>
-                {options.states.map((state) => (
-                  <option key={state} value={state}>
-                    {state}
-                  </option>
-                ))}
-              </select>
-            </div>
+
 
             {/* Round Number */}
             <div>
