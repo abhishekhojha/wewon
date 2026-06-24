@@ -116,6 +116,8 @@ export interface ChoiceRow {
   origin?: string;
   isHomeState?: boolean;
   district?: string;
+  category?: string;
+  instituteType?: string;
 }
 
 export interface ChoiceFillingResponse {
