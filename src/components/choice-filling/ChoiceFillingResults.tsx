@@ -139,7 +139,7 @@ export default function ChoiceFillingResults({
       value: results.user?.homeState,
     },
     {
-      label: "Districts",
+      label: "Preferred Location",
       value: toolKey === "uptac"
         ? results.user?.districts && results.user.districts.length > 0
           ? results.user.districts.join(", ")
@@ -360,7 +360,7 @@ export default function ChoiceFillingResults({
                     </th>
                     {showDistrict && (
                       <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                        District
+                        Location
                       </th>
                     )}
                     {showQuota && (
@@ -522,7 +522,7 @@ export default function ChoiceFillingResults({
                     <>
                       Show All {results.totalChoices} Choices{" "}
                       <ChevronDown size={16} />
-                    </>
+                    </>Preferred
                   )}
                 </button>
               </div>
