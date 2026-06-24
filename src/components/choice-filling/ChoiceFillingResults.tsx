@@ -90,6 +90,8 @@ export default function ChoiceFillingResults({
   const showGender = allChoices.some((c) => hasValue(c.gender));
   const showOpeningRank = !isUptacStudent && allChoices.some((c) => hasValue(c.openingRank));
   const showClosingRank = !isUptacStudent && allChoices.some((c) => hasValue(c.closingRank));
+  const showInstituteType = allChoices.some((c) => hasValue(c.instituteType));
+  const showCategory = allChoices.some((c) => hasValue(c.category));
   const showOrigin = allChoices.some((c) => hasValue(c.origin));
   const showDistrict = allChoices.some((c) => hasValue(c.district));
   const selectedIncludedStates =
@@ -367,12 +369,12 @@ export default function ChoiceFillingResults({
                     <th className="px-2 sm:px-4 py-2 sm:py-3 min-w-[180px]">
                       Program
                     </th>
-                    {isUptacStudent && (
+                    {showCategory && (
                       <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
                         Category
                       </th>
                     )}
-                    {isUptacStudent && (
+                    {showInstituteType && (
                       <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
                         Institute Type
                       </th>
@@ -450,12 +452,12 @@ export default function ChoiceFillingResults({
                         <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] break-words max-w-[280px]">
                           {choice.program}
                         </td>
-                        {isUptacStudent && (
+                        {showCategory && (
                           <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap">
                             {choice.seatType || choice.category || "-"}
                           </td>
                         )}
-                        {isUptacStudent && (
+                        {showInstituteType && (
                           <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap">
                             {choice.instituteType || "-"}
                           </td>

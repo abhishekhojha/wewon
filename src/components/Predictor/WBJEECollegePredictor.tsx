@@ -1069,7 +1069,7 @@ export default function WBJEECollegePredictor() {
                 disabled={loading}
                 className="w-full bg-[var(--primary)] text-white font-semibold p-2.5 sm:p-3.5 text-sm sm:text-base rounded-lg shadow-md hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                {loading ? "Predicting..." : "Get Prediction"}
+                {loading ? "Predicting..." : "Predict My College"}
               </button>
             </div>
             <p className="text-center text-[10px] sm:text-xs text-[var(--muted-text)] pt-2">
