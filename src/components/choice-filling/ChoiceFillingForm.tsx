@@ -615,7 +615,8 @@ export default function ChoiceFillingForm({
           return resolved.length > 0 ? resolved : undefined;
         })();
       } else {
-        payload.homeState = formData.homeState;
+        // ALWAYS SEND UTTAR PRADESH FOR UPTAC
+        payload.homeState = isUPTAC ? "Uttar Pradesh" : formData.homeState;
         payload.includedStates = formData.includedStates.length > 0 ? formData.includedStates : undefined;
         payload.instituteType = formData.instituteTypes.length > 0 ? formData.instituteTypes : undefined;
         if (isUPTAC) {
