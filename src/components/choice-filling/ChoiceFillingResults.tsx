@@ -522,7 +522,7 @@ export default function ChoiceFillingResults({
                     <>
                       Show All {results.totalChoices} Choices{" "}
                       <ChevronDown size={16} />
-                    </>Preferred
+                    </>
                   )}
                 </button>
               </div>
