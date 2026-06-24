@@ -75,7 +75,7 @@ export default function MPDTECollegePredictor() {
   const [formData, setFormData] = useState<MPDTEFormData>({
     jeeMainRank: "",
     jee_category_rank: "",
-    instituteType: [],
+    instituteType: ["Government Autonomous"],
     category: "OPEN",
     gender: "MALE",
     seatClass: "Regular Seat",
@@ -492,6 +492,10 @@ export default function MPDTECollegePredictor() {
       toast.error("Please enter your JEE Main Rank");
       return;
     }
+    if (formData.instituteType.length === 0) {
+      toast.error("Please select at least one Institute Type");
+      return;
+    }
     if (!formData.round) {
       toast.error("Please select Counselling Round");
       return;
@@ -538,7 +542,7 @@ export default function MPDTECollegePredictor() {
           <form className="space-y-3 sm:space-y-5" onSubmit={handleSubmit}>
             {/* Rank */}
             <div>
-              <label htmlFor="jeeMainRank" className="block text-xs sm:text-sm font-medium mb-1">JEE Main Rank (Required)</label>
+              <label htmlFor="jeeMainRank" className="block text-xs sm:text-sm font-medium mb-1">JEE Main Rank <span className="text-red-500">*</span></label>
               <input type="number" id="jeeMainRank" value={formData.jeeMainRank} onChange={handleChange} disabled={crlRankLocked} className="w-full p-2 border rounded-lg" placeholder="e.g. 45709" required />
               {crlRankLocked && <p className="text-xs text-amber-700 mt-1">{rankLockMessage}</p>}
             </div>
@@ -552,7 +556,7 @@ export default function MPDTECollegePredictor() {
 
             {/* Institute Type */}
             <div>
-              <label className="block text-xs sm:text-sm font-medium mb-1">Institute Type</label>
+              <label className="block text-xs sm:text-sm font-medium mb-1">Institute Type <span className="text-red-500">*</span></label>
               <div className="flex flex-wrap gap-2">
                 {metadata.institute_types.map((type) => (
                   <button
@@ -609,7 +613,7 @@ export default function MPDTECollegePredictor() {
 
             {/* Category */}
             <div>
-              <label htmlFor="category" className="block text-xs sm:text-sm font-medium mb-1">Category</label>
+              <label htmlFor="category" className="block text-xs sm:text-sm font-medium mb-1">Category <span className="text-red-500">*</span></label>
               <select
                 id="category"
                 value={formData.category}
