@@ -65,6 +65,7 @@ export default function ChoiceFillingResults({
   const [showAll, setShowAll] = useState(false);
   const user = useAppSelector(selectUser);
   const isStudent = user?.userId?.role?.toLowerCase() === "student" || requestData.exportAs === "student";
+  const isUptacStudent = toolKey === "uptac" && isStudent;
   const [exportingExcel, setExportingExcel] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
 
@@ -87,9 +88,12 @@ export default function ChoiceFillingResults({
   const showQuota = allChoices.some((c) => hasValue(c.quota));
   const showSeatType = allChoices.some((c) => hasValue(c.seatType));
   const showGender = allChoices.some((c) => hasValue(c.gender));
-  const showOpeningRank = allChoices.some((c) => hasValue(c.openingRank));
-  const showClosingRank = allChoices.some((c) => hasValue(c.closingRank));
+  const showOpeningRank = !isUptacStudent && allChoices.some((c) => hasValue(c.openingRank));
+  const showClosingRank = !isUptacStudent && allChoices.some((c) => hasValue(c.closingRank));
+  const showInstituteType = allChoices.some((c) => hasValue(c.instituteType));
+  const showCategory = allChoices.some((c) => hasValue(c.category));
   const showOrigin = allChoices.some((c) => hasValue(c.origin));
+  const showDistrict = allChoices.some((c) => hasValue(c.district));
   const selectedIncludedStates =
     results.user?.includedStates && results.user.includedStates.length > 0
       ? results.user.includedStates
@@ -138,6 +142,16 @@ export default function ChoiceFillingResults({
       value: results.user?.homeState,
     },
     {
+      label: "Preferred Location",
+      value: toolKey === "uptac"
+        ? results.user?.districts && results.user.districts.length > 0
+          ? results.user.districts.join(", ")
+          : requestData.districts && requestData.districts.length > 0
+            ? requestData.districts.join(", ")
+            : "All"
+        : undefined,
+    },
+    {
       label: "Included States",
       value: showIncludedStates
         ? selectedIncludedStates.length > 0
@@ -162,7 +176,11 @@ export default function ChoiceFillingResults({
   const handleExportExcel = async () => {
     setExportingExcel(true);
     try {
-      const blob = await exportChoiceListExcel(requestData, toolKey);
+      const exportReq = { ...requestData };
+      if (isStudent) {
+        exportReq.exportAs = "student";
+      }
+      const blob = await exportChoiceListExcel(exportReq, toolKey);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -183,7 +201,11 @@ export default function ChoiceFillingResults({
   const handleExportPDF = async () => {
     setExportingPDF(true);
     try {
-      const blob = await exportChoiceListPDF(requestData, toolKey);
+      const exportReq = { ...requestData };
+      if (isStudent) {
+        exportReq.exportAs = "student";
+      }
+      const blob = await exportChoiceListPDF(exportReq, toolKey);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -347,6 +369,21 @@ export default function ChoiceFillingResults({
                     <th className="px-2 sm:px-4 py-2 sm:py-3 min-w-[180px]">
                       Program
                     </th>
+                    {showCategory && (
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                        Category
+                      </th>
+                    )}
+                    {showInstituteType && (
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                        Institute Type
+                      </th>
+                    )}
+                    {showDistrict && (
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                        Location
+                      </th>
+                    )}
                     {showQuota && (
                       <th className="px-2 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
                         Quota
@@ -415,6 +452,21 @@ export default function ChoiceFillingResults({
                         <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] break-words max-w-[280px]">
                           {choice.program}
                         </td>
+                        {showCategory && (
+                          <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap">
+                            {choice.seatType || choice.category || "-"}
+                          </td>
+                        )}
+                        {showInstituteType && (
+                          <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap">
+                            {choice.instituteType || "-"}
+                          </td>
+                        )}
+                        {showDistrict && (
+                          <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap">
+                            {choice.district || "-"}
+                          </td>
+                        )}
                         {showQuota && (
                           <td className="px-2 sm:px-4 py-3 text-[var(--muted-text)] whitespace-nowrap">
                             {hasValue(choice.quota) ? choice.quota : "-"}

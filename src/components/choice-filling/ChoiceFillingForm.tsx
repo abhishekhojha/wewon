@@ -38,6 +38,7 @@ type ChoiceFillingFormState = {
   subCategory: string; // JAC Delhi specific
   region: string; // JAC Delhi specific
   includedInstitutes: string[]; // JAC Delhi specific
+  districts: string[]; // UPTAC-specific: district filters
 };
 
 const mergePrefillIntoForm = (
@@ -51,6 +52,7 @@ const mergePrefillIntoForm = (
     gender?: string;
     category?: string;
     homeState?: string;
+    districts?: string[];
   },
   preserveExistingValues: boolean = false,
   isJACDelhi: boolean = false,
@@ -92,6 +94,10 @@ const mergePrefillIntoForm = (
       prefill.homeState && (!preserveExistingValues || !prev.homeState)
         ? prefill.homeState
         : prev.homeState,
+    districts:
+      prefill.districts && (!preserveExistingValues || prev.districts.length === 0)
+        ? prefill.districts
+        : prev.districts,
   };
 };
 
@@ -206,7 +212,7 @@ export default function ChoiceFillingForm({
     crlRank: "",
     categoryRank: "",
     gender: "Male",
-    category: "OPEN",
+    category: toolKey === "uptac" ? "" : "OPEN",
     homeState: "",
     includedStates: [] as string[],
     instituteTypes: [] as string[],
@@ -216,6 +222,7 @@ export default function ChoiceFillingForm({
     subCategory: "None",
     region: "",
     includedInstitutes: [] as string[],
+    districts: [] as string[],
   });
 
   const [results, setResults] = useState<ChoiceFillingResponse | null>(null);
@@ -235,9 +242,10 @@ export default function ChoiceFillingForm({
   const [stateSearch, setStateSearch] = useState("");
   const [branchGroupSearch, setBranchGroupSearch] = useState("");
   const [jacInstituteSearch, setJacInstituteSearch] = useState("");
+  const [districtSearch, setDistrictSearch] = useState("");
 
   const isCrlRankRequired = isJACDelhi || !isIIT || formData.category === "OPEN";
-  const isCategoryRankRequired = !isJACDelhi && formData.category !== "OPEN";
+  const isCategoryRankRequired = !isUPTAC && !isJACDelhi && formData.category !== "OPEN";
 
 
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -245,6 +253,9 @@ export default function ChoiceFillingForm({
 
   useEffect(() => {
     if (orderPrefill) {
+      if (toolKey === "uptac" && (orderPrefill as any).districts) {
+        (orderPrefill as any).districts = (orderPrefill as any).districts.filter((d: string) => d.toLowerCase() !== "kaushambi");
+      }
       const mergedPrefill = {
         ...orderPrefill,
         ...(isIIT && jeeAdvanceAccess && typeof jeeAdvanceAccess.jeeAdvancedRank === "number"
@@ -302,6 +313,17 @@ export default function ChoiceFillingForm({
       try {
         setMetaLoading(true);
         const data = await fetchChoiceFillingMetadata(toolKey);
+        
+        // Filter out Kaushambi for UPTAC choice filling
+        if (toolKey === "uptac" && data) {
+          if (data.districts) {
+            data.districts = data.districts.filter((d: string) => d.toLowerCase() !== "kaushambi");
+          }
+          if (data.prefill?.districts) {
+            data.prefill.districts = data.prefill.districts.filter((d: string) => d.toLowerCase() !== "kaushambi");
+          }
+        }
+
         setMetadata(data);
 
         const prefill = data.prefill;
@@ -510,6 +532,18 @@ export default function ChoiceFillingForm({
     });
   };
 
+  const handleDistrictToggle = (district: string) => {
+    setFormData((prev) => {
+      const current = prev.districts;
+      return {
+        ...prev,
+        districts: current.includes(district)
+          ? current.filter((d) => d !== district)
+          : [...current, district],
+      };
+    });
+  };
+
   const availableInstituteStates =
     metadata?.instituteStates || metadata?.states || metadata?.homeStates || [];
 
@@ -529,6 +563,11 @@ export default function ChoiceFillingForm({
 
     if (!formData.name.trim()) {
       toast.error("Please enter your name.");
+      return;
+    }
+
+    if (!formData.category) {
+      toast.error("Please select your Category.");
       return;
     }
 
@@ -590,11 +629,15 @@ export default function ChoiceFillingForm({
           return resolved.length > 0 ? resolved : undefined;
         })();
       } else {
-        payload.homeState = formData.homeState;
+        // ALWAYS SEND UTTAR PRADESH FOR UPTAC
+        payload.homeState = isUPTAC ? "Uttar Pradesh" : formData.homeState;
         payload.includedStates = formData.includedStates.length > 0 ? formData.includedStates : undefined;
         payload.instituteType = formData.instituteTypes.length > 0 ? formData.instituteTypes : undefined;
-        if (isUPTAC && formData.hasTFW) {
-          payload.hasTFW = true;
+        if (isUPTAC) {
+          if (formData.hasTFW) {
+            payload.hasTFW = true;
+          }
+          payload.districts = formData.districts.length > 0 ? formData.districts : undefined;
         }
       }
 
@@ -730,7 +773,7 @@ export default function ChoiceFillingForm({
               Get your choice list
             </h3>
             <p className="text-xs sm:text-sm text-[var(--muted-text)] mt-1">
-              Personalized, rank-optimized list ready for JoSAA
+              Personalized, rank-optimized list ready for {isUPTAC || productSlug === "uptac" ? "UPTAC/AKTU/UPTU" : "JoSAA"}
             </p>
           </div>
           <p className="text-xs text-[var(--muted-text)] px-2">
@@ -898,6 +941,11 @@ export default function ChoiceFillingForm({
                 required
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
+                {isUPTAC && (
+                  <option value="">
+                    Select Category
+                  </option>
+                )}
                 {(
                   metadata?.categories || [
                     "OPEN",
@@ -1253,7 +1301,7 @@ export default function ChoiceFillingForm({
                 </div>
 
                 {/* Included States - Multi Select (Inclusion Filter) */}
-                {availableInstituteStates.length > 0 && (
+                {!isUPTAC &&  availableInstituteStates.length > 0 && (
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
                       College Location Preferences (Optional)
@@ -1439,6 +1487,110 @@ export default function ChoiceFillingForm({
                   )}
                 </div>
               </>
+            )}
+
+            {/* District Filter - UPTAC only */}
+            {isUPTAC && metadata?.districts && metadata.districts.length > 0 && (
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
+                  Preferred Locations (Optional)
+                </label>
+                <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
+                  <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
+                    <input
+                      type="text"
+                      placeholder="Search locations..."
+                      value={districtSearch}
+                      onChange={(e) => setDistrictSearch(e.target.value)}
+                      className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
+                    />
+                  </div>
+                  <div className="max-h-48 overflow-y-auto p-1.5">
+                    <label className="flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-1 group">
+                      <input
+                        type="checkbox"
+                        checked={
+                          formData.districts.length === metadata.districts.length
+                        }
+                        onChange={() => {
+                          if (!metadata?.districts) return;
+                          if (formData.districts.length === metadata.districts.length) {
+                            setFormData((prev) => ({
+                              ...prev,
+                              districts: [],
+                            }));
+                          } else {
+                            setFormData((prev) => ({
+                              ...prev,
+                              districts: [...metadata.districts!],
+                            }));
+                          }
+                        }}
+                        className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)] cursor-pointer"
+                      />
+                      <span className="text-xs sm:text-sm font-bold text-[var(--foreground)]">
+                        Select All ({metadata.districts.length})
+                      </span>
+                    </label>
+                    <div className="border-t border-[var(--border)] my-1.5 mx-2"></div>
+                    {metadata.districts
+                       .filter((d) =>
+                        d.toLowerCase().includes(districtSearch.toLowerCase())
+                      )
+                      .map((district) => (
+                        <label
+                          key={district}
+                          className={`flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-0.5 ${
+                            formData.districts.includes(district)
+                              ? "bg-[var(--primary)]/5"
+                              : ""
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.districts.includes(district)}
+                            onChange={() => handleDistrictToggle(district)}
+                            className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)] cursor-pointer"
+                          />
+                          <span className="text-xs sm:text-sm flex-1 text-[var(--muted-text)] font-medium group-hover:text-[var(--foreground)]">
+                            {district}
+                          </span>
+                          {formData.districts.includes(district) && (
+                            <svg
+                              className="w-4 h-4 text-[var(--primary)] flex-shrink-0"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          )}
+                        </label>
+                      ))}
+                    {metadata.districts.filter((d) =>
+                      d.toLowerCase().includes(districtSearch.toLowerCase())
+                    ).length === 0 && (
+                      <p className="text-[10px] sm:text-xs text-[var(--muted-text)] text-center py-4">
+                        No locations match your search
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {formData.districts.length === 0 && (
+                  <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1.5 ml-1">
+                    No selection = All locations included
+                  </p>
+                )}
+                {formData.districts.length > 0 && (
+                  <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1.5 ml-1 font-semibold">
+                    {formData.districts.length} location
+                    {formData.districts.length > 1 ? "s" : ""} selected
+                  </p>
+                )}
+              </div>
             )}
 
             {/* TFW Toggle - UPTAC only */}

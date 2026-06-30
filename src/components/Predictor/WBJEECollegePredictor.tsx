@@ -13,7 +13,7 @@ import {
 import { getPredictorBySlug, PredictorProduct } from "@/data/counsellingProducts";
 import PredictionResults from "./PredictionResults";
 import { toast } from "sonner";
-import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
+// import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
@@ -76,12 +76,17 @@ export default function WBJEECollegePredictor() {
   const userOrders = useAppSelector(selectUserOrders);
   const isCounsellor = userData?.userId?.role === "counsellor";
 
-  const {
-    prefill,
-    crlRankLocked,
-    categoryRankLocked,
-    lockMessage,
-  } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
+  // Prefill paused for this predictor
+  //   const {
+  //   prefill,
+  //   crlRankLocked,
+  //   categoryRankLocked,
+  //   lockMessage,
+  // } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
+  const prefill = undefined as any;
+  const crlRankLocked = false;
+  const categoryRankLocked = false;
+  const lockMessage = undefined as string | undefined;
 
   const [formData, setFormData] = useState<WBJEEFormData>({
     exam: "WBJEE",
@@ -1064,7 +1069,7 @@ export default function WBJEECollegePredictor() {
                 disabled={loading}
                 className="w-full bg-[var(--primary)] text-white font-semibold p-2.5 sm:p-3.5 text-sm sm:text-base rounded-lg shadow-md hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                {loading ? "Predicting..." : "Get Prediction"}
+                {loading ? "Predicting..." : "Predict My College"}
               </button>
             </div>
             <p className="text-center text-[10px] sm:text-xs text-[var(--muted-text)] pt-2">
