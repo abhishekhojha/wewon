@@ -5,6 +5,8 @@ import Image from "next/image";
 import {
   predictMPDTE,
   getMPDTEMetadata,
+  getMPDTEInstitutes,
+  getMPDTEBranches,
   fetchPredictorBySlug,
   PredictorListItem,
 } from "@/network/predictor";
@@ -98,7 +100,13 @@ export default function MPDTECollegePredictor() {
   });
   const [loadingMetadata, setLoadingMetadata] = useState(true);
 
-
+  const [availableInstitutes, setAvailableInstitutes] = useState<string[]>([]);
+  const [loadingInstitutes, setLoadingInstitutes] = useState(false);
+  const [instituteSearch, setInstituteSearch] = useState("");
+  
+  const [availableBranches, setAvailableBranches] = useState<string[]>([]);
+  const [loadingBranches, setLoadingBranches] = useState(false);
+  const [branchSearch, setBranchSearch] = useState("");
 
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -555,7 +563,6 @@ export default function MPDTECollegePredictor() {
                     key={type}
                     type="button"
                     onClick={() => handleInstituteTypeChange(type)}
-                    disabled={isPrivateSelected && type !== "Private Colleges"}
                     className={`p-2 text-xs border rounded-lg ${formData.instituteType.includes(type) ? "bg-[var(--primary)] text-white" : "bg-white"}`}
                   >
                     {type}

@@ -253,6 +253,9 @@ export default function ChoiceFillingForm({
 
   useEffect(() => {
     if (orderPrefill) {
+      if (toolKey === "uptac" && (orderPrefill as any).districts) {
+        (orderPrefill as any).districts = (orderPrefill as any).districts.filter((d: string) => d.toLowerCase() !== "kaushambi");
+      }
       const mergedPrefill = {
         ...orderPrefill,
         ...(isIIT && jeeAdvanceAccess && typeof jeeAdvanceAccess.jeeAdvancedRank === "number"
@@ -310,6 +313,17 @@ export default function ChoiceFillingForm({
       try {
         setMetaLoading(true);
         const data = await fetchChoiceFillingMetadata(toolKey);
+        
+        // Filter out Kaushambi for UPTAC choice filling
+        if (toolKey === "uptac" && data) {
+          if (data.districts) {
+            data.districts = data.districts.filter((d: string) => d.toLowerCase() !== "kaushambi");
+          }
+          if (data.prefill?.districts) {
+            data.prefill.districts = data.prefill.districts.filter((d: string) => d.toLowerCase() !== "kaushambi");
+          }
+        }
+
         setMetadata(data);
 
         const prefill = data.prefill;
@@ -759,7 +773,7 @@ export default function ChoiceFillingForm({
               Get your choice list
             </h3>
             <p className="text-xs sm:text-sm text-[var(--muted-text)] mt-1">
-              Personalized, rank-optimized list ready for JoSAA
+              Personalized, rank-optimized list ready for {isUPTAC || productSlug === "uptac" ? "UPTAC/AKTU/UPTU" : "JoSAA"}
             </p>
           </div>
           <p className="text-xs text-[var(--muted-text)] px-2">
@@ -1479,13 +1493,13 @@ export default function ChoiceFillingForm({
             {isUPTAC && metadata?.districts && metadata.districts.length > 0 && (
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
-                  Preferred Districts (Optional)
+                  Preferred Locations (Optional)
                 </label>
                 <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
                   <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
                     <input
                       type="text"
-                      placeholder="Search districts..."
+                      placeholder="Search locations..."
                       value={districtSearch}
                       onChange={(e) => setDistrictSearch(e.target.value)}
                       className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
@@ -1520,7 +1534,7 @@ export default function ChoiceFillingForm({
                     </label>
                     <div className="border-t border-[var(--border)] my-1.5 mx-2"></div>
                     {metadata.districts
-                      .filter((d) =>
+                       .filter((d) =>
                         d.toLowerCase().includes(districtSearch.toLowerCase())
                       )
                       .map((district) => (
@@ -1560,19 +1574,19 @@ export default function ChoiceFillingForm({
                       d.toLowerCase().includes(districtSearch.toLowerCase())
                     ).length === 0 && (
                       <p className="text-[10px] sm:text-xs text-[var(--muted-text)] text-center py-4">
-                        No districts match your search
+                        No locations match your search
                       </p>
                     )}
                   </div>
                 </div>
                 {formData.districts.length === 0 && (
                   <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1.5 ml-1">
-                    No selection = All districts included
+                    No selection = All locations included
                   </p>
                 )}
                 {formData.districts.length > 0 && (
                   <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1.5 ml-1 font-semibold">
-                    {formData.districts.length} district
+                    {formData.districts.length} location
                     {formData.districts.length > 1 ? "s" : ""} selected
                   </p>
                 )}
