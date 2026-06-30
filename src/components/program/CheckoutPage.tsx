@@ -134,6 +134,11 @@ export default function CheckoutPage({
       if (!trimmedValue) return;
 
       if (field.type.toLowerCase() === "number") {
+        if (field.name === "categoryRank" || field.name === "jeeAdvancedCategoryRank") {
+          payload[field.name] = trimmedValue;
+          return;
+        }
+
         const parsedValue = Number(trimmedValue);
         payload[field.name] = Number.isNaN(parsedValue)
           ? trimmedValue
@@ -178,12 +183,14 @@ export default function CheckoutPage({
         return;
       }
 
-      if (
-        normalizedType === "number" &&
-        value &&
-        Number.isNaN(Number(value))
-      ) {
-        nextErrors[field.name] = `${field.label} must be a valid number`;
+      if (normalizedType === "number" && value) {
+        if (field.name === "categoryRank" || field.name === "jeeAdvancedCategoryRank") {
+          if (!/^\d+[pP]?$/.test(value)) {
+            nextErrors[field.name] = `${field.label} must be a valid number (optionally ending with 'P')`;
+          }
+        } else if (Number.isNaN(Number(value))) {
+          nextErrors[field.name] = `${field.label} must be a valid number`;
+        }
       }
 
       if (field.name === "phone" && value) {
@@ -249,8 +256,9 @@ export default function CheckoutPage({
     }
 
     const isPhoneField = field.name === "phone" || normalizedType === "phone" || normalizedType === "tel";
+    const isRankWithPField = field.name === "categoryRank" || field.name === "jeeAdvancedCategoryRank";
     const supportedInputTypes = ["number", "email", "tel", "date", "text"];
-    const inputType = isPhoneField ? "tel" : (supportedInputTypes.includes(normalizedType)
+    const inputType = isPhoneField ? "tel" : isRankWithPField ? "text" : (supportedInputTypes.includes(normalizedType)
       ? normalizedType
       : "text");
 
@@ -259,7 +267,14 @@ export default function CheckoutPage({
         id={fieldId}
         type={inputType}
         value={value}
-        onChange={(e) => handleMentorshipFieldChange(field.name, e.target.value)}
+        onChange={(e) => {
+          let val = e.target.value;
+          if (isRankWithPField) {
+            val = val.toUpperCase();
+            if (val !== "" && !/^\d+P?$/.test(val)) return;
+          }
+          handleMentorshipFieldChange(field.name, val);
+        }}
         className={inputClasses}
         placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
       />

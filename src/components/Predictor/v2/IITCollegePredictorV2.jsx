@@ -2,30 +2,31 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { predict, fetchPredictorBySlug } from "@/network/predictor";
+import { predictV2 } from "@/network/v2/predictor";
+import { fetchPredictorBySlug } from "@/network/predictor";
 import { getPredictorBySlug } from "@/data/counsellingProducts";
-import options from "./data/options.json";
-import PredictionResults from "./PredictionResults";
+import options from "../data/options.json";
+import PredictionResults from "../PredictionResults";
 import { toast } from "sonner";
 import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { fetchUserOrders } from "@/store/order/orderThunk";
 import { selectUserOrders } from "@/store/order/orderSlice";
-import PredictorPaymentModal from "./PredictorPaymentModal";
+import PredictorPaymentModal from "../PredictorPaymentModal";
 import { limitLeft } from "@/utils/helpers";
 import { getPredictorPurchaseDetails } from "@/utils/checkPredictorPurchase";
 
 
-const PRODUCT_SLUG = "jee-advanced-predictor";
-const RETURN_URL = "/jee-advanced-predictor";
+const PRODUCT_SLUG = "jee-advanced-predictor-v2";
+const RETURN_URL = "/jee-advanced-predictor-v2";
 
 const CATEGORY_RANK_MANDATORY_CATEGORIES = [
   "SC", "ST", "OPEN (PwD)", "EWS (PwD)", "OBC-NCL (PwD)", 
   "ST (PwD)", "SC (PwD)", "EWS", "OBC-NCL"
 ];
 
-export default function IITCollegePredictor() {
+export default function IITCollegePredictorV2() {
   const {
     prefill,
   } = useMentorshipToolPrefill({ productSlug: PRODUCT_SLUG });
@@ -272,10 +273,13 @@ export default function IITCollegePredictor() {
     setResults(null);
 
     try {
-      const { matchingOrder } = getPredictorPurchaseDetails(userOrders, PRODUCT_SLUG);
-      const isMentorship = matchingOrder?.product?.features?.hasMentorship === true;
+      const rawCategoryRank = formData.jeeAdvancedCategoryRank ? String(formData.jeeAdvancedCategoryRank) : "";
 
       const payload = {
+        jeeAdvancedRank: Number(formData.jeeAdvancedRank || 1),
+        jeeAdvancedCategoryRank: rawCategoryRank
+          ? (rawCategoryRank.includes('P') ? rawCategoryRank : Number(rawCategoryRank))
+          : undefined,
         category: formData.category,
         gender: formData.gender,
         counselingType: formData.counselingType,
@@ -284,21 +288,8 @@ export default function IITCollegePredictor() {
         branchGroup: formData.branchGroup.length > 0 ? formData.branchGroup : undefined,
       };
 
-      const rawCategoryRank = formData.jeeAdvancedCategoryRank ? String(formData.jeeAdvancedCategoryRank) : "";
-      const categoryRankVal = rawCategoryRank
-        ? (rawCategoryRank.includes('P') ? rawCategoryRank : Number(rawCategoryRank))
-        : 1;
-
-      if (isMentorship) {
-        payload.jeeAdvancedRank = Number(formData.jeeAdvancedRank || 1);
-        payload.jeeAdvancedCategoryRank = categoryRankVal;
-      } else {
-        payload.crlRank = Number(formData.jeeAdvancedRank || 1);
-        payload.categoryRank = categoryRankVal;
-      }
-
       console.log("Sending payload:", payload);
-      const response = await predict(payload);
+      const response = await predictV2(payload);
       console.log("Prediction response:", response.data);
       setResults(response.data);
     } catch (error) {
@@ -401,7 +392,7 @@ export default function IITCollegePredictor() {
               Add your preferences
             </h3>
             <p className="text-xs sm:text-sm text-[var(--muted-text)] mt-1">
-              Category, gender, and home state
+              Category and gender
             </p>
           </div>
           <div className="p-3 sm:p-6 bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-sm">
@@ -522,6 +513,8 @@ export default function IITCollegePredictor() {
                 ))}
               </select>
             </div>
+
+
 
             {/* Round Number */}
             <div>

@@ -12,7 +12,10 @@ interface keyPredictorSlugMap {
   "JOSAA": "josaa-predictor",
   "IIT": "iit-predictor",
   "EARLY_JEE": "jee-early-predictor",
-  "MPDTE": "mpdte-predictor"
+  "MPDTE": "mpdte-predictor",
+  "CSAB_V2": "csab-predictor-v2",
+  "JOSAA_V2": "josaa-predictor-v2",
+  "JEE_ADVANCE_V2": "jee-advanced-predictor-v2"
 }
 
 interface choiceFillingKeySlugMap {
@@ -34,7 +37,10 @@ interface predictorSlugKeyMap {
   "josaa-predictor": "JOSAA",
   "iit-predictor": "IIT",
   "jee-early-predictor": "EARLY_JEE",
-  "mpdte-predictor": "MPDTE"
+  "mpdte-predictor": "MPDTE",
+  "csab-predictor-v2": "CSAB_V2",
+  "josaa-predictor-v2": "JOSAA_V2",
+  "jee-advanced-predictor-v2": "JEE_ADVANCE_V2"
 }
 
 interface choiceFillingSlugKeyMap {
@@ -43,7 +49,7 @@ interface choiceFillingSlugKeyMap {
   "uptac": "UPTAC",
   "iit": "IIT"
 }
-export type predictorExamKey = "WBJEE" | "JEE_MAIN" | "JAC_DELHI" | "JAC_CHANDIGARH" | "UPTAC" | "MMMUT" | "HBTU" | "CSAB" | "JOSAA" | "IIT" | "EARLY_JEE" | "MPDTE";
+export type predictorExamKey = "WBJEE" | "JEE_MAIN" | "JAC_DELHI" | "JAC_CHANDIGARH" | "UPTAC" | "MMMUT" | "HBTU" | "CSAB" | "JOSAA" | "IIT" | "EARLY_JEE" | "MPDTE" | "CSAB_V2" | "JOSAA_V2" | "JEE_ADVANCE_V2";
 
 export const predictorKeyMap: keyPredictorSlugMap = {
   "WBJEE": "wbjee-predictor",
@@ -58,7 +64,10 @@ export const predictorKeyMap: keyPredictorSlugMap = {
   "JOSAA": "josaa-predictor",
   "IIT": "iit-predictor",
   "EARLY_JEE": "jee-early-predictor",
-  "MPDTE": "mpdte-predictor"
+  "MPDTE": "mpdte-predictor",
+  "CSAB_V2": "csab-predictor-v2",
+  "JOSAA_V2": "josaa-predictor-v2",
+  "JEE_ADVANCE_V2": "jee-advanced-predictor-v2"
 }
 // reverse mapping for predictor
 export const predictorSlugKeyMap: predictorSlugKeyMap = {
@@ -74,7 +83,10 @@ export const predictorSlugKeyMap: predictorSlugKeyMap = {
   "josaa-predictor": "JOSAA",
   "iit-predictor": "IIT",
   "jee-early-predictor": "EARLY_JEE",
-  "mpdte-predictor": "MPDTE"
+  "mpdte-predictor": "MPDTE",
+  "csab-predictor-v2": "CSAB_V2",
+  "josaa-predictor-v2": "JOSAA_V2",
+  "jee-advanced-predictor-v2": "JEE_ADVANCE_V2"
 }
 
 // reverse mapping for choice filling

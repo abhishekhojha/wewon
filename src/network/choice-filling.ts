@@ -9,6 +9,9 @@ export interface ToolAutoFillData {
   gender?: string;
   category?: string;
   homeState?: string;
+  jeeAdvancedRank?: number;
+  jeeAdvancedCategoryRank?: number;
+  districts?: string[];
 }
 
 export interface ChoiceFillingProduct {
@@ -74,6 +77,7 @@ export interface ChoiceFillingMetadata {
   rankLocked?: boolean;
   lockMessage?: string;
   prefill?: ToolAutoFillData;
+  districts?: string[];
 }
 
 export interface ChoiceFillingRequest {
@@ -95,6 +99,8 @@ export interface ChoiceFillingRequest {
   region?: string;
   instituteName?: string[];
   programName?: string[];
+  exportAs?: "student";
+  districts?: string[];
 }
 
 export interface ChoiceRow {
@@ -109,6 +115,9 @@ export interface ChoiceRow {
   closingRank?: number;
   origin?: string;
   isHomeState?: boolean;
+  district?: string;
+  category?: string;
+  instituteType?: string;
 }
 
 export interface ChoiceFillingResponse {
@@ -126,6 +135,7 @@ export interface ChoiceFillingResponse {
     /** JAC Delhi specific */
     region?: string;
     subCategory?: string;
+    districts?: string[];
   };
   searchRank: number;
   minRange: number;
@@ -187,8 +197,9 @@ export const exportChoiceListExcel = async (
   data: ChoiceFillingRequest,
   toolKey: string = DEFAULT_CHOICE_FILLING_TOOL_KEY,
 ): Promise<Blob> => {
+  const queryParam = data.exportAs === "student" ? "?exportAs=student" : "";
   const response = await apiClient.post(
-    choiceFillingToolPath(toolKey, "export/excel"),
+    choiceFillingToolPath(toolKey, `export/excel${queryParam}`),
     data,
     { responseType: "blob" },
   );
@@ -199,8 +210,9 @@ export const exportChoiceListPDF = async (
   data: ChoiceFillingRequest,
   toolKey: string = DEFAULT_CHOICE_FILLING_TOOL_KEY,
 ): Promise<Blob> => {
+  const queryParam = data.exportAs === "student" ? "?exportAs=student" : "";
   const response = await apiClient.post(
-    choiceFillingToolPath(toolKey, "export/pdf"),
+    choiceFillingToolPath(toolKey, `export/pdf${queryParam}`),
     data,
     { responseType: "blob" },
   );

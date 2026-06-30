@@ -4,7 +4,6 @@ import { useJeeAdvancedAccess } from "./useJeeAdvancedAccess";
 
 /** Slugs that are restricted by the JEE Advanced gates */
 const JEE_MENTORSHIP_SLUGS = ["jee-advanced-predictor"];
-const IIT_CHOICE_FILLING_SLUG = "iit";
 
 export function useJeeAdvancedGates(
   isAuthenticated: boolean,
@@ -18,37 +17,8 @@ export function useJeeAdvancedGates(
     });
   }, [userOrders]);
 
-  // 2. Check if the user has purchased the relevant products
-  const hasJosaaOrJeeAdvProduct = useMemo(() => {
-    return userOrders.some((order) => {
-      const allowed =
-        order.product?.features?.collegePredictor?.allowedPredictors ?? [];
-      // JOSAA or JEE_ADVANCE predictors
-      return allowed.includes("JEE_ADVANCE");
-    });
-  }, [userOrders]);
-
-  const hasIitChoiceFillingProduct = useMemo(() => {
-    return userOrders.some((order) => {
-      const allowed =
-        order.product?.features?.choiceFilling?.allowedChoiceFillers ?? [];
-      return allowed.includes("IIT");
-    });
-  }, [userOrders]);
-
-  const hasJeeMainChoiceFillingProduct = useMemo(() => {
-    return userOrders.some((order) => {
-      const allowed =
-        order.product?.features?.choiceFilling?.allowedChoiceFillers ?? [];
-      return allowed.includes("JEE_MAIN");
-    });
-  }, [userOrders]);
-
-  // 3. Only fetch the access API if they have a mentorship order AND one of the gated products
-  const shouldFetchAccess =
-    isAuthenticated &&
-    hasMentorshipOrder &&
-    (hasJosaaOrJeeAdvProduct || hasIitChoiceFillingProduct || hasJeeMainChoiceFillingProduct);
+  // 2. Only fetch the access API if they have a mentorship order
+  const shouldFetchAccess = isAuthenticated && hasMentorshipOrder;
 
   const { access, loading: accessLoading } = useJeeAdvancedAccess(shouldFetchAccess);
 
@@ -56,33 +26,23 @@ export function useJeeAdvancedGates(
   // Default to open (no restrictions) if access is null (loading) or not a mentorship order
   let hideJeeTools = false;
   let lockJeeTools = false;
+  let choiceFillingHidden = false;
+  let choiceFillingLocked = false;
 
   if (hasMentorshipOrder && access !== null) {
-    if (access.forceEnabled) {
-      // Force enabled overrides everything -> visible & usable
-      hideJeeTools = false;
-      lockJeeTools = false;
-    } else if (access.jeeAdvancedRank === null) {
-      // No rank (or pre-result) -> hidden
-      hideJeeTools = true;
-    } else if (!access.taskCompleted) {
-      // Rank filled but task pending -> visible but locked
-      lockJeeTools = true;
-    }
-    // If taskCompleted is true -> visible & usable (default false)
+    hideJeeTools = !access.predictorVisible;
+    lockJeeTools = !access.predictorAccessible;
+    choiceFillingHidden = !access.choiceFillingVisible;
+    choiceFillingLocked = access.choiceFillingLocked;
   }
-  console.log("hideJeeTools,JEE_MENTORSHIP_SLUGS", hideJeeTools,JEE_MENTORSHIP_SLUGS)
+
   // 5. Output structures for predictors
   const predictorHiddenSlugs = hideJeeTools ? JEE_MENTORSHIP_SLUGS : [];
   const predictorLockedSlugs = lockJeeTools ? JEE_MENTORSHIP_SLUGS : [];
 
   // 6. Output structures for choice filling
-  const choiceFillingHidden = hideJeeTools;
-  // Combine with any general order-level locks
-  const isAnyToolLockedViaOrder = userOrders.some(
-    (o) => o.choiceFillingLocked === true
-  );
-  const choiceFillingLocked = lockJeeTools || isAnyToolLockedViaOrder;
+  // IIT Choice is locked/unlocked based on jeeAdvanceAccess (access.choiceFillingLocked) only
+  const finalChoiceFillingLocked = choiceFillingLocked;
 
   return {
     hasMentorshipOrder,
@@ -90,8 +50,7 @@ export function useJeeAdvancedGates(
     predictorHiddenSlugs,
     predictorLockedSlugs,
     iitChoiceFillingHidden: choiceFillingHidden,
-    iitChoiceFillingLocked: choiceFillingLocked,
-    jeeMainChoiceFillingHidden: choiceFillingHidden,
-    jeeMainChoiceFillingLocked: choiceFillingLocked,
+    iitChoiceFillingLocked: finalChoiceFillingLocked,
+    jeeAdvanceAccess: access,
   };
 }

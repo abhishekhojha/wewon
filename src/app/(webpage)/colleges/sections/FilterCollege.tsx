@@ -39,7 +39,7 @@ export default function FilterColleges() {
   // Pending filters (selected but not yet applied)
   const [selectedInstituteType, setSelectedInstituteType] = useState<
     string | null
-  >(null);
+  >(searchParams.get("type") || null);
   const [selectedState, setSelectedState] = useState<string | null>(null); // States filter
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export default function FilterColleges() {
   // Applied filters (used for API calls)
   const [appliedInstituteType, setAppliedInstituteType] = useState<
     string | null
-  >(null);
+  >(searchParams.get("type") || null);
   const [appliedState, setAppliedState] = useState<string | null>(null);
   const [appliedCity, setAppliedCity] = useState<string | null>(null);
   const [appliedCourse, setAppliedCourse] = useState<string | null>(null);
@@ -56,6 +56,18 @@ export default function FilterColleges() {
   const itemsPerPage = 12;
   const maxRetries = 3;
   const [retryCount, setRetryCount] = useState<number>(0);
+
+  // Sync URL search params with state (especially for type query param)
+  useEffect(() => {
+    const type = searchParams.get("type");
+    if (type) {
+      setSelectedInstituteType(type);
+      setAppliedInstituteType(type);
+    } else {
+      setSelectedInstituteType(null);
+      setAppliedInstituteType(null);
+    }
+  }, [searchParams]);
 
   // Auto-retry when error occurs
   useEffect(() => {

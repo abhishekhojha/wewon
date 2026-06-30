@@ -94,6 +94,7 @@ export const getPredictorPurchaseDetails = (
     if (order.status !== "completed") return;
 
     let grantsAccessToRequested = false;
+
     const isCombo =
       order.product?.features?.collegePredictor.isEnabled &&
       !order.product?.features?.choiceFilling.isEnabled &&

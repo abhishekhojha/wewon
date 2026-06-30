@@ -10,6 +10,7 @@ export interface ToolAutoPrefillData {
   category?: string;
   homeState?: string;
   jeeAdvancedRank?: number;
+  jeeAdvancedCategoryRank?: number;
 }
 
 export interface ResolveMentorshipToolPrefillParams {
@@ -23,6 +24,7 @@ export interface ResolvedMentorshipToolPrefill {
   categoryRankLocked: boolean;
   lockMessage?: string;
   sourceOrderId: string;
+  choiceFillingLocked?: boolean;
 }
 
 const normalizeText = (value: unknown): string | undefined => {
@@ -58,7 +60,7 @@ const getOrderTimestamp = (order: Order): number => {
 };
 
 const isCompletedOrder = (order: Order): boolean => {
-  const status = (order.status || order.paymentStatus || "").toLowerCase();
+  const status = (order.status ?? order.paymentStatus ?? "").toLowerCase();
   return status === "completed";
 };
 
@@ -162,7 +164,7 @@ export const resolveMentorshipToolPrefill = (
     matchingOrder = [...orders]
       .filter(isCompletedOrder)
       .filter((order) => {
-        const orderProductId = order.product?._id || order.productId;
+        const orderProductId = order.product?._id ?? order.productId;
         return orderProductId === params.productId;
       })
       .sort((a, b) => getOrderTimestamp(b) - getOrderTimestamp(a))[0];
@@ -196,7 +198,7 @@ export const resolveMentorshipToolPrefill = (
       "studentName",
       "candidateName",
     ]),
-    crlRank: crlRankFromOverride || isJeeAdvancePredictor ? pickNumberValue(formData, ["jeeadvancedrank", "crlRank", "crl_rank", "rank"]) :  crlRankFromForm,
+    crlRank: crlRankFromOverride ?? (isJeeAdvancePredictor ? pickNumberValue(formData, ["jeeadvancedrank", "crlRank", "crl_rank", "rank"]) : crlRankFromForm),
     categoryRank: categoryRankFromOverride ?? categoryRankFromForm,
     gender: pickTextValue(formData, ["gender", "sex"]),
     category: pickTextValue(formData, ["category", "studentCategory"]),
@@ -207,6 +209,7 @@ export const resolveMentorshipToolPrefill = (
       "domicile",
     ]),
     jeeAdvancedRank: pickNumberValue(formData, ["jeeAdvancedRank", "jeeadvancedrank"]),
+    jeeAdvancedCategoryRank: pickNumberValue(formData, ["jeeAdvancedCategoryRank", "jeeadvancedcategoryrank"]),
   };
 
   const hasMentorshipCrlField = hasMentorshipField(matchingOrder, "crlRank");
@@ -220,16 +223,20 @@ export const resolveMentorshipToolPrefill = (
   const hasCategoryRankFromForm = categoryRankFromForm != null;
 
   const crlRankLocked = Boolean(
-    hasMentorshipCrlField ||
-    hasCrlRankOverride ||
-    hasCrlRankFromForm ||
-    rankOverrides.lockedByAdmin,
+    (hasMentorshipCrlField ||
+      hasCrlRankOverride ||
+      hasCrlRankFromForm ||
+      rankOverrides.lockedByAdmin) &&
+    ((typeof prefill.crlRank === "number" && prefill.crlRank > 0) ||
+      (typeof prefill.jeeAdvancedRank === "number" && prefill.jeeAdvancedRank > 0))
   );
   const categoryRankLocked = Boolean(
-    hasMentorshipCategoryField ||
-    hasCategoryRankOverride ||
-    hasCategoryRankFromForm ||
-    rankOverrides.lockedByAdmin,
+    (hasMentorshipCategoryField ||
+      hasCategoryRankOverride ||
+      hasCategoryRankFromForm ||
+      rankOverrides.lockedByAdmin) &&
+    typeof prefill.categoryRank === "number" &&
+    prefill.categoryRank > 0
   );
 
   if (!hasAnyPrefillValue(prefill) && !crlRankLocked && !categoryRankLocked) {
@@ -240,7 +247,8 @@ export const resolveMentorshipToolPrefill = (
     prefill,
     crlRankLocked,
     categoryRankLocked,
-    lockMessage: buildLockMessage(hasCrlRankOverride, hasMentorshipCrlField),
+    lockMessage: crlRankLocked ? buildLockMessage(hasCrlRankOverride, hasMentorshipCrlField) : undefined,
     sourceOrderId: matchingOrder._id,
+    choiceFillingLocked: matchingOrder.choiceFillingLocked === true,
   };
 };

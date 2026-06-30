@@ -20,46 +20,49 @@ const colleges = [
   {
     name: "IIT BOMBAY",
     imageUrl:
-      "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769433143/zvbgp6s9nf7gwo7mtzyq.webp",
+      "https://amzn-wewon-media-105906274677-ap-southeast-2-an.s3.ap-southeast-2.amazonaws.com/uploads/1779301408917-file.webp",
     url: "/indian-institute-of-technology-bombay",
   },
   {
     name: "IIT DELHI",
     imageUrl:
-      "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769435304/lgxqzt1oxtzbxiw6nwdo.webp",
+      "https://amzn-wewon-media-105906274677-ap-southeast-2-an.s3.ap-southeast-2.amazonaws.com/uploads/1779301400181-file.webp",
     url: "/indian-institute-of-technology-delhi",
   },
   {
     name: "IIT KHARAGPUR",
-    imageUrl: "/herocolleges/iit.jpg",
+    imageUrl:
+      "https://amzn-wewon-media-105906274677-ap-southeast-2-an.s3.ap-southeast-2.amazonaws.com/uploads/1779306324542-file.webp",
     url: "/indian-institute-of-technology-kharagpur",
   },
   {
     name: "NIT ALLAHABAD",
-    imageUrl: "/herocolleges/nit.jpg",
+    imageUrl:
+      "https://amzn-wewon-media-105906274677-ap-southeast-2-an.s3.ap-southeast-2.amazonaws.com/uploads/1779306298565-file.webp",
     url: "/motilal-nehru-national-institute-of-technology-allahabad",
   },
   {
     name: "IIT MANDI",
     imageUrl:
-      "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769442890/sbgcb3tggqzbbycm3eb4.webp",
+      "https://amzn-wewon-media-105906274677-ap-southeast-2-an.s3.ap-southeast-2.amazonaws.com/uploads/1779301391676-file.webp",
     url: "/indian-institute-of-technology-mandi",
   },
   {
     name: "IIT MADRAS",
     imageUrl:
-      "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769433935/caqfb43bygxwljmsle8a.webp",
+      "https://amzn-wewon-media-105906274677-ap-southeast-2-an.s3.ap-southeast-2.amazonaws.com/uploads/1779301428698-file.webp",
     url: "/indian-institute-of-technology-madras",
   },
   {
     name: "IIT KANPUR",
     imageUrl:
-      "https://res.cloudinary.com/dtqjgv5aa/image/upload/v1769434599/dpjct6kcuvto7yhlswep.webp",
+      "https://amzn-wewon-media-105906274677-ap-southeast-2-an.s3.ap-southeast-2.amazonaws.com/uploads/1779301419902-file.webp",
     url: "/indian-institute-of-technology-kanpur",
   },
   {
     name: "NIT AGARTALA",
-    imageUrl: "/herocolleges/nit.jpg",
+    imageUrl:
+      "https://amzn-wewon-media-105906274677-ap-southeast-2-an.s3.ap-southeast-2.amazonaws.com/uploads/1779306193398-file.webp",
     url: "/national-institute-of-technology-agartala",
   },
 ];

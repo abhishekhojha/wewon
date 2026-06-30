@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock, LockOpen } from "lucide-react";
 import GoogleAds from "../sections/GoogleAds";
 import ChoiceFillingResults from "./ChoiceFillingResults";
 import {
@@ -17,6 +17,8 @@ import { useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated, selectUser } from "@/store/auth/authSlice";
 import { useRouter } from "next/navigation";
 import { useMentorshipToolPrefill } from "@/hooks/useMentorshipToolPrefill";
+import { selectUserOrders } from "@/store/order/orderSlice";
+import { useJeeAdvancedGates } from "@/hooks/useJeeAdvancedGates";
 import Image from "next/image";
 import { GOOGLE_ADS_ACTIVE } from "@/data/constants";
 
@@ -36,6 +38,7 @@ type ChoiceFillingFormState = {
   subCategory: string; // JAC Delhi specific
   region: string; // JAC Delhi specific
   includedInstitutes: string[]; // JAC Delhi specific
+  districts: string[]; // UPTAC-specific: district filters
 };
 
 const mergePrefillIntoForm = (
@@ -44,10 +47,12 @@ const mergePrefillIntoForm = (
     name?: string;
     crlRank?: number;
     jeeAdvancedRank?: number;
+    jeeAdvancedCategoryRank?: number;
     categoryRank?: number | string;
     gender?: string;
     category?: string;
     homeState?: string;
+    districts?: string[];
   },
   preserveExistingValues: boolean = false,
   isJACDelhi: boolean = false,
@@ -62,15 +67,19 @@ const mergePrefillIntoForm = (
         ? prefill.name
         : prev.name,
     crlRank:
-      isIIT && typeof prefill.jeeAdvancedRank === "number" && (!preserveExistingValues || !prev.crlRank)
-        ? String(prefill.jeeAdvancedRank)
-        : typeof prefill.crlRank === "number" &&
-          (!preserveExistingValues || !prev.crlRank)
+      isIIT
+        ? typeof prefill.jeeAdvancedRank === "number" && (!preserveExistingValues || !prev.crlRank)
+          ? String(prefill.jeeAdvancedRank)
+          : prev.crlRank
+        : typeof prefill.crlRank === "number" && (!preserveExistingValues || !prev.crlRank)
         ? String(prefill.crlRank)
         : prev.crlRank,
     categoryRank:
-      prefill.categoryRank !== undefined &&
-      (!preserveExistingValues || !prev.categoryRank)
+      isIIT
+        ? typeof prefill.jeeAdvancedCategoryRank === "number" && (!preserveExistingValues || !prev.categoryRank)
+          ? String(prefill.jeeAdvancedCategoryRank)
+          : prev.categoryRank
+        : prefill.categoryRank !== undefined && (!preserveExistingValues || !prev.categoryRank)
         ? String(prefill.categoryRank)
         : prev.categoryRank,
     gender:
@@ -85,7 +94,49 @@ const mergePrefillIntoForm = (
       prefill.homeState && (!preserveExistingValues || !prev.homeState)
         ? prefill.homeState
         : prev.homeState,
+    districts:
+      prefill.districts && (!preserveExistingValues || prev.districts.length === 0)
+        ? prefill.districts
+        : prev.districts,
   };
+};
+
+const isValidRank = (val: any): boolean => {
+  if (val === undefined || val === null) return false;
+  if (typeof val === "number") return val > 0;
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (!trimmed) return false;
+    const num = Number(trimmed);
+    return !isNaN(num) && num > 0;
+  }
+  return false;
+};
+
+const isValidCategoryRank = (val: any): boolean => {
+  if (val === undefined || val === null) return false;
+  if (typeof val === "number") return val > 0;
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (!trimmed) return false;
+    const normalized = trimmed.replace(/[Pp]$/, "");
+    const num = Number(normalized);
+    return !isNaN(num) && num > 0;
+  }
+  return false;
+};
+
+const isYouTubeLink = (url: string): boolean => {
+  if (!url) return false;
+  return url.includes("youtube.com") || url.includes("youtu.be");
+};
+
+const getYouTubeEmbedUrl = (url: string): string | null => {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  const videoId = (match && match[2].length === 11) ? match[2] : null;
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
 };
 
 interface ChoiceFillingFormProps {
@@ -95,6 +146,13 @@ interface ChoiceFillingFormProps {
   productId?: string;
   productSlug?: string;
   capsule?: string;
+  labels?: {
+    heading: string;
+    subHeading: string;
+    formHeading: string;
+    capsule: string;
+    colleges: string[];
+  };
 }
 
 export default function ChoiceFillingForm({
@@ -104,28 +162,42 @@ export default function ChoiceFillingForm({
   productId,
   productSlug,
   capsule,
+  labels,
 }: ChoiceFillingFormProps) {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const user = useAppSelector(selectUser);
+  const userOrders = useAppSelector(selectUserOrders);
   const router = useRouter();
+
+  const isStudent = user?.userId?.role?.toLowerCase() === "student";
+  const [exportAsStudent, setExportAsStudent] = useState(false);
 
   const isIIT = toolKey === "iit";
   const isUPTAC = toolKey === "uptac";
   const isJACDelhi = toolKey === "jac-delhi";
 
-  
-
+  const {
+    iitChoiceFillingLocked,
+    accessLoading: gatesLoading,
+    jeeAdvanceAccess,
+  } = useJeeAdvancedGates(
+    isAuthenticated,
+    userOrders
+  );
 
   const {
     prefill: orderPrefill,
     crlRankLocked: isOrderRankLocked,
     categoryRankLocked: isOrderCategoryRankLocked,
     lockMessage: orderRankLockMessage,
+    choiceFillingLocked: isOrderChoiceFillingLocked,
   } = useMentorshipToolPrefill({
     productId,
     productSlug,
   });
-  const isDevelopmentMode = process.env.NODE_ENV === "development";
+
+  const [isDevelopmentMode, setIsDevelopmentMode] = useState(process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_API_URL === "https://wewon-backend-dev.vercel.app/");
+  const isChoiceFillingLocked = isIIT ? iitChoiceFillingLocked : isOrderChoiceFillingLocked;
   console.log("isDevelopmentMode", isDevelopmentMode);
   const [metadata, setMetadata] = useState<ChoiceFillingMetadata | null>(null);
   const [metaLoading, setMetaLoading] = useState(true);
@@ -140,7 +212,7 @@ export default function ChoiceFillingForm({
     crlRank: "",
     categoryRank: "",
     gender: "Male",
-    category: "OPEN",
+    category: toolKey === "uptac" ? "" : "OPEN",
     homeState: "",
     includedStates: [] as string[],
     instituteTypes: [] as string[],
@@ -150,6 +222,7 @@ export default function ChoiceFillingForm({
     subCategory: "None",
     region: "",
     includedInstitutes: [] as string[],
+    districts: [] as string[],
   });
 
   const [results, setResults] = useState<ChoiceFillingResponse | null>(null);
@@ -157,13 +230,22 @@ export default function ChoiceFillingForm({
     null,
   );
   const [loading, setLoading] = useState(false);
+  const [useCompletePreference, setUseCompletePreference] = useState(false);
+  const [submittedToolKey, setSubmittedToolKey] = useState<string>(toolKey || "jee-main");
+
+  useEffect(() => {
+    if (toolKey) {
+      setSubmittedToolKey(toolKey);
+    }
+  }, [toolKey]);
   const [iitSearch, setIitSearch] = useState("");
   const [stateSearch, setStateSearch] = useState("");
   const [branchGroupSearch, setBranchGroupSearch] = useState("");
   const [jacInstituteSearch, setJacInstituteSearch] = useState("");
+  const [districtSearch, setDistrictSearch] = useState("");
 
-  const isCrlRankRequired = !isIIT || formData.category === "OPEN";
-  const isCategoryRankRequired = formData.category !== "OPEN";
+  const isCrlRankRequired = isJACDelhi || !isIIT || formData.category === "OPEN";
+  const isCategoryRankRequired = !isUPTAC && !isJACDelhi && formData.category !== "OPEN";
 
 
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -171,13 +253,26 @@ export default function ChoiceFillingForm({
 
   useEffect(() => {
     if (orderPrefill) {
-      setFormData((prev) => mergePrefillIntoForm(prev, orderPrefill, false, isJACDelhi, isIIT));
+      const mergedPrefill = {
+        ...orderPrefill,
+        ...(isIIT && jeeAdvanceAccess && typeof jeeAdvanceAccess.jeeAdvancedRank === "number"
+          ? { jeeAdvancedRank: jeeAdvanceAccess.jeeAdvancedRank }
+          : {}),
+      };
+      setFormData((prev) => mergePrefillIntoForm(prev, mergedPrefill, false, isJACDelhi, isIIT));
     }
 
-    if (isOrderRankLocked && !isDevelopmentMode && !isIIT) {
+    const hasPrefilledCrl = isIIT
+      ? (isValidRank(orderPrefill?.jeeAdvancedRank) || isValidRank(jeeAdvanceAccess?.jeeAdvancedRank))
+      : isValidRank(orderPrefill?.crlRank);
+    const hasPrefilledCategory = isIIT
+      ? isValidCategoryRank(orderPrefill?.jeeAdvancedCategoryRank)
+      : isValidCategoryRank(orderPrefill?.categoryRank);
+
+    if (isOrderRankLocked && hasPrefilledCrl && !isDevelopmentMode && !isIIT) {
       setRankLocked(true);
     }
-    if (isOrderCategoryRankLocked && !isDevelopmentMode && !isIIT) {
+    if (isOrderCategoryRankLocked && hasPrefilledCategory && !isDevelopmentMode && !isIIT) {
       setCategoryRankLocked(true);
     }
     if (orderRankLockMessage) {
@@ -189,7 +284,25 @@ export default function ChoiceFillingForm({
     orderPrefill,
     orderRankLockMessage,
     isDevelopmentMode,
+    isIIT,
+    isJACDelhi,
+    jeeAdvanceAccess,
   ]);
+
+  // Prefill CRL Rank for IIT using jeeAdvancedRank from jeeAdvanceAccess
+  useEffect(() => {
+    if (isIIT && jeeAdvanceAccess && typeof jeeAdvanceAccess.jeeAdvancedRank === "number") {
+      setFormData((prev) => {
+        if (!prev.crlRank) {
+          return {
+            ...prev,
+            crlRank: String(jeeAdvanceAccess.jeeAdvancedRank),
+          };
+        }
+        return prev;
+      });
+    }
+  }, [isIIT, jeeAdvanceAccess]);
 
   // Fetch metadata on mount
   useEffect(() => {
@@ -202,19 +315,41 @@ export default function ChoiceFillingForm({
         const prefill = data.prefill;
         
         if (prefill) {
-          setFormData((prev) => mergePrefillIntoForm(prev, prefill, true, isJACDelhi, isIIT));
+          const mergedPrefill = {
+            ...prefill,
+            ...(isIIT && jeeAdvanceAccess && typeof jeeAdvanceAccess.jeeAdvancedRank === "number"
+              ? { jeeAdvancedRank: jeeAdvanceAccess.jeeAdvancedRank }
+              : {}),
+          };
+          setFormData((prev) => mergePrefillIntoForm(prev, mergedPrefill, true, isJACDelhi, isIIT));
         }
 
-        const isMetadataCrlPrefilled = typeof prefill?.crlRank === "number";
-        const isMetadataCategoryPrefilled = prefill?.categoryRank !== undefined && prefill?.categoryRank !== null;
+        const isMetadataCrlPrefilled = isIIT
+          ? (isValidRank(prefill?.jeeAdvancedRank) || isValidRank(jeeAdvanceAccess?.jeeAdvancedRank))
+          : isValidRank(prefill?.crlRank);
+        const isMetadataCategoryPrefilled = isIIT
+          ? isValidCategoryRank(prefill?.jeeAdvancedCategoryRank)
+          : isValidCategoryRank(prefill?.categoryRank);
+
+        const hasPrefilledCrl =
+          isMetadataCrlPrefilled ||
+          (isIIT
+            ? (isValidRank(orderPrefill?.jeeAdvancedRank) || isValidRank(jeeAdvanceAccess?.jeeAdvancedRank))
+            : isValidRank(orderPrefill?.crlRank));
+        const hasPrefilledCategory =
+          isMetadataCategoryPrefilled ||
+          (isIIT
+            ? isValidCategoryRank(orderPrefill?.jeeAdvancedCategoryRank)
+            : isValidCategoryRank(orderPrefill?.categoryRank));
+
         setRankLocked(
-          Boolean((data.rankLocked || isOrderRankLocked || isMetadataCrlPrefilled) && !isDevelopmentMode && !isIIT),
+          Boolean((data.rankLocked || isOrderRankLocked || isMetadataCrlPrefilled) && hasPrefilledCrl && !isDevelopmentMode && !isIIT),
         );
         setCategoryRankLocked(
           Boolean(
             (data.rankLocked ||
               isOrderCategoryRankLocked ||
-              isMetadataCategoryPrefilled) && !isDevelopmentMode && !isIIT,
+              isMetadataCategoryPrefilled) && hasPrefilledCategory && !isDevelopmentMode && !isIIT,
           ),
         );
         if (data.lockMessage && !isOrderRankLocked) {
@@ -300,7 +435,22 @@ export default function ChoiceFillingForm({
   };
 
   const handleGenderChange = (gender: string) => {
-    setFormData((prev) => ({ ...prev, gender }));
+    setFormData((prev) => {
+      let updatedIncludedInstitutes = prev.includedInstitutes;
+      if (isJACDelhi && gender === "Male") {
+        updatedIncludedInstitutes = prev.includedInstitutes.filter(
+          (inst) =>
+            inst !== "IGDTUW" &&
+            inst !== "Indira Gandhi Delhi Technical University for Women (IGDTUW)" &&
+            !inst.includes("IGDTUW")
+        );
+      }
+      return {
+        ...prev,
+        gender,
+        includedInstitutes: updatedIncludedInstitutes,
+      };
+    });
   };
 
   const handleInstituteTypeToggle = (type: string) => {
@@ -368,6 +518,18 @@ export default function ChoiceFillingForm({
     });
   };
 
+  const handleDistrictToggle = (district: string) => {
+    setFormData((prev) => {
+      const current = prev.districts;
+      return {
+        ...prev,
+        districts: current.includes(district)
+          ? current.filter((d) => d !== district)
+          : [...current, district],
+      };
+    });
+  };
+
   const availableInstituteStates =
     metadata?.instituteStates || metadata?.states || metadata?.homeStates || [];
 
@@ -387,6 +549,11 @@ export default function ChoiceFillingForm({
 
     if (!formData.name.trim()) {
       toast.error("Please enter your name.");
+      return;
+    }
+
+    if (!formData.category) {
+      toast.error("Please select your Category.");
       return;
     }
 
@@ -410,6 +577,11 @@ export default function ChoiceFillingForm({
       return;
     }
 
+    if (isJACDelhi && formData.subCategory.toLowerCase().includes("girl") && formData.gender === "Male") {
+      toast.error("Male candidates cannot select girl-only subcategories.");
+      return;
+    }
+
     setLoading(true);
     setResults(null);
 
@@ -423,6 +595,10 @@ export default function ChoiceFillingForm({
         gender: formData.gender,
         category: formData.category,
       };
+
+      if (exportAsStudent && !isJACDelhi) {
+        payload.exportAs = "student";
+      }
 
       if (isJACDelhi) {
         payload.region = formData.region;
@@ -439,23 +615,36 @@ export default function ChoiceFillingForm({
           return resolved.length > 0 ? resolved : undefined;
         })();
       } else {
-        payload.homeState = formData.homeState;
+        // ALWAYS SEND UTTAR PRADESH FOR UPTAC
+        payload.homeState = isUPTAC ? "Uttar Pradesh" : formData.homeState;
         payload.includedStates = formData.includedStates.length > 0 ? formData.includedStates : undefined;
         payload.instituteType = formData.instituteTypes.length > 0 ? formData.instituteTypes : undefined;
-        if (isUPTAC && formData.hasTFW) {
-          payload.hasTFW = true;
+        if (isUPTAC) {
+          if (formData.hasTFW) {
+            payload.hasTFW = true;
+          }
+          payload.districts = formData.districts.length > 0 ? formData.districts : undefined;
         }
       }
 
       payload.branchGroup = formData.branchGroups.length > 0 ? formData.branchGroups : undefined;
 
-      const response = await generateChoiceList(payload, toolKey);
+      const effectiveToolKey = (useCompletePreference && toolKey === "jee-main")
+        ? "jee-main/complete-preference"
+        : (toolKey || "jee-main");
+
+      const response = await generateChoiceList(payload, effectiveToolKey);
       setResults(response);
       setLastRequest(payload);
+      setSubmittedToolKey(effectiveToolKey);
 
       if (response.rankLocked && !isDevelopmentMode) {
-        setRankLocked(true);
-        setCategoryRankLocked(true);
+        if (isValidRank(formData.crlRank) || (isIIT && isValidRank(formData.crlRank))) {
+          setRankLocked(true);
+        }
+        if (isValidCategoryRank(formData.categoryRank)) {
+          setCategoryRankLocked(true);
+        }
       }
       if (response.lockMessage) {
         setRankLockMessage(response.lockMessage);
@@ -465,10 +654,10 @@ export default function ChoiceFillingForm({
       const prefill = response.prefill;
       if (prefill) {
         setFormData((prev) => mergePrefillIntoForm(prev, prefill, false, isJACDelhi, isIIT));
-        if (typeof prefill.crlRank === "number" && !isDevelopmentMode) {
+        if (isValidRank(prefill.crlRank) && !isDevelopmentMode) {
           setRankLocked(true);
         }
-        if (typeof prefill.categoryRank === "number" && !isDevelopmentMode) {
+        if (isValidCategoryRank(prefill.categoryRank) && !isDevelopmentMode) {
           setCategoryRankLocked(true);
         }
       }
@@ -506,7 +695,9 @@ export default function ChoiceFillingForm({
     }
   };
 
-  if (metaLoading) {
+  const showLoading = metaLoading || (isIIT && gatesLoading);
+
+  if (showLoading) {
     return (
       <div className="w-full flex items-center justify-center py-16">
         <div className="flex flex-col items-center gap-4">
@@ -519,20 +710,32 @@ export default function ChoiceFillingForm({
 
   return (
     <div className="container mx-auto px-2 sm:px-4 my-6 sm:my-10">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 items-start">
         {/* Left Column: Info Steps */}
-        <div className="flex flex-col justify-center space-y-3 sm:space-y-6">
+        <div className="flex flex-col space-y-3 sm:space-y-6">
           {product?.thumbnail && (
             <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg mb-4 sm:mb-6">
-              <Image
-                src={product.thumbnail}
-                alt={product.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              {isYouTubeLink(product.thumbnail) ? (
+                <iframe
+                  className="absolute inset-0 w-full h-full border-0"
+                  src={getYouTubeEmbedUrl(product.thumbnail) || ""}
+                  title={product.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <>
+                  <Image
+                    src={product.thumbnail}
+                    alt={product.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    priority
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                </>
+              )}
             </div>
           )}
           <div className="p-3 sm:p-6 bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-sm">
@@ -566,7 +769,36 @@ export default function ChoiceFillingForm({
         </div>
 
         {/* Right Column: Form */}
-        <div className="bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-6 md:p-8">
+        <div className="bg-[var(--background)] border border-[var(--border)] rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-6 md:p-8 relative">
+          {/* rank lock toggle button for development */}
+            {(process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_API_URL === "https://wewon-backend-dev.vercel.app/") && (
+          <button
+              className="absolute top-3 right-3 rounded-full p-2 hover:text-[var(--primary)] hover:bg-[var(--muted-text)/10] transition-colors"
+            onClick={() => {
+              setIsDevelopmentMode(!isDevelopmentMode);
+            }}
+          >
+            {isDevelopmentMode ? <Lock className="mr-2 h-4 w-4 text-red-500"/> : <LockOpen className="mr-2 h-4 w-4 text-green-500"/>}
+          </button>
+        )}
+
+          
+          {/* Lock overlay */}       
+          {isChoiceFillingLocked && (
+            <div className="absolute inset-0 z-10 rounded-lg sm:rounded-xl bg-white/80 backdrop-blur-[3px] flex flex-col items-center justify-center gap-4 border-2 border-orange-200">
+              <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center shadow-md animate-pulse">
+                <Lock className="w-8 h-8 text-orange-500 animate-none" />
+              </div>
+              <div className="text-center px-6 max-w-md">
+                <h3 className="text-lg font-bold text-gray-800">
+                  Choice Filling Locked
+                </h3>
+                <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+                  Choice filling is locked until your mentor completes your assigned task. Contact your mentor or ask them to force-enable access.
+                </p>
+              </div>
+            </div>
+          )}
           {/* Header */}
           <div className="flex flex-col justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
             <h2  className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--primary)]">
@@ -672,6 +904,12 @@ export default function ChoiceFillingForm({
                   </button>
                 ))}
               </div>
+               { isJACDelhi && formData.gender === "Male" && (
+                <p className="text-xs text-amber-600 mt-1">
+                  Note: IGDTUW is a women-only college and is excluded for male
+                  candidates.
+                </p>
+              )}
             </div>
 
             {/* Category */}
@@ -680,14 +918,20 @@ export default function ChoiceFillingForm({
                 htmlFor="category"
                 className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
               >
-                Select Your Category
+                Select Your Category <span className="text-red-500">*</span>
               </label>
               <select
                 id="category"
                 value={formData.category}
                 onChange={handleChange}
+                required
                 className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
               >
+                {isUPTAC && (
+                  <option value="">
+                    Select Category
+                  </option>
+                )}
                 {(
                   metadata?.categories || [
                     "OPEN",
@@ -701,7 +945,7 @@ export default function ChoiceFillingForm({
                     "SC (PwD)",
                     "ST (PwD)",
                   ]
-                ).map((cat) => (isJACDelhi && cat === "GEN" ? "OPEN" : cat)).map((cat) => (
+                ).filter((cat) => (isJACDelhi && cat !== "GEN") || !isJACDelhi).map((cat) => (
                   <option key={cat} value={cat}>
                     {cat}
                   </option>
@@ -876,14 +1120,23 @@ export default function ChoiceFillingForm({
                     id="subCategory"
                     value={formData.subCategory}
                     onChange={handleChange}
-                    className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
+                    className={`w-full p-2 sm:p-3 text-sm sm:text-base border rounded-lg shadow-sm bg-white outline-none transition ${
+                      formData.subCategory.toLowerCase().includes("girl") && formData.gender === "Male"
+                        ? "border-red-500 text-[var(--foreground)] focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                        : "border-[var(--border)] text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+                    }`}
                   >
                     {(metadata?.subCategories || ["None", "Girl Candidate", "Single Girl Child", "Defence", "Kashmiri Migrant", "Persons with Disabilities"]).map((sub) => (
-                      <option key={sub} value={sub}>
+                      <option key={sub} value={sub} className="text-black bg-white">
                         {sub}
                       </option>
                     ))}
                   </select>
+                  {formData.subCategory.toLowerCase().includes("girl") && formData.gender === "Male" && (
+                    <p className="text-xs text-red-500 mt-1.5 font-medium">
+                      Male candidates cannot select girl-only subcategories.
+                    </p>
+                  )}
                 </div>
 
                 {/* Institutes Picker */}
@@ -905,79 +1158,93 @@ export default function ChoiceFillingForm({
                       />
                     </div>
                     <div className="max-h-48 overflow-y-auto p-1.5">
-                      {(metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"]).length > 0 ? (
-                        <>
-                          <label className="flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-1 group">
-                            <input
-                              type="checkbox"
-                              checked={
-                                formData.includedInstitutes.length ===
-                                (metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"]).length
-                              }
-                              onChange={() => {
-                                const all = metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"];
-                                if (formData.includedInstitutes.length === all.length) {
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    includedInstitutes: [],
-                                  }));
-                                } else {
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    includedInstitutes: [...all],
-                                  }));
-                                }
-                              }}
-                              className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
-                            />
-                            <span className="text-xs sm:text-sm font-bold text-[var(--foreground)]">
-                              Select All ({(metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"]).length})
-                            </span>
-                          </label>
-                          <div className="border-t border-[var(--border)] my-1.5 mx-2"></div>
-                          {(metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"])
-                            .filter((inst) =>
-                              inst.toLowerCase().includes(jacInstituteSearch.toLowerCase())
+                      {(() => {
+                        const rawInstitutes = metadata?.institutes || ["DTU", "NSUT", "IIITD", "IGDTUW"];
+                        const displayedInstitutes = isJACDelhi && formData.gender === "Male"
+                          ? rawInstitutes.filter(
+                              (inst) =>
+                                inst !== "IGDTUW" &&
+                                inst !== "Indira Gandhi Delhi Technical University for Women (IGDTUW)" &&
+                                !inst.includes("IGDTUW")
                             )
-                            .map((inst) => (
-                              <label
-                                key={inst}
-                                className={`flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-0.5 ${
-                                  formData.includedInstitutes.includes(inst)
-                                    ? "bg-[var(--primary)]/5"
-                                    : ""
-                                }`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={formData.includedInstitutes.includes(inst)}
-                                  onChange={() => handleInstituteToggle(inst)}
-                                  className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
-                                />
-                                <span className="text-xs sm:text-sm flex-1 text-[var(--muted-text)] font-medium group-hover:text-[var(--foreground)]">
-                                  {inst}
-                                </span>
-                                {formData.includedInstitutes.includes(inst) && (
-                                  <svg
-                                    className="w-4 h-4 text-[var(--primary)] flex-shrink-0"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                )}
-                              </label>
-                            ))}
-                        </>
-                      ) : (
-                        <p className="text-[10px] sm:text-xs text-[var(--muted-text)] text-center py-4">
-                          No institutes available
-                        </p>
-                      )}
+                          : rawInstitutes;
+
+                        if (displayedInstitutes.length === 0) {
+                          return (
+                            <p className="text-[10px] sm:text-xs text-[var(--muted-text)] text-center py-4">
+                              No institutes available
+                            </p>
+                          );
+                        }
+
+                        return (
+                          <>
+                            <label className="flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-1 group">
+                              <input
+                                type="checkbox"
+                                checked={
+                                  formData.includedInstitutes.length === displayedInstitutes.length
+                                }
+                                onChange={() => {
+                                  if (formData.includedInstitutes.length === displayedInstitutes.length) {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      includedInstitutes: [],
+                                    }));
+                                  } else {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      includedInstitutes: [...displayedInstitutes],
+                                    }));
+                                  }
+                                }}
+                                className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
+                              />
+                              <span className="text-xs sm:text-sm font-bold text-[var(--foreground)]">
+                                Select All ({displayedInstitutes.length})
+                              </span>
+                            </label>
+                            <div className="border-t border-[var(--border)] my-1.5 mx-2"></div>
+                            {displayedInstitutes
+                              .filter((inst) =>
+                                inst.toLowerCase().includes(jacInstituteSearch.toLowerCase())
+                              )
+                              .map((inst) => (
+                                <label
+                                  key={inst}
+                                  className={`flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-0.5 ${
+                                    formData.includedInstitutes.includes(inst)
+                                      ? "bg-[var(--primary)]/5"
+                                      : ""
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={formData.includedInstitutes.includes(inst)}
+                                    onChange={() => handleInstituteToggle(inst)}
+                                    className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)]"
+                                  />
+                                  <span className="text-xs sm:text-sm flex-1 text-[var(--muted-text)] font-medium group-hover:text-[var(--foreground)]">
+                                    {inst}
+                                  </span>
+                                  {formData.includedInstitutes.includes(inst) && (
+                                    <svg
+                                      className="w-4 h-4 text-[var(--primary)] flex-shrink-0"
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                    >
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                        clipRule="evenodd"
+                                      />
+                                    </svg>
+                                  )}
+                                </label>
+                              ))}
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                   {formData.includedInstitutes.length === 0 && (
@@ -1001,11 +1268,12 @@ export default function ChoiceFillingForm({
                     htmlFor="homeState"
                     className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5"
                   >
-                    Select Your Home State
+                    Select Your Home State <span className="text-red-500">*</span>
                   </label>
                   <select
                     id="homeState"
                     value={formData.homeState}
+                    required
                     onChange={handleChange}
                     className="w-full p-2 sm:p-3 text-sm sm:text-base border border-[var(--border)] rounded-lg shadow-sm bg-white text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition"
                   >
@@ -1019,7 +1287,7 @@ export default function ChoiceFillingForm({
                 </div>
 
                 {/* Included States - Multi Select (Inclusion Filter) */}
-                {availableInstituteStates.length > 0 && (
+                {!isUPTAC &&  availableInstituteStates.length > 0 && (
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
                       College Location Preferences (Optional)
@@ -1207,6 +1475,110 @@ export default function ChoiceFillingForm({
               </>
             )}
 
+            {/* District Filter - UPTAC only */}
+            {isUPTAC && metadata?.districts && metadata.districts.length > 0 && (
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-[var(--foreground)] mb-1 sm:mb-1.5">
+                  Preferred Districts (Optional)
+                </label>
+                <div className="border border-[var(--border)] rounded-lg bg-white overflow-hidden shadow-sm">
+                  <div className="p-2 border-b border-[var(--border)] bg-[var(--muted-background)]/30">
+                    <input
+                      type="text"
+                      placeholder="Search districts..."
+                      value={districtSearch}
+                      onChange={(e) => setDistrictSearch(e.target.value)}
+                      className="w-full p-2 text-xs sm:text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
+                    />
+                  </div>
+                  <div className="max-h-48 overflow-y-auto p-1.5">
+                    <label className="flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-1 group">
+                      <input
+                        type="checkbox"
+                        checked={
+                          formData.districts.length === metadata.districts.length
+                        }
+                        onChange={() => {
+                          if (!metadata?.districts) return;
+                          if (formData.districts.length === metadata.districts.length) {
+                            setFormData((prev) => ({
+                              ...prev,
+                              districts: [],
+                            }));
+                          } else {
+                            setFormData((prev) => ({
+                              ...prev,
+                              districts: [...metadata.districts!],
+                            }));
+                          }
+                        }}
+                        className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)] cursor-pointer"
+                      />
+                      <span className="text-xs sm:text-sm font-bold text-[var(--foreground)]">
+                        Select All ({metadata.districts.length})
+                      </span>
+                    </label>
+                    <div className="border-t border-[var(--border)] my-1.5 mx-2"></div>
+                    {metadata.districts
+                      .filter((d) =>
+                        d.toLowerCase().includes(districtSearch.toLowerCase())
+                      )
+                      .map((district) => (
+                        <label
+                          key={district}
+                          className={`flex items-center p-2.5 hover:bg-[var(--muted-background)] rounded-md cursor-pointer transition-colors mb-0.5 ${
+                            formData.districts.includes(district)
+                              ? "bg-[var(--primary)]/5"
+                              : ""
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.districts.includes(district)}
+                            onChange={() => handleDistrictToggle(district)}
+                            className="mr-3 w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)] cursor-pointer"
+                          />
+                          <span className="text-xs sm:text-sm flex-1 text-[var(--muted-text)] font-medium group-hover:text-[var(--foreground)]">
+                            {district}
+                          </span>
+                          {formData.districts.includes(district) && (
+                            <svg
+                              className="w-4 h-4 text-[var(--primary)] flex-shrink-0"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          )}
+                        </label>
+                      ))}
+                    {metadata.districts.filter((d) =>
+                      d.toLowerCase().includes(districtSearch.toLowerCase())
+                    ).length === 0 && (
+                      <p className="text-[10px] sm:text-xs text-[var(--muted-text)] text-center py-4">
+                        No districts match your search
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {formData.districts.length === 0 && (
+                  <p className="text-[10px] sm:text-xs text-[var(--muted-text)] mt-1.5 ml-1">
+                    No selection = All districts included
+                  </p>
+                )}
+                {formData.districts.length > 0 && (
+                  <p className="text-[10px] sm:text-xs text-[var(--primary)] mt-1.5 ml-1 font-semibold">
+                    {formData.districts.length} district
+                    {formData.districts.length > 1 ? "s" : ""} selected
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* TFW Toggle - UPTAC only */}
             {isUPTAC && (
               <div>
@@ -1352,6 +1724,40 @@ export default function ChoiceFillingForm({
               )}
             </div>
 
+            {/* Export as Student Toggle for Counsellors */}
+            {!isStudent && !isJACDelhi && (
+              <div className="pt-2">
+                <label className="flex items-center gap-2.5 px-3 py-2.5 border border-[var(--border)] rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer hover:bg-[var(--muted-background)]/50 bg-white">
+                  <input
+                    type="checkbox"
+                    checked={exportAsStudent}
+                    onChange={(e) => setExportAsStudent(e.target.checked)}
+                    className="w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)] cursor-pointer"
+                  />
+                  <span className="text-[var(--foreground)] select-none">
+                    Generate / Export choice list as student (Removes counsellor columns)
+                  </span>
+                </label>
+              </div>
+            )}
+
+            {/* Complete Preference Toggle for Counsellors (JEE Main only) */}
+            {!isStudent && toolKey === "jee-main" && (
+              <div className="pt-2">
+                <label className="flex items-center gap-2.5 px-3 py-2.5 border border-[var(--border)] rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer hover:bg-[var(--muted-background)]/50 bg-white">
+                  <input
+                    type="checkbox"
+                    checked={useCompletePreference}
+                    onChange={(e) => setUseCompletePreference(e.target.checked)}
+                    className="w-4 h-4 accent-[var(--primary)] rounded border-[var(--border)] cursor-pointer"
+                  />
+                  <span className="text-[var(--foreground)] select-none">
+                    Generate Complete Exhaustive List (Counsellor Mode - bypasses rank limits)
+                  </span>
+                </label>
+              </div>
+            )}
+
             {/* Submit Button */}
             <div className="pt-2 sm:pt-4">
               <button
@@ -1380,7 +1786,8 @@ export default function ChoiceFillingForm({
           <ChoiceFillingResults
             results={results}
             requestData={lastRequest}
-            toolKey={toolKey}
+            toolKey={submittedToolKey}
+            labels={labels}
           />
         )}
       </div>

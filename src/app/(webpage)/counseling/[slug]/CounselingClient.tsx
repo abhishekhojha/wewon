@@ -164,7 +164,7 @@ export default function CounselingClient() {
       url?: string;
     }> = [];
 
-    if (highlights.introVideo?.url) {
+    if (highlights.introVideo?.url && highlights.introVideo.url !== "https://empty.com") {
       materials.push({
         id: "intro-video",
         title: highlights.introVideo.title || "How We Work",
@@ -173,7 +173,7 @@ export default function CounselingClient() {
       });
     }
 
-    if (highlights.coursePdf?.url) {
+    if (highlights.coursePdf?.url && highlights.coursePdf.url !== "https://empty.com") {
       materials.push({
         id: "course-pdf",
         title: highlights.coursePdf.title || "Program Structure.pdf",
@@ -182,7 +182,7 @@ export default function CounselingClient() {
       });
     }
 
-    if (highlights.fullDescriptionVideo?.url) {
+    if (highlights.fullDescriptionVideo?.url && highlights.fullDescriptionVideo.url !== "https://empty.com") {
       materials.push({
         id: "full-description-video",
         title:
@@ -638,7 +638,8 @@ export default function CounselingClient() {
 
           {/* Free Overview Video */}
           {product.content.landingPageHighlights.introVideo &&
-            product.content.landingPageHighlights.introVideo.url && (
+            product.content.landingPageHighlights.introVideo.url &&
+            product.content.landingPageHighlights.introVideo.url !== "https://empty.com" && (
               <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-12">
                 <h2 className="text-2xl font-bold text-[var(--primary)] mb-6">
                   Free Overview Video
