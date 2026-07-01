@@ -41,6 +41,12 @@ type ChoiceFillingFormState = {
   districts: string[]; // UPTAC-specific: district filters
 };
 
+const isGirlRelated = (name?: string): boolean => {
+  if (!name) return false;
+  const lower = name.toLowerCase();
+  return lower.includes("girl") || /\bgl\b/i.test(name) || /gl$/i.test(name) || /\(gl\)/i.test(name);
+};
+
 const mergePrefillIntoForm = (
   prev: ChoiceFillingFormState,
   prefill?: {
@@ -459,10 +465,20 @@ export default function ChoiceFillingForm({
             !inst.includes("IGDTUW")
         );
       }
+      let updatedSubCategory = prev.subCategory;
+      if (gender === "Male" && isGirlRelated(prev.subCategory)) {
+        updatedSubCategory = "None";
+      }
+      let updatedCategory = prev.category;
+      if (gender === "Male" && isGirlRelated(prev.category)) {
+        updatedCategory = toolKey === "uptac" ? "" : "OPEN";
+      }
       return {
         ...prev,
         gender,
         includedInstitutes: updatedIncludedInstitutes,
+        subCategory: updatedSubCategory,
+        category: updatedCategory,
       };
     });
   };
@@ -591,8 +607,13 @@ export default function ChoiceFillingForm({
       return;
     }
 
-    if (isJACDelhi && formData.subCategory.toLowerCase().includes("girl") && formData.gender === "Male") {
+    if (isJACDelhi && isGirlRelated(formData.subCategory) && formData.gender === "Male") {
       toast.error("Male candidates cannot select girl-only subcategories.");
+      return;
+    }
+
+    if (isGirlRelated(formData.category) && formData.gender === "Male") {
+      toast.error("Male candidates cannot select girl-only categories.");
       return;
     }
 
@@ -971,11 +992,13 @@ export default function ChoiceFillingForm({
                     "SC (PwD)",
                     "ST (PwD)",
                   ]
-                ).filter((cat) => (isJACDelhi && cat !== "GEN") || !isJACDelhi).map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
+                )
+                  .filter((cat) => ((isJACDelhi && cat !== "GEN") || !isJACDelhi) && !(formData.gender === "Male" && isGirlRelated(cat)))
+                  .map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
               </select>
             </div>
 
@@ -1152,13 +1175,15 @@ export default function ChoiceFillingForm({
                         : "border-[var(--border)] text-[var(--muted-text)] focus:text-[var(--foreground)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                     }`}
                   >
-                    {(metadata?.subCategories || ["None", "Girl Candidate", "Single Girl Child", "Defence", "Kashmiri Migrant", "Persons with Disabilities"]).map((sub) => (
-                      <option key={sub} value={sub} className="text-black bg-white">
-                        {sub}
-                      </option>
-                    ))}
+                    {(metadata?.subCategories || ["None", "Girl Candidate", "Single Girl Child", "Defence", "Kashmiri Migrant", "Persons with Disabilities"])
+                      .filter((sub) => !(formData.gender === "Male" && isGirlRelated(sub)))
+                      .map((sub) => (
+                        <option key={sub} value={sub} className="text-black bg-white">
+                          {sub}
+                        </option>
+                      ))}
                   </select>
-                  {formData.subCategory.toLowerCase().includes("girl") && formData.gender === "Male" && (
+                  {isGirlRelated(formData.subCategory) && formData.gender === "Male" && (
                     <p className="text-xs text-red-500 mt-1.5 font-medium">
                       Male candidates cannot select girl-only subcategories.
                     </p>
