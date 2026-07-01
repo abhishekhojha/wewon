@@ -632,7 +632,12 @@ export default function ChoiceFillingForm({
         // ALWAYS SEND UTTAR PRADESH FOR UPTAC
         payload.homeState = isUPTAC ? "Uttar Pradesh" : formData.homeState;
         payload.includedStates = formData.includedStates.length > 0 ? formData.includedStates : undefined;
-        payload.instituteType = formData.instituteTypes.length > 0 ? formData.instituteTypes : undefined;
+        const allTypes = (metadata?.instituteTypes && metadata.instituteTypes.length > 0)
+          ? metadata.instituteTypes
+          : ["NIT", "IIIT", "GFTI"];
+        payload.instituteType = (formData.instituteTypes.length > 0 && formData.instituteTypes.length < allTypes.length)
+          ? formData.instituteTypes
+          : undefined;
         if (isUPTAC) {
           if (formData.hasTFW) {
             payload.hasTFW = true;
