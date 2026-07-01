@@ -614,11 +614,15 @@ export default function ChoiceFillingForm({
         payload.exportAs = "student";
       }
 
+      const finalBranchGroups = (formData.branchGroups.length > 0 && formData.branchGroups.length < availableBranchGroups.length)
+        ? formData.branchGroups
+        : undefined;
+
       if (isJACDelhi) {
         payload.region = formData.region;
         payload.subCategory = formData.subCategory;
         payload.instituteName = formData.includedInstitutes.length > 0 ? formData.includedInstitutes : ["ALL"];
-        payload.programName = formData.branchGroups.length > 0 ? formData.branchGroups : undefined;
+        payload.programName = finalBranchGroups;
       } else if (isIIT) {
         // Resolve shortNames → fullNames
         payload.includedIITs = (() => {
@@ -642,11 +646,14 @@ export default function ChoiceFillingForm({
           if (formData.hasTFW) {
             payload.hasTFW = true;
           }
-          payload.districts = formData.districts.length > 0 ? formData.districts : undefined;
+          const allDistricts = metadata?.districts || [];
+          payload.districts = (formData.districts.length > 0 && formData.districts.length < allDistricts.length)
+            ? formData.districts
+            : undefined;
         }
       }
 
-      payload.branchGroup = formData.branchGroups.length > 0 ? formData.branchGroups : undefined;
+      payload.branchGroup = finalBranchGroups;
 
       const effectiveToolKey = (useCompletePreference && toolKey === "jee-main")
         ? "jee-main/complete-preference"
