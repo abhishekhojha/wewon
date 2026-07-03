@@ -139,7 +139,7 @@ export default function ChoiceFillingResults({
     { label: "Category", value: results.user?.category },
     {
       label: "Home State",
-      value: results.user?.homeState,
+      value: requestData.homeState || results.user?.homeState,
     },
     {
       label: "Preferred Location",
@@ -180,6 +180,9 @@ export default function ChoiceFillingResults({
       if (isStudent) {
         exportReq.exportAs = "student";
       }
+      if (toolKey === "uptac") {
+        exportReq.homeState = "Uttar Pradesh";
+      }
       const blob = await exportChoiceListExcel(exportReq, toolKey);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -204,6 +207,9 @@ export default function ChoiceFillingResults({
       const exportReq = { ...requestData };
       if (isStudent) {
         exportReq.exportAs = "student";
+      }
+      if (toolKey === "uptac") {
+        exportReq.homeState = "Uttar Pradesh";
       }
       const blob = await exportChoiceListPDF(exportReq, toolKey);
       const url = window.URL.createObjectURL(blob);

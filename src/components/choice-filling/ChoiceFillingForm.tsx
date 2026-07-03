@@ -654,8 +654,7 @@ export default function ChoiceFillingForm({
           return resolved.length > 0 ? resolved : undefined;
         })();
       } else {
-        // ALWAYS SEND UTTAR PRADESH FOR UPTAC
-        payload.homeState = isUPTAC ? "Uttar Pradesh" : formData.homeState;
+        payload.homeState = formData.homeState;
         payload.includedStates = formData.includedStates.length > 0 ? formData.includedStates : undefined;
         const allTypes = (metadata?.instituteTypes && metadata.instituteTypes.length > 0)
           ? metadata.instituteTypes
@@ -680,7 +679,11 @@ export default function ChoiceFillingForm({
         ? "jee-main/complete-preference"
         : (toolKey || "jee-main");
 
-      const response = await generateChoiceList(payload, effectiveToolKey);
+      const apiPayload = {
+        ...payload,
+        homeState: isUPTAC ? "Uttar Pradesh" : payload.homeState,
+      };
+      const response = await generateChoiceList(apiPayload, effectiveToolKey);
       setResults(response);
       setLastRequest(payload);
       setSubmittedToolKey(effectiveToolKey);
