@@ -134,7 +134,7 @@ export default function Home() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <HeroSection />
       </div>
-      {/* <CountDown /> */}
+      <CountDown />
       <div className="container mx-auto">
         <FeatureCounselling />
         <FeaturePredictor />
