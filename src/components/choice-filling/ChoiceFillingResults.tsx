@@ -181,7 +181,7 @@ export default function ChoiceFillingResults({
         exportReq.exportAs = "student";
       }
       if (toolKey === "uptac") {
-        exportReq.homeState = "Uttar Pradesh";
+        exportReq.homeState = requestData.homeState || results.user?.homeState || "Uttar Pradesh";
       }
       const blob = await exportChoiceListExcel(exportReq, toolKey);
       const url = window.URL.createObjectURL(blob);
@@ -209,7 +209,7 @@ export default function ChoiceFillingResults({
         exportReq.exportAs = "student";
       }
       if (toolKey === "uptac") {
-        exportReq.homeState = "Uttar Pradesh";
+        exportReq.homeState = requestData.homeState || results.user?.homeState || "Uttar Pradesh";
       }
       const blob = await exportChoiceListPDF(exportReq, toolKey);
       const url = window.URL.createObjectURL(blob);
