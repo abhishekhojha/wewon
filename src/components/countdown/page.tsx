@@ -10,7 +10,7 @@ import { Clock } from "lucide-react";
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 // Single deadline: July 3rd, end of day (11:59:59 PM IST)
-const DEADLINE = new Date("2026-07-04T23:59:59+05:30");
+const DEADLINE = new Date("2026-07-05T23:59:59+05:30");
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TimeLeft {
