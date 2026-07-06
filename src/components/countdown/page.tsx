@@ -9,8 +9,20 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Clock } from "lucide-react";
 
 // ─── Configuration ───────────────────────────────────────────────────────────
-// Single deadline: July 3rd, end of day (11:59:59 PM IST)
-const DEADLINE = new Date("2026-07-05T23:59:59+05:30");
+// Deadline: end of the current day at 11:59:59 PM IST (resets each midnight)
+function getTonightDeadline(): Date {
+    // IST = UTC+5:30
+    const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+    const nowUTC = Date.now();
+    const nowIST = new Date(nowUTC + IST_OFFSET_MS);
+
+    // Build tonight's 23:59:59 in IST
+    const year = nowIST.getUTCFullYear();
+    const month = String(nowIST.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(nowIST.getUTCDate()).padStart(2, "0");
+
+    return new Date(`${year}-${month}-${day}T23:59:59+05:30`);
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TimeLeft {
@@ -23,7 +35,7 @@ interface TimeLeft {
 
 // ─── Compute remaining time ───────────────────────────────────────────────────
 function computeTimeLeft(): TimeLeft {
-    const diff = Math.max(0, DEADLINE.getTime() - Date.now());
+    const diff = Math.max(0, getTonightDeadline().getTime() - Date.now());
     const total = Math.floor(diff / 1000);
     const days = Math.floor(total / 86400);
     const hours = Math.floor((total % 86400) / 3600);
