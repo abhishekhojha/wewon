@@ -685,7 +685,7 @@ export default function ChoiceFillingForm({
       };
       const response = await generateChoiceList(apiPayload, effectiveToolKey);
       setResults(response);
-      setLastRequest(payload);
+      setLastRequest(apiPayload);
       setSubmittedToolKey(effectiveToolKey);
 
       if (response.rankLocked && !isDevelopmentMode) {
