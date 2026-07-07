@@ -22,7 +22,8 @@ interface choiceFillingKeySlugMap {
   "JEE_MAIN": "jee-main",
   "JAC_DELHI": "jac-delhi",
   "UPTAC": "uptac",
-  "IIT": "iit"
+  "IIT": "iit",
+  "CSAB": "csab"
 }
 interface predictorSlugKeyMap {
   "wbjee-predictor": "WBJEE",
@@ -47,7 +48,8 @@ interface choiceFillingSlugKeyMap {
   "jee-main": "JEE_MAIN",
   "jac-delhi": "JAC_DELHI",
   "uptac": "UPTAC",
-  "iit": "IIT"
+  "iit": "IIT",
+  "csab": "CSAB"
 }
 export type predictorExamKey = "WBJEE" | "JEE_MAIN" | "JAC_DELHI" | "JAC_CHANDIGARH" | "UPTAC" | "MMMUT" | "HBTU" | "CSAB" | "JOSAA" | "IIT" | "EARLY_JEE" | "MPDTE" | "CSAB_V2" | "JOSAA_V2" | "JEE_ADVANCE_V2";
 
@@ -94,12 +96,14 @@ export const choiceFillingSlugKeyMap: choiceFillingSlugKeyMap = {
   "jee-main": "JEE_MAIN",
   "jac-delhi": "JAC_DELHI",
   "uptac": "UPTAC",
-  "iit": "IIT"
+  "iit": "IIT",
+  "csab": "CSAB"
 }
 
 export const choiceFillingKeySlugMap: choiceFillingKeySlugMap = {
   "JEE_MAIN": "jee-main",
   "JAC_DELHI": "jac-delhi",
   "UPTAC": "uptac",
-  "IIT": "iit"
+  "IIT": "iit",
+  "CSAB": "csab"
 }

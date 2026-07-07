@@ -88,7 +88,8 @@ export default function ChoiceFillingProductDetailPage() {
     "iit" : {heading : "Personalised IIT Choice Filling" ,subHeading : "", formHeading : "Generate a personalised IIT choice list based on your rank", capsule :"IIT" , colleges : ["IIT"]},
     "jee-main" : {heading : "Personalised NIT, IIIT & GFTI Choice Filling" ,subHeading : "", formHeading : "Generate a personalised JOSAA choice list based on your rank", capsule : "NIT • IIIT • GFTI" , colleges : ["NIT","IIIT","GFTI"]},
     "jac-delhi" : {heading : "Personalised DTU, NSUT, IIIT-D, DSEU & IGDTUW Choice Filling" ,subHeading : "", formHeading : " Generate a personalised JAC Delhi choice list based on your rank", capsule : "DTU • NSUT • IIIT-D • IGDTUW • DSEU" , colleges : ["DTU","NSUT","IIIT-D","IGDTUW","DSEU"]},
-    "uptac" : {heading : "Personalised UPTAC/AKTU Choice Filling" ,subHeading : "", formHeading : "Generate a personalised UPTAC/AKTU choice list based on your rank", capsule : "UPTAC • AKTU • UPTU" , colleges : ["UPTAC","AKTU","UPTU"]}
+    "uptac" : {heading : "Personalised UPTAC/AKTU Choice Filling" ,subHeading : "", formHeading : "Generate a personalised UPTAC/AKTU choice list based on your rank", capsule : "UPTAC • AKTU • UPTU" , colleges : ["UPTAC","AKTU","UPTU"]},
+    "csab" : {heading : "Personalised CSAB Special Round Choice Filling" ,subHeading : "", formHeading : "Generate a personalised CSAB choice list based on your rank", capsule : "NIT • IIIT • GFTI • CSAB" , colleges : ["NIT","IIIT","GFTI"]}
   }
   const toolDescription =  labels[resolvedToolKey as keyof typeof labels]?.formHeading || resolvedToolKey.toUpperCase() + " Choice Filling";
   const toolCapsule =  labels[resolvedToolKey as keyof typeof labels]?.capsule || "Powered by real cutoff data";

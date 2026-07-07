@@ -181,6 +181,7 @@ export default function ChoiceFillingForm({
   const isIIT = toolKey === "iit";
   const isUPTAC = toolKey === "uptac";
   const isJACDelhi = toolKey === "jac-delhi";
+  const isCSAB = toolKey === "csab";
 
   const {
     iitChoiceFillingLocked,
@@ -219,7 +220,7 @@ export default function ChoiceFillingForm({
     categoryRank: "",
     gender: "Male",
     category: toolKey === "uptac" ? "" : "OPEN",
-    homeState: "",
+    homeState: "Uttar Pradesh",
     includedStates: [] as string[],
     instituteTypes: [] as string[],
     branchGroups: [] as string[],
@@ -809,7 +810,7 @@ export default function ChoiceFillingForm({
               Get your choice list
             </h3>
             <p className="text-xs sm:text-sm text-[var(--muted-text)] mt-1">
-              Personalized, rank-optimized list ready for {isUPTAC || productSlug === "uptac" ? "UPTAC/AKTU/UPTU" : "JoSAA"}
+              Personalized, rank-optimized list ready for {isUPTAC || productSlug === "uptac" ? "UPTAC/AKTU/UPTU" : isCSAB || productSlug === "csab" ? "CSAB Special Round" : "JoSAA"}
             </p>
           </div>
           <p className="text-xs text-[var(--muted-text)] px-2">
