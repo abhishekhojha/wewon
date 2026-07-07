@@ -699,7 +699,6 @@ export default function ChoiceFillingForm({
       if (response.lockMessage) {
         setRankLockMessage(response.lockMessage);
       }
-
     
       const prefill = response.prefill;
       if (prefill) {
