@@ -177,9 +177,9 @@ export default function ChoiceFillingResults({
     setExportingExcel(true);
     try {
       const exportReq = { ...requestData };
-      if (isStudent) {
-        exportReq.exportAs = "student";
-      }
+      // if (isStudent) {
+      //   exportReq.exportAs = "student";
+      // }
       if (toolKey === "uptac") {
         exportReq.homeState = requestData.homeState || results.user?.homeState || "Uttar Pradesh";
       }
