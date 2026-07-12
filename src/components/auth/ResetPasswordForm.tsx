@@ -4,7 +4,8 @@ import { Eye, EyeOff, Loader2, KeyRound, ArrowLeft } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 interface ResetPasswordFormProps {
-  email: string;
+  email?: string;
+  phone?: string;
   onSubmit: (otp: string, newPassword: string) => Promise<void>;
   onBack: () => void;
   onResendOTP: () => Promise<void>;
@@ -14,6 +15,7 @@ interface ResetPasswordFormProps {
 
 export default function ResetPasswordForm({
   email,
+  phone,
   onSubmit,
   onBack,
   onResendOTP,
@@ -118,7 +120,9 @@ export default function ResetPasswordForm({
         </h3>
         <p className="text-[var(--muted-text)] text-sm">
           We've sent a 6-digit OTP to{" "}
-          <span className="font-medium text-[var(--foreground)]">{email}</span>
+          <span className="font-medium text-[var(--foreground)]">
+            {phone ? phone : email}
+          </span>
         </p>
       </div>
 

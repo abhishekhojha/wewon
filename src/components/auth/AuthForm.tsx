@@ -1,4 +1,4 @@
-// components/AuthForm.jsx
+// components/AuthForm.tsx
 "use client";
 
 import { useState } from "react";
@@ -10,7 +10,7 @@ import ForgotPasswordForm from "./ForgotPasswordForm";
 import ResetPasswordForm from "./ResetPasswordForm";
 import apiClient from "../../hooks/Axios";
 import { toast } from "sonner";
-import { fetchUserProfile, loginUser } from "@/store/auth/authThunk";
+import { fetchUserProfile, loginUser, verifyOtp } from "@/store/auth/authThunk";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
 
@@ -24,9 +24,11 @@ export default function AuthForm() {
   >("login");
   const [registerStep, setRegisterStep] = useState<number>(1);
 
-  // Forgot password flow step: 1 = email input, 2 = OTP + new password
+  // Forgot password flow step: 1 = email/phone input, 2 = OTP + new password
   const [forgotPasswordStep, setForgotPasswordStep] = useState<number>(1);
+  // Store which identifier was used for forgot-password (email or phone)
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [forgotPasswordPhone, setForgotPasswordPhone] = useState("");
 
   // Registration form state (moved to parent)
   const [name, setName] = useState("");
@@ -59,11 +61,11 @@ export default function AuthForm() {
 
 
   // Step 1: send register request (server sends OTP)
+  // API: POST /api/auth/register — { name, email, password, phone?, verificationMethod? }
   const handleNextStep = async () => {
     setError(null);
     setLoading(true);
     try {
-      // Use full backend URL per API doc
       await apiClient.post("/api/auth/register", {
         name,
         email,
@@ -71,7 +73,7 @@ export default function AuthForm() {
         phone,
         verificationMethod,
       });
-      // server should respond with message "OTP sent..."
+      // server responds with: { message: "OTP sent to email/phone for verification" }
       setRegisterStep(2);
     } catch (err: any) {
       setError(
@@ -96,7 +98,6 @@ export default function AuthForm() {
         phone,
         verificationMethod,
       });
-      // keep user on OTP step; show a small notice (alert used for brevity)
       toast.success(
         `OTP resent to your ${verificationMethod === "email" ? "email" : "phone"}`,
       );
@@ -110,30 +111,28 @@ export default function AuthForm() {
   };
 
   // Step 2: verify OTP
+  // API: POST /api/auth/verify-otp — { email? | phone?, otp }
+  // Success: { message, token, user: { id, name, email, phone, role } }
+  // On success, user is fully logged in — no need to redirect to login tab.
   const handleOTPSubmit = async (otp: string) => {
     setOtpLoading(true);
     try {
-      // Pass either email or phone based on verification method
       const verifyPayload =
         verificationMethod === "phone" ? { phone, otp } : { email, otp };
 
-      const res = await apiClient.post("/api/auth/verify-otp", verifyPayload);
+      const { user } = await dispatch(
+        verifyOtp(verifyPayload),
+      ).unwrap();
 
-      // Expected: { message, token, user }
-      const token = res?.data?.token;
+      toast.success(`Welcome, ${user.name}! Registration successful.`);
+
+      // Fetch full profile now that we have a token
+      const token = localStorage.getItem("token");
       if (token) {
-        try {
-          localStorage.setItem("token", token);
-        } catch (e) {
-          // ignore storage errors
-        }
+        await dispatch(fetchUserProfile()).unwrap();
       }
 
-      // success -> navigate to returnUrl or home
-      toast.success(res?.data?.message || "Verification successful");
       setRegisterStep(1);
-      setActiveTab("login");
-      
       router.push(returnUrl);
     } catch (err: any) {
       toast.error(
@@ -147,6 +146,7 @@ export default function AuthForm() {
   };
 
   // Login handler (password-based)
+  // API: POST /api/auth/login — { email, password }
   const handleLogin = async () => {
     setLoginLoading(true);
     try {
@@ -158,7 +158,7 @@ export default function AuthForm() {
       if (token) {
         await dispatch(fetchUserProfile()).unwrap();
       }
-      console.log("login - ",returnUrl);
+      console.log("login - ", returnUrl);
       router.push(returnUrl);
     } catch (err: any) {
       toast.error(
@@ -169,16 +169,22 @@ export default function AuthForm() {
     }
   };
 
-  // Forgot Password: Send OTP to email
-  const handleForgotPassword = async (emailInput: string) => {
+  // Forgot Password: Send OTP to email or phone
+  // API: POST /api/auth/forgot-password — { email? | phone? }
+  const handleForgotPassword = async (identifier: {
+    email?: string;
+    phone?: string;
+  }) => {
     setForgotLoading(true);
     try {
-      await apiClient.post("/api/auth/forgot-password", {
-        email: emailInput,
-      });
-      setForgotPasswordEmail(emailInput);
+      await apiClient.post("/api/auth/forgot-password", identifier);
+      // Store the identifier used so reset-password can pass it back
+      setForgotPasswordEmail(identifier.email ?? "");
+      setForgotPasswordPhone(identifier.phone ?? "");
       setForgotPasswordStep(2);
-      toast.success("OTP sent to your email");
+      toast.success(
+        identifier.phone ? "OTP sent to your phone" : "OTP sent to your email",
+      );
     } catch (err: any) {
       toast.error(
         err?.response?.data?.message || err?.message || "Failed to send OTP",
@@ -189,13 +195,19 @@ export default function AuthForm() {
   };
 
   // Forgot Password: Resend OTP
+  // API: POST /api/auth/forgot-password — same identifier
   const handleForgotResendOTP = async () => {
     setResetResendLoading(true);
     try {
-      await apiClient.post("/api/auth/forgot-password", {
-        email: forgotPasswordEmail,
-      });
-      toast.success("OTP resent to your email");
+      const identifier: { email?: string; phone?: string } = {};
+      if (forgotPasswordPhone) identifier.phone = forgotPasswordPhone;
+      else if (forgotPasswordEmail) identifier.email = forgotPasswordEmail;
+      await apiClient.post("/api/auth/forgot-password", identifier);
+      toast.success(
+        forgotPasswordPhone
+          ? "OTP resent to your phone"
+          : "OTP resent to your email",
+      );
     } catch (err: any) {
       toast.error(
         err?.response?.data?.message || err?.message || "Failed to resend OTP",
@@ -206,11 +218,16 @@ export default function AuthForm() {
   };
 
   // Reset Password: Verify OTP and set new password
+  // API: POST /api/auth/reset-password — { email? | phone?, otp, newPassword }
   const handleResetPassword = async (otp: string, newPassword: string) => {
     setResetLoading(true);
     try {
+      const identifier: { email?: string; phone?: string } = {};
+      if (forgotPasswordPhone) identifier.phone = forgotPasswordPhone;
+      else if (forgotPasswordEmail) identifier.email = forgotPasswordEmail;
+
       await apiClient.post("/api/auth/reset-password", {
-        email: forgotPasswordEmail,
+        ...identifier,
         otp,
         newPassword,
       });
@@ -220,6 +237,7 @@ export default function AuthForm() {
       // Reset state and go back to login
       setForgotPasswordStep(1);
       setForgotPasswordEmail("");
+      setForgotPasswordPhone("");
       setActiveTab("login");
     } catch (err: any) {
       toast.error(
@@ -279,7 +297,7 @@ export default function AuthForm() {
               src={
                 activeTab === "login" || activeTab === "forgot-password"
                   ? "/auth/login.jpeg"
-                  : "/auth/register.jpeg" 
+                  : "/auth/register.jpeg"
               }
               alt={
                 activeTab === "login"
@@ -403,6 +421,7 @@ export default function AuthForm() {
                 {forgotPasswordStep === 2 && (
                   <ResetPasswordForm
                     email={forgotPasswordEmail}
+                    phone={forgotPasswordPhone}
                     onSubmit={handleResetPassword}
                     onBack={() => setForgotPasswordStep(1)}
                     onResendOTP={handleForgotResendOTP}

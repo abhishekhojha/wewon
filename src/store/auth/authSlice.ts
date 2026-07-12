@@ -7,6 +7,7 @@ import {
   signupUser,
   updateStudentProfile,
   updateUserProfile,
+  verifyOtp,
 } from "./authThunk";
 
 // ---------------------------
@@ -110,6 +111,26 @@ const authSlice = createSlice({
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Login failed";
+      });
+
+    // Verify OTP (registration completion)
+    builder
+      .addCase(verifyOtp.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(verifyOtp.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user.userId = action.payload.user;
+        state.token = action.payload.token;
+        state.isAuthenticated = true;
+        if (typeof window !== "undefined") {
+          localStorage.setItem("token", action.payload.token);
+        }
+      })
+      .addCase(verifyOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "OTP verification failed";
       });
 
     // Signup

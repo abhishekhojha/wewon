@@ -14,9 +14,47 @@ export const loginUser = createAsyncThunk<
     if (token) {
       localStorage.setItem("token", token);
     }
-    return res.data; // expecting { user, token }
+    // API returns user.id; map it to _id for UserId type compatibility
+    const rawUser = res?.data?.user ?? {};
+    const user: UserId = {
+      _id: rawUser.id ?? rawUser._id ?? "",
+      name: rawUser.name ?? "",
+      email: rawUser.email ?? "",
+      phone: rawUser.phone ?? "",
+      role: rawUser.role ?? "",
+      avatar: rawUser.avatar ?? "",
+    };
+    return { user, token };
   } catch (err: any) {
     return rejectWithValue(err.response?.data?.message || "Login failed");
+  }
+});
+
+// Verify OTP after registration — API: POST /api/auth/verify-otp
+// Returns { message, token, user: { id, name, email, phone, role } }
+export const verifyOtp = createAsyncThunk<
+  { user: UserId; token: string },
+  { email?: string; phone?: string; otp: string },
+  { rejectValue: string }
+>("auth/verifyOtp", async (payload, { rejectWithValue }) => {
+  try {
+    const res = await apiClient.post("/api/auth/verify-otp", payload);
+    const token = res?.data?.token;
+    if (token) {
+      localStorage.setItem("token", token);
+    }
+    const rawUser = res?.data?.user ?? {};
+    const user: UserId = {
+      _id: rawUser.id ?? rawUser._id ?? "",
+      name: rawUser.name ?? "",
+      email: rawUser.email ?? "",
+      phone: rawUser.phone ?? "",
+      role: rawUser.role ?? "",
+      avatar: rawUser.avatar ?? "",
+    };
+    return { user, token };
+  } catch (err: any) {
+    return rejectWithValue(err.response?.data?.message || "OTP verification failed");
   }
 });
 
@@ -26,7 +64,8 @@ export const signupUser = createAsyncThunk<
   { rejectValue: string }
 >("auth/signupUser", async (credentials, { rejectWithValue }) => {
   try {
-    const res = await apiClient.post("/api/auth/signup", credentials);
+    // Kept for backwards-compat; registration is OTP-based via /register + /verify-otp
+    const res = await apiClient.post("/api/auth/register", credentials);
     return res.data;
   } catch (err: any) {
     return rejectWithValue(err.response?.data?.message || "Signup failed");
