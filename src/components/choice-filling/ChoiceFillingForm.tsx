@@ -676,8 +676,8 @@ export default function ChoiceFillingForm({
 
       payload.branchGroup = finalBranchGroups;
 
-      const effectiveToolKey = (useCompletePreference && toolKey === "jee-main")
-        ? "jee-main/complete-preference"
+      const effectiveToolKey = useCompletePreference && (toolKey === "jee-main" || toolKey === "csab")
+        ? `${toolKey}/complete-preference`
         : (toolKey || "jee-main");
 
       const apiPayload = {
@@ -686,7 +686,7 @@ export default function ChoiceFillingForm({
       };
       const response = await generateChoiceList(apiPayload, effectiveToolKey);
       setResults(response);
-      setLastRequest(payload);
+      setLastRequest(apiPayload);
       setSubmittedToolKey(effectiveToolKey);
 
       if (response.rankLocked && !isDevelopmentMode) {
@@ -700,7 +700,6 @@ export default function ChoiceFillingForm({
       if (response.lockMessage) {
         setRankLockMessage(response.lockMessage);
       }
-
     
       const prefill = response.prefill;
       if (prefill) {
@@ -1797,7 +1796,7 @@ export default function ChoiceFillingForm({
             )}
 
             {/* Complete Preference Toggle for Counsellors (JEE Main only) */}
-            {!isStudent && toolKey === "jee-main" && (
+            {!isStudent && (toolKey === "jee-main" || toolKey === "csab") && (
               <div className="pt-2">
                 <label className="flex items-center gap-2.5 px-3 py-2.5 border border-[var(--border)] rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer hover:bg-[var(--muted-background)]/50 bg-white">
                   <input

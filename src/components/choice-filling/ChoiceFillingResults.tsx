@@ -64,7 +64,9 @@ export default function ChoiceFillingResults({
 }: ChoiceFillingResultsProps) {
   const [showAll, setShowAll] = useState(false);
   const user = useAppSelector(selectUser);
-  const isStudent = user?.userId?.role?.toLowerCase() === "student" || requestData.exportAs === "student";
+  const isStudent =
+    user?.userId?.role?.toLowerCase() === "student" ||
+    requestData.exportAs === "student";
   const isUptacStudent = toolKey === "uptac" && isStudent;
   const [exportingExcel, setExportingExcel] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
@@ -80,7 +82,7 @@ export default function ChoiceFillingResults({
   const quickDisplayCount = quickDisplay?.length || 100;
   const displayedChoices: ChoiceRow[] = showAll
     ? allChoices
-    : (quickDisplay || allChoices.slice(0, quickDisplayCount));
+    : quickDisplay || allChoices.slice(0, quickDisplayCount);
 
   const hasHomeState = allChoices.some((c) => c.isHomeState);
   const hasSerialNo = allChoices.some((c) => c.serialNo != null);
@@ -88,8 +90,10 @@ export default function ChoiceFillingResults({
   const showQuota = allChoices.some((c) => hasValue(c.quota));
   const showSeatType = allChoices.some((c) => hasValue(c.seatType));
   const showGender = allChoices.some((c) => hasValue(c.gender));
-  const showOpeningRank = !isUptacStudent && allChoices.some((c) => hasValue(c.openingRank));
-  const showClosingRank = !isUptacStudent && allChoices.some((c) => hasValue(c.closingRank));
+  const showOpeningRank =
+    !isUptacStudent && allChoices.some((c) => hasValue(c.openingRank));
+  const showClosingRank =
+    !isUptacStudent && allChoices.some((c) => hasValue(c.closingRank));
   const showInstituteType = allChoices.some((c) => hasValue(c.instituteType));
   const showCategory = allChoices.some((c) => hasValue(c.category));
   const showOrigin = allChoices.some((c) => hasValue(c.origin));
@@ -101,15 +105,17 @@ export default function ChoiceFillingResults({
   const showIncludedStates = toolKey !== "iit";
 
   const categoryRankStr = String(
-    results.user?.categoryRank !== undefined && results.user?.categoryRank !== null
+    results.user?.categoryRank !== undefined &&
+      results.user?.categoryRank !== null
       ? results.user.categoryRank
-      : requestData.categoryRank !== undefined && requestData.categoryRank !== null
+      : requestData.categoryRank !== undefined &&
+          requestData.categoryRank !== null
         ? requestData.categoryRank
-        : ""
+        : "",
   ).toUpperCase();
   const isPreparatoryRank = toolKey === "iit" && categoryRankStr.includes("P");
   const hasChoices = allChoices.length > 0;
-  
+
   const summaryItems = [
     { label: "Name", value: results.user?.name },
     {
@@ -143,13 +149,14 @@ export default function ChoiceFillingResults({
     },
     {
       label: "Preferred Location",
-      value: toolKey === "uptac"
-        ? results.user?.districts && results.user.districts.length > 0
-          ? results.user.districts.join(", ")
-          : requestData.districts && requestData.districts.length > 0
-            ? requestData.districts.join(", ")
-            : "All"
-        : undefined,
+      value:
+        toolKey === "uptac"
+          ? results.user?.districts && results.user.districts.length > 0
+            ? results.user.districts.join(", ")
+            : requestData.districts && requestData.districts.length > 0
+              ? requestData.districts.join(", ")
+              : "All"
+          : undefined,
     },
     {
       label: "Included States",
@@ -163,9 +170,10 @@ export default function ChoiceFillingResults({
     { label: "Sub-Category", value: results.user?.subCategory },
     {
       label: "Search Rank",
-      value: !isStudent && hasValue(results.searchRank)
-        ? results.searchRank?.toLocaleString()
-        : undefined,
+      value:
+        !isStudent && hasValue(results.searchRank)
+          ? results.searchRank?.toLocaleString()
+          : undefined,
     },
     {
       label: "Total Choices",
@@ -177,25 +185,30 @@ export default function ChoiceFillingResults({
     setExportingExcel(true);
     try {
       const exportReq = { ...requestData };
-      if (isStudent) {
-        exportReq.exportAs = "student";
-      }
+      // if (isStudent) {
+      //   exportReq.exportAs = "student";
+      // }
       if (toolKey === "uptac") {
-        exportReq.homeState = requestData.homeState || results.user?.homeState || "Uttar Pradesh";
+        exportReq.homeState =
+          requestData.homeState || results.user?.homeState || "Uttar Pradesh";
       }
       const blob = await exportChoiceListExcel(exportReq, toolKey);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-  
-      a.download = `Personalised_${ labels ? labels?.colleges?.join("_") :"" }_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.xlsx` || `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.xlsx`;
+
+      a.download =
+        `Personalised_${labels ? labels?.colleges?.join("_") : ""}_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.xlsx` ||
+        `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       toast.success("Excel file downloaded successfully!");
     } catch (error: any) {
-      toast.error(error?.message || "Failed to export Excel. Please try again.");
+      toast.error(
+        error?.message || "Failed to export Excel. Please try again.",
+      );
     } finally {
       setExportingExcel(false);
     }
@@ -209,13 +222,16 @@ export default function ChoiceFillingResults({
         exportReq.exportAs = "student";
       }
       if (toolKey === "uptac") {
-        exportReq.homeState = requestData.homeState || results.user?.homeState || "Uttar Pradesh";
+        exportReq.homeState =
+          requestData.homeState || results.user?.homeState || "Uttar Pradesh";
       }
       const blob = await exportChoiceListPDF(exportReq, toolKey);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Personalised_${labels ? labels?.colleges?.join("_") : ""}_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf` || `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf`;
+      a.download =
+        `Personalised_${labels ? labels?.colleges?.join("_") : ""}_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf` ||
+        `Personalised_Choice_Filling_${requestData.name.replace(/\s+/g, "_")}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -246,23 +262,32 @@ export default function ChoiceFillingResults({
               </div>
             ))}
           </div>
-          {!isStudent &&(hasValue(results.minRange) || hasValue(results.maxRange)) && (
-            <div className="mt-3 pt-3 border-t border-white/20">
-              <p className="text-white/70 text-xs sm:text-sm">
-                Rank Range:{" "}
-                {hasValue(results.minRange) ? results.minRange?.toLocaleString() : "-"}{" "}
-                –{" "}
-                {hasValue(results.maxRange) ? results.maxRange?.toLocaleString() : "-"}
-              </p>
-            </div>
-          )}
+          {!isStudent &&
+            (hasValue(results.minRange) || hasValue(results.maxRange)) && (
+              <div className="mt-3 pt-3 border-t border-white/20">
+                <p className="text-white/70 text-xs sm:text-sm">
+                  Rank Range:{" "}
+                  {hasValue(results.minRange)
+                    ? results.minRange?.toLocaleString()
+                    : "-"}{" "}
+                  –{" "}
+                  {hasValue(results.maxRange)
+                    ? results.maxRange?.toLocaleString()
+                    : "-"}
+                </p>
+              </div>
+            )}
         </div>
       )}
-   {/* Disclaimer */}
+      {/* Disclaimer */}
       {hasChoices && results.disclaimer && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4">
           <p className="text-xs sm:text-sm text-amber-800">
-            <strong>Disclaimer:</strong> Please watch the Choice Filling video carefully and fill all relevant choices wisely{toolKey !== "uptac" && ", as choice filling cannot be modified in later rounds"}. For any doubt or support, please contact your mentor.
+            <strong>Disclaimer:</strong> Please watch the Choice Filling video
+            carefully and fill all relevant choices wisely
+            {toolKey !== "uptac" &&
+              ", as choice filling cannot be modified in later rounds"}
+            . For any doubt or support, please contact your mentor.
           </p>
         </div>
       )}
@@ -276,12 +301,11 @@ export default function ChoiceFillingResults({
                   This is a Preparatory Rank under JEE Advanced.
                 </p>
                 <p className="text-xs sm:text-sm text-[var(--muted-text)]">
-                  Based on last year's JEE Advanced counselling data, no
-                  seat allotment was recorded for this rank.
+                  Based on last year's JEE Advanced counselling data, no seat
+                  allotment was recorded for this rank.
                 </p>
                 <p className="text-xs sm:text-sm text-[var(--muted-text)]">
-                  Therefore, no colleges are being displayed for this
-                  category.
+                  Therefore, no colleges are being displayed for this category.
                 </p>
               </div>
             </div>
@@ -295,7 +319,8 @@ export default function ChoiceFillingResults({
                   Based on your rank and preferences, no choices are available.
                 </p>
                 <p className="text-xs sm:text-sm text-[var(--muted-text)]">
-                  Please check your rank details or adjust your selected filters/branches.
+                  Please check your rank details or adjust your selected
+                  filters/branches.
                 </p>
               </div>
             </div>
@@ -314,8 +339,8 @@ export default function ChoiceFillingResults({
                 Download your complete choice list
               </p>
               <p className="text-xs text-[var(--muted-text)] mt-1">
-                Use the Export buttons above to download your personalized choice
-                list as an Excel or PDF file for offline reference during
+                Use the Export buttons above to download your personalized
+                choice list as an Excel or PDF file for offline reference during
                 counselling.
               </p>
             </div>
@@ -430,7 +455,8 @@ export default function ChoiceFillingResults({
                 <tbody className="divide-y divide-[var(--border)]">
                   {displayedChoices.map((choice, index) => {
                     const originStyle =
-                      ORIGIN_COLORS[choice.origin ?? "BASE"] || ORIGIN_COLORS.BASE;
+                      ORIGIN_COLORS[choice.origin ?? "BASE"] ||
+                      ORIGIN_COLORS.BASE;
                     return (
                       <tr
                         key={index}
@@ -488,7 +514,9 @@ export default function ChoiceFillingResults({
                             {hasValue(choice.gender) ? (
                               <span
                                 className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium ${
-                                  choice.gender?.toLowerCase().includes("female")
+                                  choice.gender
+                                    ?.toLowerCase()
+                                    .includes("female")
                                     ? "bg-pink-100 text-pink-700"
                                     : "bg-blue-100 text-blue-700"
                                 }`}
@@ -496,7 +524,9 @@ export default function ChoiceFillingResults({
                                 {choice.gender}
                               </span>
                             ) : (
-                              <span className="text-[var(--muted-text)]">-</span>
+                              <span className="text-[var(--muted-text)]">
+                                -
+                              </span>
                             )}
                           </td>
                         )}
@@ -523,7 +553,9 @@ export default function ChoiceFillingResults({
                                 {choice.origin?.replace(/_/g, " ")}
                               </span>
                             ) : (
-                              <span className="text-[var(--muted-text)]">-</span>
+                              <span className="text-[var(--muted-text)]">
+                                -
+                              </span>
                             )}
                           </td>
                         )}
@@ -567,8 +599,6 @@ export default function ChoiceFillingResults({
           </div>
         </>
       )}
-
-   
     </div>
   );
 }
