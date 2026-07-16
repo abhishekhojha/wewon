@@ -252,7 +252,7 @@ export default function ChoiceFillingForm({
   const [districtSearch, setDistrictSearch] = useState("");
 
   const isCrlRankRequired = isJACDelhi || !isIIT || formData.category === "OPEN";
-  const isCategoryRankRequired = !isUPTAC && !isJACDelhi && formData.category !== "OPEN";
+  const isCategoryRankRequired = !isUPTAC && !isJACDelhi && !isCSAB && formData.category !== "OPEN";
 
 
   const resultsRef = useRef<HTMLDivElement>(null);
