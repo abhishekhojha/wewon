@@ -8,7 +8,7 @@ import { choiceFillingKeySlugMap } from "@/data/productKeyMap";
 import ChoiceFillingProductsGrid from "@/components/choice-filling/ChoiceFillingProductsGrid";
 
 
-type choiceFillingKey = "JEE_MAIN" | "JAC_DELHI" | "UPTAC" | "IIT";
+type choiceFillingKey = "JEE_MAIN" | "JAC_DELHI" | "UPTAC" | "IIT" | "CSAB";
 
 
 const choiceFillingEndpoints = [
