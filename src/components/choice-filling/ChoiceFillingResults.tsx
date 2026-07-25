@@ -309,6 +309,22 @@ export default function ChoiceFillingResults({
                     </p>
               </div>
             </div>
+          ) : toolKey === "csab" ? (
+            <div className="p-6 sm:p-8 text-center bg-gray-50 rounded-lg border border-[var(--border)]">
+              <div className="space-y-3">
+                <p className="text-base sm:text-lg font-bold text-[var(--foreground)]">
+                  No Choices Available
+                </p>
+                <p className="text-xs sm:text-sm text-[var(--muted-text)]">
+                  Based on your current rank and selected filters, no college
+                  choices are available.
+                </p>
+                <p className="text-xs sm:text-sm text-[var(--muted-text)]">
+                  Try removing or adjusting some filters/branch preferences to
+                  see more college options.
+                </p>
+              </div>
+            </div>
           ) : (
             <div className="p-6 sm:p-8 text-center bg-gray-50 rounded-lg border border-[var(--border)]">
               <div className="space-y-3">
