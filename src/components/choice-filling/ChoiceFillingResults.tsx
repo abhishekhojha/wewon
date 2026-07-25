@@ -300,13 +300,26 @@ export default function ChoiceFillingResults({
                 <p className="text-base sm:text-lg font-bold text-[var(--foreground)]">
                   This is a Preparatory Rank under JEE Advanced.
                 </p>
-                <p className="text-xs sm:text-sm text-[var(--muted-text)]">
-                  Based on last year's JEE Advanced counselling data, no seat
-                  allotment was recorded for this rank.
-                </p>
-                <p className="text-xs sm:text-sm text-[var(--muted-text)]">
-                  Therefore, no colleges are being displayed for this category.
-                </p>
+                {toolKey === "csab" ? (
+                  <>
+                    <p className="text-xs sm:text-sm text-[var(--muted-text)]">
+                      Based on your current rank and selected filters, no college choices are available.
+                    </p>
+                    <p className="text-xs sm:text-sm text-[var(--muted-text)]">
+                      Try removing or adjusting some filters/branch preferences to see more college options.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs sm:text-sm text-[var(--muted-text)]">
+                      Based on your rank and preferences, no choices are available.
+                    </p>
+                    <p className="text-xs sm:text-sm text-[var(--muted-text)]">
+                      Please check your rank details or adjust your selected
+                      filters/branches.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           ) : (
