@@ -1779,7 +1779,7 @@ export default function ChoiceFillingForm({
             </div>
 
             {/* Export as Student Toggle for Counsellors */}
-            {!isStudent && !isJACDelhi && (
+            {!isStudent && !isJACDelhi && !(toolKey === "csab" && !isAuthenticated) && (
               <div className="pt-2">
                 <label className="flex items-center gap-2.5 px-3 py-2.5 border border-[var(--border)] rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer hover:bg-[var(--muted-background)]/50 bg-white">
                   <input
@@ -1796,7 +1796,7 @@ export default function ChoiceFillingForm({
             )}
 
             {/* Complete Preference Toggle for Counsellors (JEE Main only) */}
-            {!isStudent && (toolKey === "jee-main" || toolKey === "csab") && (
+            {!isStudent && (toolKey === "jee-main" || (toolKey === "csab" && isAuthenticated)) && (
               <div className="pt-2">
                 <label className="flex items-center gap-2.5 px-3 py-2.5 border border-[var(--border)] rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer hover:bg-[var(--muted-background)]/50 bg-white">
                   <input
