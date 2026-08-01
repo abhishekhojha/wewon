@@ -105,6 +105,29 @@ export default function AuthForm() {
   };
 
   /**
+   * Phone + password login — API: POST /api/auth/login { phone, password }
+   * Same endpoint as email login; just swaps the identifier field.
+   */
+  const handlePhonePasswordLogin = async (
+    phoneVal: string,
+    passwordVal: string
+  ): Promise<void> => {
+    setLoginLoading(true);
+    try {
+      const { user } = await dispatch(
+        loginUser({ phone: phoneVal, password: passwordVal })
+      ).unwrap();
+      await postLoginSuccess(user.name);
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message || err?.message || "Login failed"
+      );
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  /**
    * Phone OTP login step 1 — API: POST /api/auth/send-login-otp { phone }
    * Throws on error so LoginForm can stay in its loading state cleanly.
    */
@@ -419,6 +442,7 @@ export default function AuthForm() {
             {activeTab === "login" && (
               <LoginForm
                 onEmailLogin={handleEmailLogin}
+                onPhonePasswordLogin={handlePhonePasswordLogin}
                 onSendLoginOtp={handleSendLoginOtp}
                 onVerifyLoginOtp={handleVerifyLoginOtp}
                 onResendLoginOtp={handleResendLoginOtp}
