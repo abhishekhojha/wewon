@@ -3,9 +3,13 @@ import { User, UserId } from "../types";
 import apiClient from "@/hooks/Axios";
 
 // ---------------------------
+// Login with email / phone / identifier + password
+// API: POST /api/auth/login
+// Body: { email?, phone?, identifier?, password }
+// ---------------------------
 export const loginUser = createAsyncThunk<
-  { user: UserId; token: string }, // Return type
-  { email: string; password: string }, // Argument type
+  { user: UserId; token: string },
+  { email?: string; phone?: string; identifier?: string; password: string },
   { rejectValue: string }
 >("auth/loginUser", async (credentials, { rejectWithValue }) => {
   try {
@@ -14,7 +18,6 @@ export const loginUser = createAsyncThunk<
     if (token) {
       localStorage.setItem("token", token);
     }
-    // API returns user.id; map it to _id for UserId type compatibility
     const rawUser = res?.data?.user ?? {};
     const user: UserId = {
       _id: rawUser.id ?? rawUser._id ?? "",
@@ -30,8 +33,29 @@ export const loginUser = createAsyncThunk<
   }
 });
 
-// Verify OTP after registration — API: POST /api/auth/verify-otp
-// Returns { message, token, user: { id, name, email, phone, role } }
+// ---------------------------
+// Send login OTP to phone
+// API: POST /api/auth/send-login-otp — { phone }
+// ---------------------------
+export const sendLoginOtp = createAsyncThunk<
+  { message: string },
+  { phone: string },
+  { rejectValue: string }
+>("auth/sendLoginOtp", async ({ phone }, { rejectWithValue }) => {
+  try {
+    const res = await apiClient.post("/api/auth/send-login-otp", { phone });
+    return { message: res.data?.message ?? "OTP sent" };
+  } catch (err: any) {
+    return rejectWithValue(
+      err.response?.data?.message || "Failed to send login OTP"
+    );
+  }
+});
+
+// ---------------------------
+// Verify OTP (registration completion OR phone OTP login)
+// API: POST /api/auth/verify-otp — { email?, phone?, otp }
+// ---------------------------
 export const verifyOtp = createAsyncThunk<
   { user: UserId; token: string },
   { email?: string; phone?: string; otp: string },
@@ -54,17 +78,22 @@ export const verifyOtp = createAsyncThunk<
     };
     return { user, token };
   } catch (err: any) {
-    return rejectWithValue(err.response?.data?.message || "OTP verification failed");
+    return rejectWithValue(
+      err.response?.data?.message || "OTP verification failed"
+    );
   }
 });
 
+// ---------------------------
+// Register (initiates OTP flow)
+// API: POST /api/auth/register — { name, email, password, phone?, verificationMethod? }
+// ---------------------------
 export const signupUser = createAsyncThunk<
   { user: User; token: string },
   { name: string; email: string; password: string },
   { rejectValue: string }
 >("auth/signupUser", async (credentials, { rejectWithValue }) => {
   try {
-    // Kept for backwards-compat; registration is OTP-based via /register + /verify-otp
     const res = await apiClient.post("/api/auth/register", credentials);
     return res.data;
   } catch (err: any) {
@@ -72,6 +101,10 @@ export const signupUser = createAsyncThunk<
   }
 });
 
+// ---------------------------
+// Fetch logged-in user's full profile
+// API: GET /api/profile
+// ---------------------------
 export const fetchUserProfile = createAsyncThunk<
   User,
   void,
@@ -79,10 +112,8 @@ export const fetchUserProfile = createAsyncThunk<
 >("auth/fetchUserProfile", async (_, { rejectWithValue }) => {
   try {
     const res = await apiClient.get("/api/profile");
-
     return res.data.profile;
   } catch (err: any) {
-    // Handle 401 - Invalid or expired token
     if (err.response?.status === 401) {
       localStorage.removeItem("token");
     }
@@ -92,10 +123,14 @@ export const fetchUserProfile = createAsyncThunk<
   }
 });
 
+// ---------------------------
+// Update basic user profile fields (name, phone, avatar)
+// API: PUT /api/profile/basic
+// ---------------------------
 export const updateUserProfile = createAsyncThunk<
-  UserId, // ✅ Return type (updated user object)
-  { name?: string; phone?: string; avatar?: string }, // ✅ Argument type
-  { rejectValue: string } // ✅ Rejected value type
+  UserId,
+  { name?: string; phone?: string; avatar?: string },
+  { rejectValue: string }
 >("auth/updateUserProfile", async (data, { rejectWithValue }) => {
   try {
     const res = await apiClient.put("/api/profile/basic", data);
@@ -107,6 +142,10 @@ export const updateUserProfile = createAsyncThunk<
   }
 });
 
+// ---------------------------
+// Update full student profile
+// API: PUT /api/profile
+// ---------------------------
 export const updateStudentProfile = createAsyncThunk<
   any,
   User,
@@ -114,7 +153,6 @@ export const updateStudentProfile = createAsyncThunk<
 >("profile/updateStudentProfile", async (data, { rejectWithValue }) => {
   try {
     const res = await apiClient.put("/api/profile", data);
-
     return res.data.profile;
   } catch (err: any) {
     const msg = err.response?.data?.message || "Failed to update profile";

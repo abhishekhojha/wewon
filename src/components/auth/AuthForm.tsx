@@ -1,4 +1,4 @@
-// components/AuthForm.tsx
+// components/auth/AuthForm.tsx
 "use client";
 
 import { useState } from "react";
@@ -10,27 +10,36 @@ import ForgotPasswordForm from "./ForgotPasswordForm";
 import ResetPasswordForm from "./ResetPasswordForm";
 import apiClient from "../../hooks/Axios";
 import { toast } from "sonner";
-import { fetchUserProfile, loginUser, verifyOtp } from "@/store/auth/authThunk";
+import {
+  fetchUserProfile,
+  loginUser,
+  sendLoginOtp,
+  verifyOtp,
+} from "@/store/auth/authThunk";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+type ActiveTab = "login" | "register" | "forgot-password";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Component
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function AuthForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get("returnUrl") || "/";
   const dispatch = useDispatch<AppDispatch>();
-  const [activeTab, setActiveTab] = useState<
-    "login" | "register" | "forgot-password"
-  >("login");
+
+  // ── tabs ───────────────────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState<ActiveTab>("login");
+
+  // ── registration flow state ────────────────────────────────────────────
   const [registerStep, setRegisterStep] = useState<number>(1);
-
-  // Forgot password flow step: 1 = email/phone input, 2 = OTP + new password
-  const [forgotPasswordStep, setForgotPasswordStep] = useState<number>(1);
-  // Store which identifier was used for forgot-password (email or phone)
-  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
-  const [forgotPasswordPhone, setForgotPasswordPhone] = useState("");
-
-  // Registration form state (moved to parent)
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,31 +49,99 @@ export default function AuthForm() {
     "email" | "phone"
   >("phone");
 
-  // Login form state (parent-managed)
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-
-  // UX state
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  // ── registration UX ───────────────────────────────────────────────────
+  const [regLoading, setRegLoading] = useState(false);
+  const [regError, setRegError] = useState<string | null>(null);
   const [otpLoading, setOtpLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
 
-  // Login UX state
+  // ── login UX (shared loading; individual handlers manage their own guards)
   const [loginLoading, setLoginLoading] = useState(false);
 
-  // Forgot password UX state
+  // ── forgot-password flow state ─────────────────────────────────────────
+  const [forgotPasswordStep, setForgotPasswordStep] = useState<number>(1);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [forgotPasswordPhone, setForgotPasswordPhone] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [resetResendLoading, setResetResendLoading] = useState(false);
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // Helpers
+  // ─────────────────────────────────────────────────────────────────────────
 
-  // Step 1: send register request (server sends OTP)
-  // API: POST /api/auth/register — { name, email, password, phone?, verificationMethod? }
+  /** After a successful login dispatch, fetch the full profile and redirect. */
+  const postLoginSuccess = async (userName: string) => {
+    toast.success(`Welcome back, ${userName}!`);
+    const token = localStorage.getItem("token");
+    if (token) {
+      await dispatch(fetchUserProfile()).unwrap();
+    }
+    router.push(returnUrl);
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Login handlers — passed down to LoginForm
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /** Email + password login — API: POST /api/auth/login { email, password } */
+  const handleEmailLogin = async (
+    emailVal: string,
+    passwordVal: string
+  ): Promise<void> => {
+    setLoginLoading(true);
+    try {
+      const { user } = await dispatch(
+        loginUser({ email: emailVal, password: passwordVal })
+      ).unwrap();
+      await postLoginSuccess(user.name);
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message || err?.message || "Login failed"
+      );
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  /**
+   * Phone OTP login step 1 — API: POST /api/auth/send-login-otp { phone }
+   * Throws on error so LoginForm can stay in its loading state cleanly.
+   */
+  const handleSendLoginOtp = async (phoneVal: string): Promise<void> => {
+    await dispatch(sendLoginOtp({ phone: phoneVal })).unwrap();
+    // success toast handled by LoginForm itself ("OTP sent")
+  };
+
+  /**
+   * Phone OTP login step 2 — API: POST /api/auth/verify-otp { phone, otp }
+   * The same verify-otp endpoint is used for registration AND phone OTP login.
+   */
+  const handleVerifyLoginOtp = async (
+    phoneVal: string,
+    otpVal: string
+  ): Promise<void> => {
+    const { user } = await dispatch(
+      verifyOtp({ phone: phoneVal, otp: otpVal })
+    ).unwrap();
+    await postLoginSuccess(user.name);
+  };
+
+  /**
+   * Resend login OTP — API: POST /api/auth/send-login-otp { phone }
+   */
+  const handleResendLoginOtp = async (phoneVal: string): Promise<void> => {
+    await dispatch(sendLoginOtp({ phone: phoneVal })).unwrap();
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Registration handlers
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /** Step 1: POST /api/auth/register — triggers OTP delivery */
   const handleNextStep = async () => {
-    setError(null);
-    setLoading(true);
+    setRegError(null);
+    setRegLoading(true);
     try {
       await apiClient.post("/api/auth/register", {
         name,
@@ -73,23 +150,21 @@ export default function AuthForm() {
         phone,
         verificationMethod,
       });
-      // server responds with: { message: "OTP sent to email/phone for verification" }
       setRegisterStep(2);
     } catch (err: any) {
-      setError(
+      setRegError(
         err?.response?.data?.message ||
           err?.message ||
-          "Registration request failed",
+          "Registration request failed"
       );
     } finally {
-      setLoading(false);
+      setRegLoading(false);
     }
   };
 
-  // Allow resending OTP from OTPForm
+  /** Resend registration OTP */
   const handleResend = async () => {
     setResendLoading(true);
-
     try {
       await apiClient.post("/api/auth/register", {
         name,
@@ -99,34 +174,28 @@ export default function AuthForm() {
         verificationMethod,
       });
       toast.success(
-        `OTP resent to your ${verificationMethod === "email" ? "email" : "phone"}`,
+        `OTP resent to your ${verificationMethod === "email" ? "email" : "phone"}`
       );
     } catch (err: any) {
       toast.error(
-        err?.response?.data?.message || err?.message || "Resend failed",
+        err?.response?.data?.message || err?.message || "Resend failed"
       );
     } finally {
       setResendLoading(false);
     }
   };
 
-  // Step 2: verify OTP
-  // API: POST /api/auth/verify-otp — { email? | phone?, otp }
-  // Success: { message, token, user: { id, name, email, phone, role } }
-  // On success, user is fully logged in — no need to redirect to login tab.
+  /** Step 2: POST /api/auth/verify-otp — completes registration & logs user in */
   const handleOTPSubmit = async (otp: string) => {
     setOtpLoading(true);
     try {
       const verifyPayload =
         verificationMethod === "phone" ? { phone, otp } : { email, otp };
 
-      const { user } = await dispatch(
-        verifyOtp(verifyPayload),
-      ).unwrap();
+      const { user } = await dispatch(verifyOtp(verifyPayload)).unwrap();
 
       toast.success(`Welcome, ${user.name}! Registration successful.`);
 
-      // Fetch full profile now that we have a token
       const token = localStorage.getItem("token");
       if (token) {
         await dispatch(fetchUserProfile()).unwrap();
@@ -138,39 +207,18 @@ export default function AuthForm() {
       toast.error(
         err?.response?.data?.message ||
           err?.message ||
-          "OTP verification failed",
+          "OTP verification failed"
       );
     } finally {
       setOtpLoading(false);
     }
   };
 
-  // Login handler (password-based)
-  // API: POST /api/auth/login — { email, password }
-  const handleLogin = async () => {
-    setLoginLoading(true);
-    try {
-      const { user } = await dispatch(
-        loginUser({ email: loginEmail, password: loginPassword }),
-      ).unwrap();
-      toast.success(`Welcome back, ${user.name}!`);
-      const token = localStorage.getItem("token");
-      if (token) {
-        await dispatch(fetchUserProfile()).unwrap();
-      }
-      console.log("login - ", returnUrl);
-      router.push(returnUrl);
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message || err?.message || err || "Login failed",
-      );
-    } finally {
-      setLoginLoading(false);
-    }
-  };
+  // ─────────────────────────────────────────────────────────────────────────
+  // Forgot-password handlers
+  // ─────────────────────────────────────────────────────────────────────────
 
-  // Forgot Password: Send OTP to email or phone
-  // API: POST /api/auth/forgot-password — { email? | phone? }
+  /** POST /api/auth/forgot-password — { email? | phone? } */
   const handleForgotPassword = async (identifier: {
     email?: string;
     phone?: string;
@@ -178,24 +226,22 @@ export default function AuthForm() {
     setForgotLoading(true);
     try {
       await apiClient.post("/api/auth/forgot-password", identifier);
-      // Store the identifier used so reset-password can pass it back
       setForgotPasswordEmail(identifier.email ?? "");
       setForgotPasswordPhone(identifier.phone ?? "");
       setForgotPasswordStep(2);
       toast.success(
-        identifier.phone ? "OTP sent to your phone" : "OTP sent to your email",
+        identifier.phone ? "OTP sent to your phone" : "OTP sent to your email"
       );
     } catch (err: any) {
       toast.error(
-        err?.response?.data?.message || err?.message || "Failed to send OTP",
+        err?.response?.data?.message || err?.message || "Failed to send OTP"
       );
     } finally {
       setForgotLoading(false);
     }
   };
 
-  // Forgot Password: Resend OTP
-  // API: POST /api/auth/forgot-password — same identifier
+  /** Resend forgot-password OTP */
   const handleForgotResendOTP = async () => {
     setResetResendLoading(true);
     try {
@@ -206,19 +252,18 @@ export default function AuthForm() {
       toast.success(
         forgotPasswordPhone
           ? "OTP resent to your phone"
-          : "OTP resent to your email",
+          : "OTP resent to your email"
       );
     } catch (err: any) {
       toast.error(
-        err?.response?.data?.message || err?.message || "Failed to resend OTP",
+        err?.response?.data?.message || err?.message || "Failed to resend OTP"
       );
     } finally {
       setResetResendLoading(false);
     }
   };
 
-  // Reset Password: Verify OTP and set new password
-  // API: POST /api/auth/reset-password — { email? | phone?, otp, newPassword }
+  /** POST /api/auth/reset-password — { email? | phone?, otp, newPassword } */
   const handleResetPassword = async (otp: string, newPassword: string) => {
     setResetLoading(true);
     try {
@@ -232,23 +277,27 @@ export default function AuthForm() {
         newPassword,
       });
       toast.success(
-        "Password reset successful! Please login with your new password.",
+        "Password reset successful! Please login with your new password."
       );
-      // Reset state and go back to login
       setForgotPasswordStep(1);
       setForgotPasswordEmail("");
       setForgotPasswordPhone("");
       setActiveTab("login");
     } catch (err: any) {
       toast.error(
-        err?.response?.data?.message || err?.message || "Password reset failed",
+        err?.response?.data?.message ||
+          err?.message ||
+          "Password reset failed"
       );
     } finally {
       setResetLoading(false);
     }
   };
 
-  // Get title and description based on active tab
+  // ─────────────────────────────────────────────────────────────────────────
+  // Header content (title / description)
+  // ─────────────────────────────────────────────────────────────────────────
+
   const getHeaderContent = () => {
     if (activeTab === "forgot-password") {
       return {
@@ -287,10 +336,14 @@ export default function AuthForm() {
 
   const headerContent = getHeaderContent();
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // Render
+  // ─────────────────────────────────────────────────────────────────────────
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] p-4 sm:p-6 lg:p-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden max-w-[1200px] w-full min-h-[600px]">
-        {/* Left Section: Image with Overlay */}
+        {/* ── Left: decorative image ─────────────────────────────────── */}
         <div className="hidden lg:block relative overflow-hidden bg-blue-50/50">
           <div className="absolute inset-0 w-full h-full flex items-center justify-center p-12">
             <img
@@ -303,17 +356,17 @@ export default function AuthForm() {
                 activeTab === "login"
                   ? "Login"
                   : activeTab === "register"
-                    ? "Register"
-                    : "Reset Password"
+                  ? "Register"
+                  : "Reset Password"
               }
               className="w-full h-full object-contain drop-shadow-xl"
             />
           </div>
         </div>
 
-        {/* Right Section: Form */}
+        {/* ── Right: form panel ──────────────────────────────────────── */}
         <div className="p-8 sm:p-12 xl:p-16 flex flex-col justify-center bg-white relative">
-          {/* Header Content with Animation */}
+          {/* Header */}
           <div>
             <h2 className="text-3xl lg:text-4xl font-bold text-[var(--primary)] mb-3 text-center lg:text-left tracking-tight">
               {headerContent.title}
@@ -323,10 +376,11 @@ export default function AuthForm() {
             </h2>
           </div>
 
-          {/* Tab Switcher - Only show for login/register */}
+          {/* Tab Switcher: only for login / register */}
           {activeTab !== "forgot-password" && (
             <div className="flex bg-gray-100/80 rounded-2xl p-1.5 mb-10 max-w-sm mx-auto lg:mx-0 relative">
               <button
+                id="auth-tab-login"
                 onClick={() => {
                   setActiveTab("login");
                   setRegisterStep(1);
@@ -340,9 +394,8 @@ export default function AuthForm() {
                 Login
               </button>
               <button
-                onClick={() => {
-                  setActiveTab("register");
-                }}
+                id="auth-tab-register"
+                onClick={() => setActiveTab("register")}
                 className={`flex-1 py-3 px-6 rounded-xl cursor-pointer text-sm font-bold transition-colors z-10 relative ${
                   activeTab === "register"
                     ? "bg-white shadow-sm text-[var(--primary)]"
@@ -360,14 +413,15 @@ export default function AuthForm() {
             </p>
           )}
 
+          {/* ── Forms ────────────────────────────────────────────────── */}
           <div className="relative min-h-[300px]">
+            {/* Login */}
             {activeTab === "login" && (
               <LoginForm
-                handleLogin={handleLogin}
-                email={loginEmail}
-                setEmail={setLoginEmail}
-                password={loginPassword}
-                setPassword={setLoginPassword}
+                onEmailLogin={handleEmailLogin}
+                onSendLoginOtp={handleSendLoginOtp}
+                onVerifyLoginOtp={handleVerifyLoginOtp}
+                onResendLoginOtp={handleResendLoginOtp}
                 loading={loginLoading}
                 onForgotPassword={() => {
                   setActiveTab("forgot-password");
@@ -376,6 +430,7 @@ export default function AuthForm() {
               />
             )}
 
+            {/* Register */}
             {activeTab === "register" && (
               <div>
                 {registerStep === 1 && (
@@ -393,8 +448,8 @@ export default function AuthForm() {
                     verificationMethod={verificationMethod}
                     setVerificationMethod={setVerificationMethod}
                     onNext={handleNextStep}
-                    loading={loading}
-                    error={error}
+                    loading={regLoading}
+                    error={regError}
                   />
                 )}
                 {registerStep === 2 && (
@@ -409,6 +464,7 @@ export default function AuthForm() {
               </div>
             )}
 
+            {/* Forgot Password */}
             {activeTab === "forgot-password" && (
               <div>
                 {forgotPasswordStep === 1 && (
