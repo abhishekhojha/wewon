@@ -4,6 +4,7 @@ import { AuthState, User } from "../types";
 import {
   fetchUserProfile,
   loginUser,
+  sendLoginOtp,
   signupUser,
   updateStudentProfile,
   updateUserProfile,
@@ -88,12 +89,12 @@ const authSlice = createSlice({
         localStorage.setItem("token", action.payload.token);
       }
     },
-    setLoadingFalse: (state)=>{
-      state.loading = false
-    }
+    setLoadingFalse: (state) => {
+      state.loading = false;
+    },
   },
   extraReducers: (builder) => {
-    // Login
+    // ── Login (email/phone/identifier + password) ──────────────────────────
     builder
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
@@ -113,7 +114,22 @@ const authSlice = createSlice({
         state.error = action.payload || "Login failed";
       });
 
-    // Verify OTP (registration completion)
+    // ── Send Login OTP (phone OTP login — step 1) ──────────────────────────
+    builder
+      .addCase(sendLoginOtp.pending, (state) => {
+        state.btnloading = true;
+        state.error = null;
+      })
+      .addCase(sendLoginOtp.fulfilled, (state) => {
+        state.btnloading = false;
+        state.error = null;
+      })
+      .addCase(sendLoginOtp.rejected, (state, action) => {
+        state.btnloading = false;
+        state.error = action.payload || "Failed to send OTP";
+      });
+
+    // ── Verify OTP (registration completion OR phone OTP login) ────────────
     builder
       .addCase(verifyOtp.pending, (state) => {
         state.loading = true;
@@ -133,7 +149,7 @@ const authSlice = createSlice({
         state.error = action.payload || "OTP verification failed";
       });
 
-    // Signup
+    // ── Signup ─────────────────────────────────────────────────────────────
     builder
       .addCase(signupUser.pending, (state) => {
         state.loading = true;
@@ -153,7 +169,7 @@ const authSlice = createSlice({
         state.error = action.payload || "Signup failed";
       });
 
-    // Fetch User
+    // ── Fetch User Profile ─────────────────────────────────────────────────
     builder
       .addCase(fetchUserProfile.pending, (state) => {
         state.loading = true;
@@ -170,7 +186,7 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
       });
 
-    // Update User
+    // ── Update Basic Profile ───────────────────────────────────────────────
     builder
       .addCase(updateUserProfile.pending, (state) => {
         state.loading = true;
@@ -186,7 +202,8 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload || "Profile update failed";
       });
-    // UPDATE STUDENT PROFILE
+
+    // ── Update Student Profile ─────────────────────────────────────────────
     builder
       .addCase(updateStudentProfile.pending, (state) => {
         state.btnloading = true;
