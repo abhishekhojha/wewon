@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, EyeOff, Loader2, Mail, Phone, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail, Phone, ArrowRight, KeyRound, MessageSquare } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -8,24 +8,32 @@ import { toast } from "sonner";
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
 
-type LoginMode = "email-password" | "phone-otp";
+/** Top-level login channel */
+type LoginMode = "email-password" | "phone";
+
+/** Sub-method inside the Phone channel */
+type PhoneMethod = "password" | "otp";
+
+/** Steps inside the phone-OTP sub-flow */
 type PhoneOtpStep = "enter-phone" | "verify-otp";
 
 export interface LoginFormProps {
-  /** Called with email+password credentials */
+  /** Email + password — POST /api/auth/login { email, password } */
   onEmailLogin: (email: string, password: string) => Promise<void>;
-  /** Called once the phone is submitted — should trigger POST /send-login-otp */
+  /** Phone + password — POST /api/auth/login { phone, password } */
+  onPhonePasswordLogin: (phone: string, password: string) => Promise<void>;
+  /** Phone OTP step 1 — POST /api/auth/send-login-otp { phone } */
   onSendLoginOtp: (phone: string) => Promise<void>;
-  /** Called with phone+otp — should trigger POST /verify-otp */
+  /** Phone OTP step 2 — POST /api/auth/verify-otp { phone, otp } */
   onVerifyLoginOtp: (phone: string, otp: string) => Promise<void>;
-  /** Called to resend OTP — should call POST /send-login-otp again */
+  /** Resend OTP — POST /api/auth/send-login-otp { phone } again */
   onResendLoginOtp: (phone: string) => Promise<void>;
   loading?: boolean;
   onForgotPassword?: () => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// OTP sub-component (inline, shares styles with the parent form)
+// OTP input row (shared by registration OTP & phone-OTP login)
 // ─────────────────────────────────────────────────────────────────────────────
 
 function OtpInputRow({
@@ -74,8 +82,7 @@ function OtpInputRow({
       next[i] = d;
     });
     onChange(next);
-    const focusIdx = Math.min(digits.length, 5);
-    inputRefs.current[focusIdx]?.focus();
+    inputRefs.current[Math.min(digits.length, 5)]?.focus();
   };
 
   return (
@@ -109,80 +116,108 @@ function OtpInputRow({
 
 export default function LoginForm({
   onEmailLogin,
+  onPhonePasswordLogin,
   onSendLoginOtp,
   onVerifyLoginOtp,
   onResendLoginOtp,
   loading = false,
   onForgotPassword,
 }: LoginFormProps) {
-  // ── mode & step ──────────────────────────────────────────────────────────
+  // ── top-level mode ───────────────────────────────────────────────────────
   const [mode, setMode] = useState<LoginMode>("email-password");
+
+  // ── phone sub-method (password | otp) ───────────────────────────────────
+  const [phoneMethod, setPhoneMethod] = useState<PhoneMethod>("password");
+
+  // ── OTP flow step ────────────────────────────────────────────────────────
   const [phoneStep, setPhoneStep] = useState<PhoneOtpStep>("enter-phone");
 
   // ── email-password fields ────────────────────────────────────────────────
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [emailPassword, setEmailPassword] = useState("");
+  const [showEmailPassword, setShowEmailPassword] = useState(false);
 
-  // ── phone-otp fields ─────────────────────────────────────────────────────
+  // ── phone fields (shared between both phone sub-methods) ─────────────────
   const [phone, setPhone] = useState("");
+  const [phonePassword, setPhonePassword] = useState("");
+  const [showPhonePassword, setShowPhonePassword] = useState(false);
+
+  // ── OTP state ────────────────────────────────────────────────────────────
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [otpTimer, setOtpTimer] = useState(0);
   const [resendLoading, setResendLoading] = useState(false);
 
-  // ── local busy guard (avoids double-submit) ──────────────────────────────
+  // ── local busy guard ─────────────────────────────────────────────────────
   const [localLoading, setLocalLoading] = useState(false);
-
   const isBusy = loading || localLoading;
 
-  // ── OTP countdown ────────────────────────────────────────────────────────
+  // ── countdown timer ──────────────────────────────────────────────────────
   useEffect(() => {
     if (otpTimer <= 0) return;
     const id = setInterval(() => setOtpTimer((t) => t - 1), 1000);
     return () => clearInterval(id);
   }, [otpTimer]);
 
-  // Reset OTP state when switching modes
+  // ── helpers ──────────────────────────────────────────────────────────────
+  const validatePhone = (raw: string) => raw.replace(/\D/g, "").length >= 10;
+
+  /** Full reset when switching top-level mode */
   const switchMode = (next: LoginMode) => {
     setMode(next);
+    setPhoneMethod("password");
     setPhoneStep("enter-phone");
     setOtp(["", "", "", "", "", ""]);
     setOtpTimer(0);
     setEmail("");
-    setPassword("");
+    setEmailPassword("");
     setPhone("");
+    setPhonePassword("");
   };
 
-  // ── validate phone ───────────────────────────────────────────────────────
-  const validatePhone = (raw: string) => raw.replace(/\D/g, "").length >= 10;
+  /** Reset OTP sub-flow state when switching phone sub-method */
+  const switchPhoneMethod = (next: PhoneMethod) => {
+    setPhoneMethod(next);
+    setPhoneStep("enter-phone");
+    setOtp(["", "", "", "", "", ""]);
+    setOtpTimer(0);
+    // keep `phone` so user doesn't re-type it
+    setPhonePassword("");
+  };
 
-  // ── Handlers ─────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  // Handlers
+  // ─────────────────────────────────────────────────────────────────────────
 
+  /** Email + password login */
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) {
-      toast.error("Please enter your email address.");
-      return;
-    }
-    if (!password) {
-      toast.error("Please enter your password.");
-      return;
-    }
+    if (!email.trim()) { toast.error("Please enter your email address."); return; }
+    if (!emailPassword) { toast.error("Please enter your password."); return; }
     setLocalLoading(true);
     try {
-      await onEmailLogin(email.trim(), password);
+      await onEmailLogin(email.trim(), emailPassword);
     } finally {
       setLocalLoading(false);
     }
   };
 
+  /** Phone + password login */
+  const handlePhonePasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validatePhone(phone)) { toast.error("Please enter a valid 10-digit phone number."); return; }
+    if (!phonePassword) { toast.error("Please enter your password."); return; }
+    setLocalLoading(true);
+    try {
+      await onPhonePasswordLogin(phone.trim(), phonePassword);
+    } finally {
+      setLocalLoading(false);
+    }
+  };
+
+  /** Phone OTP — step 1: send OTP */
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleaned = phone.replace(/\D/g, "");
-    if (cleaned.length < 10) {
-      toast.error("Please enter a valid 10-digit phone number.");
-      return;
-    }
+    if (!validatePhone(phone)) { toast.error("Please enter a valid 10-digit phone number."); return; }
     setLocalLoading(true);
     try {
       await onSendLoginOtp(phone.trim());
@@ -193,13 +228,11 @@ export default function LoginForm({
     }
   };
 
+  /** Phone OTP — step 2: verify OTP */
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     const otpValue = otp.join("");
-    if (otpValue.length !== 6) {
-      toast.error("Please enter the complete 6-digit OTP.");
-      return;
-    }
+    if (otpValue.length !== 6) { toast.error("Please enter the complete 6-digit OTP."); return; }
     setLocalLoading(true);
     try {
       await onVerifyLoginOtp(phone.trim(), otpValue);
@@ -208,6 +241,7 @@ export default function LoginForm({
     }
   };
 
+  /** Resend OTP */
   const handleResend = async () => {
     if (otpTimer > 0) return;
     setResendLoading(true);
@@ -217,7 +251,7 @@ export default function LoginForm({
       setOtpTimer(30);
       toast.success("OTP resent to your phone.");
     } catch {
-      // error already shown by parent
+      // error toast already shown by parent dispatch
     } finally {
       setResendLoading(false);
     }
@@ -230,12 +264,40 @@ export default function LoginForm({
   };
 
   // ─────────────────────────────────────────────────────────────────────────
+  // Shared field sub-components (avoid repetition in JSX)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const PhoneField = () => (
+    <div>
+      <label
+        htmlFor="login-phone"
+        className="block text-sm font-medium text-[var(--foreground)] mb-1.5"
+      >
+        Phone Number
+      </label>
+      <div className="relative">
+        <input
+          type="tel"
+          id="login-phone"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="Enter your registered phone number"
+          className="w-full p-3 pl-10 border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
+          required
+          autoComplete="tel"
+        />
+        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--muted-text)]" />
+      </div>
+    </div>
+  );
+
+  // ─────────────────────────────────────────────────────────────────────────
   // Render
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-6">
-      {/* ── Mode Toggle ─────────────────────────────────────────────────── */}
+      {/* ── Top-level mode toggle: Email vs Phone ─────────────────────── */}
       <div className="flex bg-gray-100/80 rounded-xl p-1 gap-1">
         <button
           type="button"
@@ -253,22 +315,21 @@ export default function LoginForm({
         <button
           type="button"
           id="login-mode-phone"
-          onClick={() => switchMode("phone-otp")}
+          onClick={() => switchMode("phone")}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-            mode === "phone-otp"
+            mode === "phone"
               ? "bg-white shadow-sm text-[var(--primary)]"
               : "text-gray-500 hover:text-gray-700"
           }`}
         >
           <Phone className="h-4 w-4" />
-          Phone OTP
+          Phone
         </button>
       </div>
 
-      {/* ── Email + Password Form ─────────────────────────────────────── */}
+      {/* ── Email + Password ──────────────────────────────────────────── */}
       {mode === "email-password" && (
         <form onSubmit={handleEmailLogin} className="space-y-6" id="login-email-form">
-          {/* Email */}
           <div>
             <label
               htmlFor="login-email"
@@ -288,7 +349,6 @@ export default function LoginForm({
             />
           </div>
 
-          {/* Password */}
           <div>
             <label
               htmlFor="login-password"
@@ -298,10 +358,10 @@ export default function LoginForm({
             </label>
             <div className="relative">
               <input
-                type={showPassword ? "text" : "password"}
+                type={showEmailPassword ? "text" : "password"}
                 id="login-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={emailPassword}
+                onChange={(e) => setEmailPassword(e.target.value)}
                 placeholder="Enter your password"
                 className="w-full p-3 border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)] pr-10"
                 required
@@ -309,20 +369,15 @@ export default function LoginForm({
               />
               <button
                 type="button"
-                onClick={() => setShowPassword((v) => !v)}
+                onClick={() => setShowEmailPassword((v) => !v)}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-[var(--muted-text)] hover:text-[var(--primary)]"
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={showEmailPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5" />
-                ) : (
-                  <Eye className="h-5 w-5" />
-                )}
+                {showEmailPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
           </div>
 
-          {/* Remember & Forgot */}
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center">
               <input
@@ -331,10 +386,7 @@ export default function LoginForm({
                 type="checkbox"
                 className="h-4 w-4 text-[var(--primary)] border-gray-300 rounded focus:ring-[var(--primary)]"
               />
-              <label
-                htmlFor="login-rememberMe"
-                className="ml-2 text-[var(--muted-text)]"
-              >
+              <label htmlFor="login-rememberMe" className="ml-2 text-[var(--muted-text)]">
                 Remember me
               </label>
             </div>
@@ -348,127 +400,188 @@ export default function LoginForm({
             </button>
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             id="login-email-submit"
             disabled={isBusy}
             className="w-full bg-[var(--primary)] text-white font-semibold p-3.5 rounded-lg shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {isBusy ? (
-              <Loader2 className="animate-spin h-5 w-5" />
-            ) : (
-              <ArrowRight className="h-5 w-5" />
-            )}
+            {isBusy ? <Loader2 className="animate-spin h-5 w-5" /> : <ArrowRight className="h-5 w-5" />}
             Login
           </button>
         </form>
       )}
 
-      {/* ── Phone OTP — Enter Phone ───────────────────────────────────── */}
-      {mode === "phone-otp" && phoneStep === "enter-phone" && (
-        <form
-          onSubmit={handleSendOtp}
-          className="space-y-6"
-          id="login-phone-form"
-        >
-          <div>
-            <label
-              htmlFor="login-phone"
-              className="block text-sm font-medium text-[var(--foreground)] mb-1.5"
-            >
-              Phone Number
-            </label>
-            <div className="relative">
-              <input
-                type="tel"
-                id="login-phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Enter your registered phone number"
-                className="w-full p-3 pl-10 border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)]"
-                required
-                autoComplete="tel"
-              />
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--muted-text)]" />
-            </div>
-            <p className="text-xs text-[var(--muted-text)] mt-1.5">
-              A 6-digit OTP will be sent to this number via SMS.
-            </p>
-          </div>
-
-          <button
-            type="submit"
-            id="login-send-otp"
-            disabled={isBusy || !validatePhone(phone)}
-            className="w-full bg-[var(--primary)] text-white font-semibold p-3.5 rounded-lg shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {isBusy ? (
-              <Loader2 className="animate-spin h-5 w-5" />
-            ) : (
-              <ArrowRight className="h-5 w-5" />
-            )}
-            Send OTP
-          </button>
-        </form>
-      )}
-
-      {/* ── Phone OTP — Verify OTP ─────────────────────────────────────── */}
-      {mode === "phone-otp" && phoneStep === "verify-otp" && (
-        <form
-          onSubmit={handleVerifyOtp}
-          className="space-y-6"
-          id="login-verify-otp-form"
-        >
-          {/* Hint */}
-          <div className="text-center space-y-1">
-            <p className="text-sm text-[var(--muted-text)]">
-              OTP sent to{" "}
-              <span className="font-semibold text-[var(--foreground)]">
-                {phone}
-              </span>
-            </p>
+      {/* ── Phone channel ─────────────────────────────────────────────── */}
+      {mode === "phone" && (
+        <div className="space-y-5">
+          {/* Phone sub-method toggle: Password vs OTP */}
+          <div className="flex bg-gray-100/60 rounded-xl p-1 gap-1 border border-gray-200">
             <button
               type="button"
-              id="login-change-phone"
-              onClick={handleChangePhone}
-              className="text-xs text-[var(--primary)] hover:underline"
+              id="phone-method-password"
+              onClick={() => switchPhoneMethod("password")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                phoneMethod === "password"
+                  ? "bg-white shadow-sm text-[var(--primary)]"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
             >
-              Change number
+              <KeyRound className="h-3.5 w-3.5" />
+              Password
+            </button>
+            <button
+              type="button"
+              id="phone-method-otp"
+              onClick={() => switchPhoneMethod("otp")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                phoneMethod === "otp"
+                  ? "bg-white shadow-sm text-[var(--primary)]"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              OTP (SMS)
             </button>
           </div>
 
-          {/* OTP boxes */}
-          <OtpInputRow otp={otp} onChange={setOtp} />
-
-          {/* Verify */}
-          <button
-            type="submit"
-            id="login-verify-otp-submit"
-            disabled={isBusy || otp.join("").length !== 6}
-            className="w-full bg-[var(--primary)] text-white font-semibold p-3.5 rounded-lg shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {isBusy ? <Loader2 className="animate-spin h-5 w-5" /> : null}
-            Verify & Login
-          </button>
-
-          {/* Resend */}
-          <div className="text-center">
-            <button
-              type="button"
-              id="login-resend-otp"
-              onClick={handleResend}
-              disabled={resendLoading || otpTimer > 0}
-              className="text-sm text-[var(--primary)] hover:underline disabled:opacity-50 disabled:no-underline transition"
+          {/* ── Phone + Password ──────────────────────────────────────── */}
+          {phoneMethod === "password" && (
+            <form
+              onSubmit={handlePhonePasswordLogin}
+              className="space-y-5"
+              id="login-phone-password-form"
             >
-              {resendLoading
-                ? "Resending..."
-                : otpTimer > 0
-                ? `Resend OTP in ${otpTimer}s`
-                : "Didn't receive code? Resend"}
-            </button>
-          </div>
-        </form>
+              <PhoneField />
+
+              <div>
+                <label
+                  htmlFor="login-phone-password"
+                  className="block text-sm font-medium text-[var(--foreground)] mb-1.5"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPhonePassword ? "text" : "password"}
+                    id="login-phone-password"
+                    value={phonePassword}
+                    onChange={(e) => setPhonePassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="w-full p-3 border border-[var(--border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition placeholder:text-[var(--muted-text)] pr-10"
+                    required
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPhonePassword((v) => !v)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-[var(--muted-text)] hover:text-[var(--primary)]"
+                    aria-label={showPhonePassword ? "Hide password" : "Show password"}
+                  >
+                    {showPhonePassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end text-sm">
+                <button
+                  type="button"
+                  id="login-phone-forgot-password"
+                  onClick={onForgotPassword}
+                  className="font-medium text-[var(--primary)] hover:underline"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+
+              <button
+                type="submit"
+                id="login-phone-password-submit"
+                disabled={isBusy}
+                className="w-full bg-[var(--primary)] text-white font-semibold p-3.5 rounded-lg shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isBusy ? <Loader2 className="animate-spin h-5 w-5" /> : <ArrowRight className="h-5 w-5" />}
+                Login
+              </button>
+            </form>
+          )}
+
+          {/* ── Phone + OTP (enter phone step) ───────────────────────── */}
+          {phoneMethod === "otp" && phoneStep === "enter-phone" && (
+            <form
+              onSubmit={handleSendOtp}
+              className="space-y-5"
+              id="login-phone-otp-form"
+            >
+              <PhoneField />
+              <p className="text-xs text-[var(--muted-text)] -mt-2">
+                A 6-digit OTP will be sent to this number via SMS.
+              </p>
+
+              <button
+                type="submit"
+                id="login-send-otp"
+                disabled={isBusy || !validatePhone(phone)}
+                className="w-full bg-[var(--primary)] text-white font-semibold p-3.5 rounded-lg shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isBusy ? <Loader2 className="animate-spin h-5 w-5" /> : <ArrowRight className="h-5 w-5" />}
+                Send OTP
+              </button>
+            </form>
+          )}
+
+          {/* ── Phone + OTP (verify step) ─────────────────────────────── */}
+          {phoneMethod === "otp" && phoneStep === "verify-otp" && (
+            <form
+              onSubmit={handleVerifyOtp}
+              className="space-y-5"
+              id="login-verify-otp-form"
+            >
+              <div className="text-center space-y-1">
+                <p className="text-sm text-[var(--muted-text)]">
+                  OTP sent to{" "}
+                  <span className="font-semibold text-[var(--foreground)]">{phone}</span>
+                </p>
+                <button
+                  type="button"
+                  id="login-change-phone"
+                  onClick={handleChangePhone}
+                  className="text-xs text-[var(--primary)] hover:underline"
+                >
+                  Change number
+                </button>
+              </div>
+
+              <OtpInputRow otp={otp} onChange={setOtp} />
+
+              <button
+                type="submit"
+                id="login-verify-otp-submit"
+                disabled={isBusy || otp.join("").length !== 6}
+                className="w-full bg-[var(--primary)] text-white font-semibold p-3.5 rounded-lg shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isBusy ? <Loader2 className="animate-spin h-5 w-5" /> : null}
+                Verify & Login
+              </button>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  id="login-resend-otp"
+                  onClick={handleResend}
+                  disabled={resendLoading || otpTimer > 0}
+                  className="text-sm text-[var(--primary)] hover:underline disabled:opacity-50 disabled:no-underline transition"
+                >
+                  {resendLoading
+                    ? "Resending..."
+                    : otpTimer > 0
+                    ? `Resend OTP in ${otpTimer}s`
+                    : "Didn't receive code? Resend"}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       )}
     </div>
   );
