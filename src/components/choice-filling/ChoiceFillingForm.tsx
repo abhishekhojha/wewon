@@ -181,6 +181,7 @@ export default function ChoiceFillingForm({
   const isIIT = toolKey === "iit";
   const isUPTAC = toolKey === "uptac";
   const isJACDelhi = toolKey === "jac-delhi";
+  const isCSAB = toolKey === "csab";
 
   const {
     iitChoiceFillingLocked,
@@ -219,7 +220,7 @@ export default function ChoiceFillingForm({
     categoryRank: "",
     gender: "Male",
     category: toolKey === "uptac" ? "" : "OPEN",
-    homeState: "",
+    homeState: "Uttar Pradesh",
     includedStates: [] as string[],
     instituteTypes: [] as string[],
     branchGroups: [] as string[],
@@ -251,7 +252,7 @@ export default function ChoiceFillingForm({
   const [districtSearch, setDistrictSearch] = useState("");
 
   const isCrlRankRequired = isJACDelhi || !isIIT || formData.category === "OPEN";
-  const isCategoryRankRequired = !isUPTAC && !isJACDelhi && formData.category !== "OPEN";
+  const isCategoryRankRequired = !isUPTAC && !isJACDelhi && !isCSAB && formData.category !== "OPEN";
 
 
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -675,8 +676,8 @@ export default function ChoiceFillingForm({
 
       payload.branchGroup = finalBranchGroups;
 
-      const effectiveToolKey = (useCompletePreference && toolKey === "jee-main")
-        ? "jee-main/complete-preference"
+      const effectiveToolKey = useCompletePreference && (toolKey === "jee-main" || toolKey === "csab")
+        ? `${toolKey}/complete-preference`
         : (toolKey || "jee-main");
 
       const apiPayload = {
@@ -808,7 +809,7 @@ export default function ChoiceFillingForm({
               Get your choice list
             </h3>
             <p className="text-xs sm:text-sm text-[var(--muted-text)] mt-1">
-              Personalized, rank-optimized list ready for {isUPTAC || productSlug === "uptac" ? "UPTAC/AKTU/UPTU" : "JoSAA"}
+              Personalized, rank-optimized list ready for {isUPTAC || productSlug === "uptac" ? "UPTAC/AKTU/UPTU" : isCSAB || productSlug === "csab" ? "CSAB Special Round" : "JoSAA"}
             </p>
           </div>
           <p className="text-xs text-[var(--muted-text)] px-2">
@@ -1778,7 +1779,7 @@ export default function ChoiceFillingForm({
             </div>
 
             {/* Export as Student Toggle for Counsellors */}
-            {!isStudent && !isJACDelhi && (
+            {!isStudent && !isJACDelhi && !(toolKey === "csab" && !isAuthenticated) && (
               <div className="pt-2">
                 <label className="flex items-center gap-2.5 px-3 py-2.5 border border-[var(--border)] rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer hover:bg-[var(--muted-background)]/50 bg-white">
                   <input
@@ -1795,7 +1796,7 @@ export default function ChoiceFillingForm({
             )}
 
             {/* Complete Preference Toggle for Counsellors (JEE Main only) */}
-            {!isStudent && toolKey === "jee-main" && (
+            {!isStudent && (toolKey === "jee-main" || (toolKey === "csab" && isAuthenticated)) && (
               <div className="pt-2">
                 <label className="flex items-center gap-2.5 px-3 py-2.5 border border-[var(--border)] rounded-lg text-xs sm:text-sm font-medium transition cursor-pointer hover:bg-[var(--muted-background)]/50 bg-white">
                   <input

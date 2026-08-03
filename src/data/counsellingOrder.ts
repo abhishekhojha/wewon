@@ -24,6 +24,7 @@ export const COUNSELLING_SLUG_ORDER = [
 
 export const COUNSELLING_SLUG_ORDER = [
   "csab-counselling-support",                                    // 1. CSAB
+  "uptac-2026-spot-round-premium-counselling",
   "uptac-counselling-full-program",                              // 2. UPTAC
   "mpdte-full-counselling-support",                               // 3. MPDTE
   "ggsipu-full-counselling-program",                              // 4. GGSIPU
